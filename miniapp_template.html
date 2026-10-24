@@ -2451,27 +2451,180 @@
 
             let html = '';
             storyHistory.forEach(h => {
+                const jId = h.job_id || h.id;
                 const title = h.source_title || 'Untitled Screenplay';
                 const date = h.created_at ? h.created_at.slice(0, 10) : '';
+                const isCompleted = (h.status === 'completed' || h.story_bible_pdf || h.scene_prompts_pdf);
                 const bibleUrl = h.story_bible_pdf ? `/download_pdf/${h.story_bible_pdf.split(/[\/\\]/).pop()}` : null;
                 const sceneUrl = h.scene_prompts_pdf ? `/download_pdf/${h.scene_prompts_pdf.split(/[\/\\]/).pop()}` : null;
 
                 html += `
-                    <div class="form-card" style="margin-bottom:10px;">
+                    <div class="form-card" style="margin-bottom:10px; cursor:pointer; transition:border-color 0.18s, transform 0.18s;" onclick="resumeProductionJob(${jId})">
                         <div class="concept-header">
                             <span class="concept-num">${h.length_tier || 'Short'} &bull; ${h.culture || 'Universal'}</span>
-                            <span class="chip ready">${h.status || 'completed'}</span>
+                            <span class="chip ${isCompleted ? 'ready' : 'active'}">${isCompleted ? 'READY &bull; RESUME' : 'IN PROGRESS'}</span>
                         </div>
-                        <div class="item-row-title" style="margin-bottom:4px;">${title}</div>
+                        <div class="item-row-title" style="margin-bottom:4px; font-size:13.5px; font-weight:600;">${title}</div>
                         <div class="item-row-sub" style="margin-bottom:10px;">Genre: ${h.genre || 'Action'} &bull; Date: ${date}</div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            ${bibleUrl ? `<a href="${bibleUrl}" target="_blank" class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Image Bible</a>` : ''}
-                            ${sceneUrl ? `<a href="${sceneUrl}" target="_blank" class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Scene Prompts</a>` : ''}
+
+                        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-top:6px;">
+                            <button class="btn-submit" style="padding:6px 12px; font-size:11px; flex:1; max-width:210px; height:32px;" onclick="event.stopPropagation(); resumeProductionJob(${jId});">
+                                <svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                ${isCompleted ? 'Open & Review Script' : 'Continue Where You Stopped'}
+                            </button>
+
+                            <div style="display:flex; gap:6px;">
+                                ${bibleUrl ? `<a href="${bibleUrl}" target="_blank" onclick="event.stopPropagation();" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Bible</a>` : ''}
+                                ${sceneUrl ? `<a href="${sceneUrl}" target="_blank" onclick="event.stopPropagation();" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Prompts</a>` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
+        }
+
+        async function resumeProductionJob(jobId) {
+            let job = storyHistory.find(j => (j.job_id == jobId || j.id == jobId));
+            if (!job || !job.concepts_json) {
+                try {
+                    const res = await fetch(`/api/job/${jobId}`, { headers: getHeaders() });
+                    const d = await res.json();
+                    if (d.success && d.job) {
+                        job = d.job;
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch job details:", e);
+                }
+            }
+
+            if (!job) {
+                showToast('Unable to load project from vault', false);
+                return;
+            }
+
+            // Close vault and open StoryCraft Studio modal
+            closeAllModals();
+            openModal('story');
+
+            activeJobId = job.job_id || job.id;
+
+            // 1. Populate Input Premise
+            const inputSrc = document.getElementById('story-input-source');
+            if (inputSrc) {
+                inputSrc.value = job.source_input || job.source_title || "";
+            }
+
+            // 2. Populate Culture
+            const cultureSel = document.getElementById('story-sel-culture');
+            if (cultureSel && job.culture) {
+                cultureSel.value = job.culture;
+            }
+            onCultureChanged();
+
+            // 3. Populate Visual Style
+            const styleSel = document.getElementById('story-sel-style');
+            if (styleSel && (job.style || job.visual_style)) {
+                styleSel.value = job.style || job.visual_style;
+            }
+
+            // 4. Populate Genre & Custom Genre
+            const genreSel = document.getElementById('story-sel-genre');
+            if (genreSel && job.genre) {
+                let found = false;
+                for (let i = 0; i < genreSel.options.length; i++) {
+                    if (genreSel.options[i].value === job.genre) {
+                        genreSel.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    for (let i = 0; i < genreSel.options.length; i++) {
+                        if (genreSel.options[i].value.startsWith("Custom")) {
+                            genreSel.selectedIndex = i;
+                            break;
+                        }
+                    }
+                    const customWrap = document.getElementById('story-custom-genre-wrap');
+                    const customInp = document.getElementById('story-custom-genre-input');
+                    if (customWrap && customInp) {
+                        customWrap.style.display = 'block';
+                        customInp.value = job.genre;
+                    }
+                } else {
+                    onGenreChanged();
+                }
+            }
+
+            // 5. Populate Length Tier
+            const tierSel = document.getElementById('story-sel-tier');
+            if (tierSel && job.length_tier) {
+                tierSel.value = job.length_tier;
+            }
+
+            // 6. Handle Concepts Container
+            let concepts = null;
+            if (job.concepts_json) {
+                try {
+                    concepts = typeof job.concepts_json === 'string' ? JSON.parse(job.concepts_json) : job.concepts_json;
+                    if (concepts && concepts.concepts && Array.isArray(concepts.concepts)) {
+                        concepts = concepts.concepts;
+                    }
+                } catch (e) {
+                    console.error("Error parsing concepts_json:", e);
+                }
+            }
+
+            const conceptsSection = document.getElementById('story-concepts-section');
+            if (Array.isArray(concepts) && concepts.length > 0) {
+                currentConcepts = concepts;
+                selectedConceptIndex = (job.selected_concept_idx !== null && job.selected_concept_idx !== undefined) ? parseInt(job.selected_concept_idx) : 0;
+                if (selectedConceptIndex >= currentConcepts.length) selectedConceptIndex = 0;
+
+                if (conceptsSection) conceptsSection.style.display = 'block';
+                renderStoryConcepts(false);
+            } else if (conceptsSection) {
+                conceptsSection.style.display = 'none';
+            }
+
+            // 7. Handle Completed PDF Results Section
+            const resultSec = document.getElementById('story-result-section');
+            const bibleBtn = document.getElementById('btn-download-bible');
+            const sceneBtn = document.getElementById('btn-download-scenes');
+
+            if (job.status === 'completed' || job.story_bible_pdf || job.scene_prompts_pdf) {
+                if (resultSec) resultSec.style.display = 'block';
+                const resultTitle = document.getElementById('story-result-title');
+                if (resultTitle) {
+                    resultTitle.innerText = `${job.source_title || 'Screenplay'} — Ready`;
+                }
+                if (bibleBtn && job.story_bible_pdf) {
+                    const safeBible = job.story_bible_pdf.split(/[\/\\]/).pop();
+                    bibleBtn.href = `/download_pdf/${safeBible}`;
+                    bibleBtn.style.display = 'inline-flex';
+                }
+                if (sceneBtn && job.scene_prompts_pdf) {
+                    const safeScenes = job.scene_prompts_pdf.split(/[\/\\]/).pop();
+                    sceneBtn.href = `/download_pdf/${safeScenes}`;
+                    sceneBtn.style.display = 'inline-flex';
+                }
+            } else if (resultSec) {
+                resultSec.style.display = 'none';
+            }
+
+            // 8. Scroll smoothly to the resume position
+            setTimeout(() => {
+                const modalBody = document.querySelector('#modal-story .modal-body');
+                if (!modalBody) return;
+                if (job.status === 'completed' && resultSec && resultSec.style.display !== 'none') {
+                    modalBody.scrollTo({ top: resultSec.offsetTop - 12, behavior: 'smooth' });
+                } else if (Array.isArray(concepts) && concepts.length > 0 && conceptsSection) {
+                    modalBody.scrollTo({ top: conceptsSection.offsetTop - 12, behavior: 'smooth' });
+                }
+            }, 140);
+
+            showToast(`Loaded: ${job.source_title || 'Project'} from Vault`);
         }
 
         // =====================================================================

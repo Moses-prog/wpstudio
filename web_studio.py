@@ -265,6 +265,10 @@ def serve_miniapp():
     resp.headers['Expires'] = '0'
     return resp
 
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok", "service": "wpstudio"}), 200
+
 @app.route('/download_pdf/<path:filename>')
 def download_pdf(filename):
     safe_name = os.path.basename(filename)
@@ -845,6 +849,14 @@ def api_history():
         "success": True,
         "history": history
     })
+
+@app.route('/api/job/<int:job_id>', methods=['GET'])
+def api_job_detail(job_id):
+    user = get_current_user()
+    job = database.get_job(job_id)
+    if not job or (job.get("user_id") != user["user_id"] and not database.is_admin(user["user_id"])):
+        return jsonify({"success": False, "error": "Job not found"}), 404
+    return jsonify({"success": True, "job": job})
 
 # ============================================================================
 # MASTER ADMIN API ENDPOINTS

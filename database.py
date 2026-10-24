@@ -446,7 +446,14 @@ def get_job(job_id: int) -> dict:
 def get_user_story_history(user_id: int) -> list:
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT job_id, user_id, source_title, culture, style, genre, length_tier, story_bible_pdf, scene_prompts_pdf, status, created_at FROM story_jobs WHERE user_id = ? ORDER BY job_id DESC LIMIT 25", (user_id,))
+    cursor.execute("""
+        SELECT job_id, user_id, source_input, source_title, culture, style, genre, length_tier,
+               concepts_json, selected_concept_idx, story_bible_pdf, scene_prompts_pdf, status, created_at
+        FROM story_jobs
+        WHERE user_id = ?
+        ORDER BY job_id DESC
+        LIMIT 35
+    """, (user_id,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]

@@ -130,11 +130,12 @@ DELIVERY_FORMATS = ["Dialogue / Narrative", "Dialogue", "Narrative"]
 
 def get_main_keyboard(user):
     has_key = bool(user.get("custom_gemini_key"))
-    key_indicator = "🔑 BYOK: Active" if has_key else "⚡ Pool Key"
-    miniapp_url = os.getenv("MINIAPP_URL", "http://localhost:8085/miniapp")
+    key_indicator = "BYOK: Active" if has_key else "Platform Pool Key"
+    miniapp_url = os.getenv("WEB_APP_URL") or os.getenv("MINIAPP_URL", "http://localhost:8085/miniapp")
     user_id = user.get("id") or user.get("user_id")
     if user_id:
-        miniapp_url = f"{miniapp_url}?user_id={user_id}"
+        sep = "&" if "?" in miniapp_url else "?"
+        miniapp_url = f"{miniapp_url}{sep}user_id={user_id}"
     
     rows = [
         [

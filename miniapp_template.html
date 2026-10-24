@@ -1,0 +1,3983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WP Studio — Screenplay & CastLock Suite</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --accent: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --card-bg: #1c1c1e;
+                --text-main: #ffffff;
+                --text-muted: #8e8e93;
+                --border-color: #2c2c2e;
+                --accent: #0a84ff;
+                --success: #30d158;
+                --warning: #ffd60a;
+                --danger: #ff453a;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* SVG Icons - Pure Stroke Monochrome Outline */
+        svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 28px 20px 20px;
+        }
+
+        .avatar-frame {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            padding: 3px; 
+            margin-bottom: 14px;
+            display: flex;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-frame.pro {
+            background: linear-gradient(135deg, #0a84ff, #5e5ce6, #00d2ff, #0a84ff);
+            background-size: 300% 300%;
+            animation: proGlow 4s ease infinite;
+        }
+
+        @keyframes proGlow {
+            0% { background-position: 0% 50%; box-shadow: 0 0 15px rgba(10, 132, 255, 0.4); }
+            50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(94, 92, 230, 0.6); }
+            100% { background-position: 0% 50%; box-shadow: 0 0 15px rgba(10, 132, 255, 0.4); }
+        }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--bg-color);
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .avatar-image svg {
+            width: 34px;
+            height: 34px;
+            color: var(--text-muted);
+        }
+
+        .tier-diamond {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tier-diamond svg {
+            width: 15px;
+            height: 15px;
+            color: var(--accent);
+            fill: var(--accent);
+        }
+
+        .user-greeting {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            color: var(--text-main);
+        }
+
+        .user-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .badge svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .badge.pro { background: rgba(10, 132, 255, 0.15); color: var(--accent); }
+        .badge.free { background: rgba(142, 142, 147, 0.15); color: var(--text-muted); }
+        .badge.credits { background: rgba(48, 209, 88, 0.15); color: var(--success); }
+        .badge.key { background: rgba(255, 214, 10, 0.15); color: var(--warning); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 0 16px 14px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-label svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Section Labels */
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 14px 16px 6px;
+        }
+
+        /* Grouped Lists */
+        .list-group {
+            background: var(--card-bg);
+            margin: 0 16px 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            min-height: 54px;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:active {
+            background: rgba(125, 125, 125, 0.05);
+        }
+
+        .icon-box {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .icon-box svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .item-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 1px;
+            color: var(--text-main);
+        }
+
+        .item-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .chip {
+            background: var(--border-color);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .chip.active { background: rgba(10, 132, 255, 0.12); color: var(--accent); }
+        .chip.ready { background: rgba(48, 209, 88, 0.12); color: var(--success); }
+        .chip.model { background: rgba(142, 142, 147, 0.15); color: var(--text-main); }
+        .chip.byok { background: rgba(255, 214, 10, 0.12); color: var(--warning); }
+
+        /* Modals & Bottom Sheets */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            max-height: 90vh;
+            background: var(--bg-color);
+            border-radius: 20px 20px 0 0;
+            z-index: 101;
+            transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.25);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal.active {
+            bottom: 0;
+        }
+
+        .modal-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-drag {
+            width: 36px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin: 10px auto;
+            flex-shrink: 0;
+        }
+
+        .modal-header {
+            padding: 4px 18px 14px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .modal-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            padding: 16px;
+            flex: 1;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Form Controls */
+        .form-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.45;
+        }
+
+        .form-input, select.form-input, textarea.form-input {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 11px 13px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        select.form-input {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 13px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:active {
+            opacity: 0.8;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-main);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-secondary:active {
+            opacity: 0.8;
+        }
+
+        .btn-danger {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-danger:active {
+            opacity: 0.8;
+        }
+
+        /* Banner Message */
+        .info-banner {
+            background: rgba(10, 132, 255, 0.08);
+            border: 1px solid rgba(10, 132, 255, 0.25);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-banner.success {
+            background: rgba(48, 209, 88, 0.08);
+            border-color: rgba(48, 209, 88, 0.25);
+        }
+
+        .info-banner.warning {
+            background: rgba(255, 214, 10, 0.08);
+            border-color: rgba(255, 214, 10, 0.25);
+        }
+
+        /* Concept Card */
+        .concept-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .concept-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+            background: rgba(10, 132, 255, 0.04);
+        }
+
+        .concept-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .concept-num {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+
+        .concept-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .concept-hook {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin-bottom: 8px;
+        }
+
+        .concept-meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* AI Recommended Concept Styling */
+        .concept-card.recommended-card {
+            border: 1.5px solid #ffd60a;
+            background: linear-gradient(180deg, rgba(255, 214, 10, 0.08) 0%, var(--card-bg) 100%);
+            box-shadow: 0 0 16px rgba(255, 214, 10, 0.15);
+            position: relative;
+        }
+
+        .concept-card.recommended-card.selected {
+            border-color: #ffd60a;
+            box-shadow: 0 0 0 2px #ffd60a, 0 4px 20px rgba(255, 214, 10, 0.25);
+        }
+
+        .chip-recommended {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #ffd60a, #ff9f0a);
+            color: #000000;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(255, 214, 10, 0.3);
+        }
+
+        .recommendation-callout {
+            background: linear-gradient(135deg, rgba(255, 214, 10, 0.12), rgba(255, 159, 10, 0.06));
+            border: 1px solid rgba(255, 214, 10, 0.35);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            animation: hudFadeIn 0.3s ease;
+        }
+
+        .rec-callout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .rec-callout-text {
+            font-size: 12px;
+            color: var(--text-main);
+            line-height: 1.45;
+        }
+
+        /* Real-Time Loading & Progress HUD Overlay - 100% WP Relay Design */
+        .progress-hud-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .progress-hud-overlay.active {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: auto;
+        }
+
+        .progress-hud-card {
+            width: 100%;
+            max-width: 326px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 18px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            animation: hudPopIn 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        @keyframes hudPopIn {
+            0% { transform: scale(0.96); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .hud-circle-wrap {
+            position: relative;
+            width: 108px;
+            height: 108px;
+            margin: 8px auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hud-circle-svg {
+            width: 108px;
+            height: 108px;
+            transform: rotate(-90deg);
+        }
+
+        .hud-circle-bg {
+            stroke: var(--border-color);
+            stroke-width: 4.5;
+            fill: none;
+        }
+
+        .hud-circle-bar {
+            stroke: var(--accent);
+            stroke-width: 4.5;
+            stroke-linecap: round;
+            fill: none;
+            stroke-dasharray: 264;
+            stroke-dashoffset: 264;
+            transition: stroke-dashoffset 0.12s linear, stroke 0.3s ease;
+        }
+
+        .hud-percent-text {
+            position: absolute;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: -apple-system-monospaced, "SF Mono", Menlo, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .hud-percent-num-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+        }
+
+        .hud-percent-symbol {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-left: 2px;
+        }
+
+        .hud-stage-step-tag {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .hud-linear-track {
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .hud-linear-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.12s linear, background-color 0.3s ease;
+        }
+
+        .hud-linear-bar.completed {
+            background: var(--success);
+        }
+
+        .hud-status-box {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-main);
+            line-height: 1.4;
+            min-height: 38px;
+            text-align: left;
+            background: rgba(125, 125, 125, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-sizing: border-box;
+        }
+
+        .hud-live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            animation: hudDotPulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes hudDotPulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.25); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        /* History & Character Item Row */
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+
+        .item-row-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-row-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .item-row-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-row-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* Skeleton Pulse */
+        .skeleton {
+            background: var(--border-color);
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+            color: transparent !important;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.45; }
+            100% { opacity: 1; }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-60px);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+            z-index: 200;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 90%;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+            /* ===================================================================== */
+        /* MASTER ADMIN SUITE STYLES - 100% WP RELAY DESIGN                      */
+        /* ===================================================================== */
+
+        /* Round Floating Admin Action Button (FAB) */
+        .floating-admin-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 99;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .floating-admin-fab:active {
+            transform: scale(0.92);
+        }
+        .floating-admin-fab svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        /* Segmented Control for Tabs */
+        .segmented-control {
+            display: flex;
+            background: var(--border-color);
+            border-radius: 8px;
+            padding: 3px;
+            margin-bottom: 14px;
+            gap: 2px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .segmented-control::-webkit-scrollbar {
+            display: none;
+        }
+        .seg-btn {
+            flex: 1;
+            white-space: nowrap;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            text-align: center;
+        }
+        .seg-btn.active {
+            background: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Filter Pills for PRO Hub & Categories */
+        .filter-pill {
+            background: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .filter-pill:active {
+            opacity: 0.8;
+        }
+        .filter-pill.active {
+            background: var(--accent);
+            color: #ffffff !important;
+            border-color: var(--accent);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
+        }
+
+        /* iOS Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-color); transition: .25s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px;
+            background-color: white; transition: .25s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+        input:checked + .slider { background-color: #34c759; }
+        input:checked + .slider.danger-when-on { background-color: var(--danger); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .btn-sm-action {
+            background: var(--border-color);
+            color: var(--text-main);
+            border: none;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-sm-action:active { opacity: 0.8; }
+
+        .btn-del {
+            background: transparent;
+            color: #ff453a;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-del svg { width: 16px; height: 16px; }
+
+        .empty-state {
+            padding: 32px 16px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .empty-icon {
+            width: 44px;
+            height: 44px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .empty-title {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 15px;
+        }
+
+        /* User Ledger & Search */
+        .admin-user-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .admin-user-card:active, .admin-user-card.selected {
+            border-color: var(--accent);
+            background: rgba(10, 132, 255, 0.05);
+        }
+        .admin-user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        /* Top Announcement Banner */
+        .announcement-banner {
+            margin: 12px 16px 0;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .announcement-banner.info {
+            background: rgba(10, 132, 255, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(10, 132, 255, 0.25);
+        }
+        .announcement-banner.warning {
+            background: rgba(255, 214, 10, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(255, 214, 10, 0.3);
+        }
+        .announcement-banner.danger {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+        }
+        .announcement-banner.success {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Announcement Banner -->
+    <div id="app-announcement-banner" class="announcement-banner info" style="display:none;">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span id="announcement-text" style="flex:1;"></span>
+        <button onclick="dismissAnnouncement()" style="background:none; border:none; color:inherit; cursor:pointer; padding:2px; display:flex; align-items:center;" aria-label="Dismiss">
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:currentColor; fill:none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <svg id="toast-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toast-text">Success</span>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="avatar-frame pro" id="avatar-frame">
+            <div class="avatar-inner">
+                <div class="avatar-image" id="avatar-image">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                </div>
+            </div>
+            <div class="tier-diamond" id="tier-diamond">
+                <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>
+            </div>
+        </div>
+        <div class="user-greeting" id="user-greeting">WP Studio</div>
+        <div class="user-subtitle" id="user-subtitle">AI Screenplay & CastLock Production</div>
+        
+        <div class="status-badges">
+            <div id="badge-tier" class="badge pro">
+                <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>
+                <span id="tier-name">Builder</span>
+            </div>
+            <div id="badge-credits" class="badge credits" onclick="openModal('settings')" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                <span id="header-credits-count">20 Credits</span>
+            </div>
+            <div id="badge-engine" class="badge free" onclick="openModal('settings')" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                <span id="header-model-name">Gemini 3.8</span>
+            </div>
+            <div id="badge-admin" class="badge danger" onclick="openAdminSuite()" style="display:none; cursor:pointer; background:rgba(255, 69, 58, 0.15); color:var(--danger); border:1px solid rgba(255, 69, 58, 0.35);">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Studio Admin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card" onclick="openModal('settings')">
+            <div id="stat-credits" class="stat-value">20</div>
+            <div class="stat-label">
+                <span>Credits Balance</span>
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+        <div class="stat-card" onclick="openModal('history')">
+            <div id="stat-stories" class="stat-value">0</div>
+            <div class="stat-label">
+                <span>Screenplays</span>
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+        <div class="stat-card" onclick="openModal('characters')">
+            <div id="stat-characters" class="stat-value">0</div>
+            <div class="stat-label">
+                <span>CastLock Roster</span>
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+        <div class="stat-card" onclick="openModal('settings')">
+            <div id="stat-engine-mode" class="stat-value" style="font-size:16px;">Standard</div>
+            <div class="stat-label">
+                <span>API Status</span>
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. AI STORY PRODUCTION -->
+    <div class="section-label">AI Story Production</div>
+    <div class="list-group">
+        <div class="list-item" onclick="openModal('story')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">StoryCraft Studio</div>
+                <div class="item-subtitle">Transform premises, true memoirs, or YouTube URLs into complete screenplays</div>
+            </div>
+            <div class="item-right">
+                <span class="chip active">PRODUCE</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+        <div class="list-item" onclick="openModal('history')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Production Screenplay Vault</div>
+                <div class="item-subtitle">Access completed screenplays, scene bibles, and dual PDFs</div>
+            </div>
+            <div class="item-right">
+                <span class="chip" id="chip-history-count">0</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CASTLOCK CHARACTER STUDIO -->
+    <div class="section-label">CastLock Character Studio</div>
+    <div class="list-group">
+        <div class="list-item" onclick="openModal('characters')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Character Continuity Roster</div>
+                <div class="item-subtitle">Manage CastLock anchors and 3-angle visual bibles</div>
+            </div>
+            <div class="item-right">
+                <span class="chip" id="chip-roster-count">0</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+        <div class="list-item" onclick="openModal('new-character')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Forge New Character</div>
+                <div class="item-subtitle">Define facial biometrics, ethnicity, and wardrobe</div>
+            </div>
+            <div class="item-right">
+                <span class="chip ready">FORGE</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. VISUAL LAB & THUMBNAILS -->
+    <div class="section-label">Visual Lab & Thumbnails</div>
+    <div class="list-group">
+        <div class="list-item" onclick="openModal('thumbnail')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">YouTube Thumbnail Lab</div>
+                <div class="item-subtitle">High-CTR viral concepts and composition prompts</div>
+            </div>
+            <div class="item-right">
+                <span class="chip active">CTR+</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+        <div class="list-item" onclick="openModal('renderer')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Visual Frame Renderer</div>
+                <div class="item-subtitle">Test-render 16:9 widescreen or 9:16 vertical frames</div>
+            </div>
+            <div class="item-right">
+                <span class="chip ready">RENDER</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. ENGINES & API SETTINGS -->
+    <div class="section-label">Engines & API Configuration</div>
+    <div class="list-group">
+        <div class="list-item" onclick="openModal('settings')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">BYOK Gemini API Key</div>
+                <div class="item-subtitle" id="sub-key-status">Connect personal Google key for unlimited runs</div>
+            </div>
+            <div class="item-right">
+                <span class="chip byok" id="chip-key-status">DEFAULT</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+        <div class="list-item" onclick="openModal('settings')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">AI Model Engine</div>
+                <div class="item-subtitle" id="sub-model-name">Gemini 3.8 Flash</div>
+            </div>
+            <div class="item-right">
+                <span class="chip model" id="chip-model-name">SELECT</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MASTER STUDIO ADMINISTRATION (ADMIN ONLY) -->
+    <div id="admin-studio-section" style="display:none;">
+        <div class="section-label" style="color:var(--danger); display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Master Studio Administration</span>
+        </div>
+        <div class="list-group">
+            <div class="list-item" onclick="openAdminModal()">
+                <div class="icon-box" style="color:var(--danger);">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div class="item-text">
+                    <div class="item-title">Master Control Suite</div>
+                    <div class="item-subtitle">Manage API keys, BYOK locks, maintenance, pricing & user credits</div>
+                </div>
+                <div class="item-right">
+                    <span class="chip active" style="color:var(--danger); background:rgba(255,69,58,0.15);">MASTER</span>
+                    <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROUND FLOATING ADMIN ACTION BUTTON (FAB) - 100% WP RELAY DESIGN -->
+    <div id="admin-fab" class="floating-admin-fab" onclick="openAdminModal()" title="Admin Control Center">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+        </svg>
+    </div>
+
+    <div class="footer">
+        WP Studio &bull; Production Architecture &bull; 2026
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeAllModals()"></div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. MODAL: STORYCRAFT STUDIO                                           -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-story">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                    StoryCraft Studio
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Generate 10 adaptive story concepts and produce complete dual PDFs</div>
+        </div>
+        <div class="modal-body">
+            <!-- Step 1: Input -->
+            <div class="form-card">
+                <div class="form-label">Story Source or Premise</div>
+                <div class="form-hint">Paste a public YouTube link or enter an original premise, life experience, or story topic.</div>
+                <textarea id="story-input-source" class="form-input" placeholder="e.g. https://www.youtube.com/watch?v=... or 'My journey dropping out of college to build an agency' or an original dramatic premise"></textarea>
+            </div>
+
+            <!-- Step 2: Creative Configuration -->
+            <div class="form-card">
+                <div class="form-label">Creative Direction</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Culture Anchor</div>
+                        <select id="story-sel-culture" class="form-input" onchange="onCultureChanged()">
+                            <option value="Black American">Black American</option>
+                            <option value="White American">White American</option>
+                            <option value="Nigerian">Nigerian</option>
+                            <option value="Universal">Universal</option>
+                            <option value="Mixed / Global">Mixed / Global</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Visual Style</div>
+                        <select id="story-sel-style" class="form-input">
+                            <option value="Stylised 3D">Stylised 3D</option>
+                            <option value="Human Realistic">Human Realistic</option>
+                            <option value="Anime / Manga">Anime / Manga</option>
+                            <option value="Cinematic Cyberpunk">Cinematic Cyberpunk</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <div class="form-label" style="font-size:10px;">Format & Genre Category</div>
+                    <select id="story-sel-genre" class="form-input" onchange="onGenreChanged()"></select>
+                    <div id="story-custom-genre-wrap" style="display:none; margin-top:6px;">
+                        <input type="text" id="story-custom-genre-input" class="form-input" placeholder="Type your custom genre, life topic or theme (e.g. My College Startup)..." style="font-size:12px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <div class="form-label" style="font-size:10px;">Video Runtime & Ceiling</div>
+                    <select id="story-sel-tier" class="form-input">
+                        <option value="Short">Short (~2-4 Mins | Up to 40 scenes | 10+40 credits)</option>
+                        <option value="Medium">Medium (~8-15 Mins | Up to 120 scenes | 50+250 credits)</option>
+                        <option value="Long">Long (~1-2+ Hours | Up to 250 scenes | 100+300 credits)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="form-label" style="font-size:10px;">CastLock Protagonist Anchor</div>
+                    <select id="story-sel-character" class="form-input">
+                        <option value="">Auto-Invent AI Protagonist</option>
+                    </select>
+                </div>
+
+                <button id="btn-generate-concepts" class="btn-submit" onclick="submitStoryConcepts()">
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    Generate 10 Concepts
+                </button>
+            </div>
+
+            <!-- Step 3: Concepts Container -->
+            <div id="story-concepts-section" style="display:none;">
+                <div class="section-label" style="padding-left:0; padding-top:4px;">Generated Story Concepts</div>
+                <div class="form-hint">Tap a concept to select it for complete screenplay and dual PDF generation.</div>
+                <div id="story-concepts-list"></div>
+
+                <div class="form-card" id="story-production-box" style="margin-top:12px;">
+                    <div class="form-label">Produce Selected Concept</div>
+                    <div class="form-hint" id="story-production-hint">Selected: Concept 1</div>
+                    <button id="btn-produce-story" class="btn-submit" onclick="submitProduceStory()">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        Produce Screenplay & Dual PDFs
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Production Result & Downloads -->
+            <div id="story-result-section" style="display:none;" class="form-card">
+                <div class="form-label" style="color:var(--success);">Production Complete</div>
+                <div class="form-hint" id="story-result-title" style="font-weight:600; color:var(--text-main); margin-bottom:10px;">Full Screenplay & Bibles Ready</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <a id="btn-download-bible" href="#" target="_blank" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Image Prompts Bible PDF
+                    </a>
+                    <a id="btn-download-scenes" href="#" target="_blank" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Video Scene Prompts PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. MODAL: PRODUCTION SCREENPLAY VAULT (HISTORY)                       -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-history">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Production Vault
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Access previously generated screenplays and download production packages</div>
+        </div>
+        <div class="modal-body">
+            <div id="history-items-container">
+                <div class="form-hint" style="text-align:center; padding:20px;">No screenplays produced yet. Use StoryCraft Studio to produce your first screenplay.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 3. MODAL: CASTLOCK CHARACTER STUDIO (ROSTER)                          -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-characters">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    CastLock Roster
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Persistent characters with fixed facial biometrics for multi-scene continuity</div>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom:12px;">
+                <button class="btn-submit" onclick="openModal('new-character')" style="margin-top:0;">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Forge New Character
+                </button>
+            </div>
+            <div id="character-roster-container">
+                <div class="form-hint" style="text-align:center; padding:20px;">No characters registered yet. Tap 'Forge New Character' above to register your first character.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 4. MODAL: NEW CHARACTER FORGE                                         -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-new-character">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    Forge CastLock Character
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Generate a 3-angle turnaround visual anchor with lockable facial biometrics</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-card">
+                <div class="form-label">Identity & Demographics</div>
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Name</div>
+                        <input id="forge-name" type="text" class="form-input" placeholder="e.g. Kemi, Marcus, Evelyn">
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Age</div>
+                        <input id="forge-age" type="number" class="form-input" value="28">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Gender</div>
+                        <select id="forge-gender" class="form-input">
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Non-Binary">Non-Binary</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Complexion</div>
+                        <select id="forge-complexion" class="form-input">
+                            <option value="Deep ebony">Deep ebony</option>
+                            <option value="Dark brown">Dark brown</option>
+                            <option value="Medium brown" selected>Medium brown</option>
+                            <option value="Caramel / Warm brown">Caramel / Warm brown</option>
+                            <option value="Golden olive">Golden olive</option>
+                            <option value="Fair / Pale">Fair / Pale</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-label">Facial & Hair Features</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Nose Profile</div>
+                        <select id="forge-nose" class="form-input">
+                            <option value="Broad / Wide">Broad / Wide</option>
+                            <option value="Straight / Narrow">Straight / Narrow</option>
+                            <option value="Aquiline / Roman">Aquiline / Roman</option>
+                            <option value="Button / Upturned">Button / Upturned</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Hairstyle</div>
+                        <select id="forge-hair" class="form-input">
+                            <option value="Braids">Braids</option>
+                            <option value="Locs">Locs</option>
+                            <option value="Afro">Afro</option>
+                            <option value="Fade / Buzz Cut">Fade / Buzz Cut</option>
+                            <option value="Long Waves">Long Waves</option>
+                            <option value="Short Crop">Short Crop</option>
+                            <option value="Sleek Ponytail">Sleek Ponytail</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-label" style="font-size:10px;">Hair Color</div>
+                    <input id="forge-hair-color" type="text" class="form-input" value="Natural Black (#000000)">
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-label">Physique & Wardrobe</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Body Build</div>
+                        <select id="forge-body" class="form-input">
+                            <option value="Slim">Slim</option>
+                            <option value="Athletic / Toned">Athletic / Toned</option>
+                            <option value="Average" selected>Average</option>
+                            <option value="Muscular / Heavyset">Muscular / Heavyset</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Height</div>
+                        <select id="forge-height" class="form-input">
+                            <option value="Petite / Short">Petite / Short</option>
+                            <option value="Average">Average</option>
+                            <option value="Tall" selected>Tall</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Facial Expression</div>
+                        <select id="forge-expression" class="form-input">
+                            <option value="Determined">Determined</option>
+                            <option value="Charismatic smile">Charismatic smile</option>
+                            <option value="Neutral studio">Neutral studio</option>
+                            <option value="Intense / Serious">Intense / Serious</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Wardrobe Style</div>
+                        <select id="forge-outfit" class="form-input">
+                            <option value="Modern Urban Streetwear">Modern Urban Streetwear</option>
+                            <option value="Tailored Corporate Suit">Tailored Corporate Suit</option>
+                            <option value="Traditional Ankara">Traditional Ankara</option>
+                            <option value="Tactical Gear">Tactical Gear</option>
+                            <option value="Casual Denim & Leather">Casual Denim & Leather</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-label">Art Direction & Vision Reference</div>
+                <div style="margin-bottom:8px;">
+                    <div class="form-label" style="font-size:10px;">Art Direction</div>
+                    <select id="forge-style" class="form-input">
+                        <option value="Stylised 3D">Stylised 3D</option>
+                        <option value="Realistic" selected>Realistic</option>
+                        <option value="Cinematic Cyberpunk">Cinematic Cyberpunk</option>
+                        <option value="Anime / Manga">Anime / Manga</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="form-label" style="font-size:10px;">Optional Reference Image</div>
+                    <input id="forge-image-input" type="file" accept="image/*" class="form-input" style="padding:6px;" onchange="handleImageFileSelect(this)">
+                    <div class="form-hint" style="margin-top:4px;">Upload a face or character reference image to extract biometrics.</div>
+                    <input id="forge-ref-instruction" type="text" class="form-input" placeholder="e.g. Keep same bone structure and eye shape, change hair to braids" style="margin-top:6px;">
+                </div>
+            </div>
+
+            <button id="btn-submit-forge" class="btn-submit" onclick="submitCharacterForge()">
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Forge CastLock Character (5 Credits)
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 5. MODAL: YOUTUBE THUMBNAIL LAB                                       -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-thumbnail">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    YouTube Thumbnail Lab
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Generate 3 high-CTR viral visual composition concepts</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-card">
+                <div class="form-label">Video Topic or Story Premise</div>
+                <div class="form-hint">Enter your video title or storyline summary to craft click-generating concepts.</div>
+                <input id="thumb-topic" type="text" class="form-input" placeholder="e.g. He Stole From The Cartel And Woke Up On An Island">
+                <button id="btn-submit-thumb" class="btn-submit" onclick="submitThumbnailGenerate()">
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    Generate 3 Thumbnail Concepts (3 Credits)
+                </button>
+            </div>
+
+            <div id="thumb-results-container" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 6. MODAL: VISUAL FRAME RENDERER                                       -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-renderer">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    Visual Frame Renderer
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Test-render high fidelity cinematics directly via Google GenAI vision cluster</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-card">
+                <div class="form-label">Visual Scene Prompt</div>
+                <div class="form-hint">Include lighting, camera framing, subject pose, and atmosphere details.</div>
+                <textarea id="render-prompt" class="form-input" placeholder="Cinematic wide angle, 35mm lens, golden hour sunlight hitting the glass skyscrapers of Lagos as a sports car speeds down the bridge..."></textarea>
+                
+                <div style="margin-top:8px;">
+                    <div class="form-label" style="font-size:10px;">Aspect Ratio</div>
+                    <select id="render-aspect" class="form-input">
+                        <option value="16:9">16:9 Widescreen (YouTube Longform)</option>
+                        <option value="9:16">9:16 Vertical (Shorts & Reels)</option>
+                        <option value="1:1">1:1 Square (Feed & Profile)</option>
+                    </select>
+                </div>
+
+                <button id="btn-submit-render" class="btn-submit" onclick="submitRenderFrame()">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    Render Frame
+                </button>
+            </div>
+
+            <div id="render-result-container" style="display:none;" class="form-card">
+                <div class="form-label">Rendered Frame</div>
+                <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-color); margin-bottom:10px;">
+                    <img id="render-img-preview" src="" alt="Render" style="width:100%; height:auto; display:block;">
+                </div>
+                <a id="btn-render-download" href="#" download="wp_studio_frame.jpg" class="btn-secondary" style="width:100%; justify-content:center;">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Save Image to Device
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 7. MODAL: ENGINES & API SETTINGS (BYOK)                               -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-settings">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+                    Engines & API Settings
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Connect your custom Gemini key for zero-credit unlimited runs</div>
+        </div>
+        <div class="modal-body">
+            <!-- Key Banner -->
+            <div id="settings-key-banner" class="info-banner" style="display:none;">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="settings-key-banner-text">BYOK is active. All script generations are free.</span>
+            </div>
+            
+            <!-- BYOK Locked Notice -->
+            <div id="settings-byok-locked-banner" class="announcement-banner danger" style="display:none; margin:0 0 12px;">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span><strong>BYOK Locked:</strong> Administrator has disabled custom API keys. Server platform credits are required for all creations.</span>
+            </div>
+
+            <div class="form-card" id="settings-byok-card">
+                <div class="form-label">Bring Your Own Key (BYOK)</div>
+                <div class="form-hint" id="settings-byok-hint">Obtain a free Gemini API key at Google AI Studio (aistudio.google.com). With a custom key, all story generations, CastLock character builds, and thumbnail prompts cost 0 credits.</div>
+                <input id="settings-api-key" type="password" class="form-input" placeholder="AIzaSy...">
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button id="btn-save-byok" class="btn-submit" onclick="submitSaveApiKey()" style="margin-top:0; flex:1;">
+                        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Save Key
+                    </button>
+                    <button id="btn-test-byok" class="btn-secondary" onclick="submitTestApiKey()" style="padding:0 14px;">
+                        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        Test Key
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-label">Active AI Model Engine</div>
+                <div class="form-hint">Select the Gemini model variant to drive the storytelling and screenwriting pipeline.</div>
+                <select id="settings-sel-model" class="form-input" onchange="submitUpdateModel()">
+                    <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended & Fast)</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Ultra Efficient)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Narrative Reasoning)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Classic Benchmark)</option>
+                </select>
+            </div>
+
+            <div class="form-card">
+                <div class="form-label">Credits Overview</div>
+                <div class="form-hint">Standard accounts use server credits. To top up without a custom key, contact admin in Telegram.</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;">
+                    <span style="font-size:14px; color:var(--text-main); font-weight:600;">Current Balance</span>
+                    <span class="chip ready" id="settings-credits-display" style="font-size:13px; padding:4px 10px;">20 Credits</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 8. ADMIN CONTROL CENTER MODAL (100% WP RELAY DESIGN)                  -->
+    <!-- ===================================================================== -->
+    <div class="modal-overlay" id="admin-modal-overlay" onclick="closeAdminModal()"></div>
+    <div class="modal" id="admin-modal">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg>
+                    <span>Admin Control Center</span>
+                </div>
+                <button class="modal-close" onclick="closeAdminModal()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Master platform controls, API keys, locks, ledger & pricing</div>
+        </div>
+        <div class="modal-body" id="admin-modal-body">
+            <!-- Dynamically populated in openAdminModal() with segmented tabs -->
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- REAL-TIME AI PROGRESS & TIME TRACKER HUD (100% WP RELAY DESIGN)       -->
+    <!-- ===================================================================== -->
+    <div id="ai-progress-hud" class="progress-hud-overlay">
+        <div class="progress-hud-card">
+            <!-- Top Badges -->
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
+                <div class="badge pro" id="hud-op-title" style="font-size:11px; letter-spacing:0.5px;">
+                    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>GENERATING CONCEPTS</span>
+                </div>
+                <div class="chip" id="hud-engine-chip" style="font-size:10px;">
+                    <span>LIVE PIPELINE</span>
+                </div>
+            </div>
+
+            <!-- Clean Circular Progress Meter -->
+            <div class="hud-circle-wrap">
+                <svg class="hud-circle-svg" viewBox="0 0 100 100">
+                    <circle class="hud-circle-bg" cx="50" cy="50" r="42"></circle>
+                    <circle id="hud-circle-meter" class="hud-circle-bar" cx="50" cy="50" r="42"></circle>
+                </svg>
+                <div class="hud-percent-text">
+                    <div class="hud-percent-num-row">
+                        <span id="hud-percent-value">0</span><span class="hud-percent-symbol">%</span>
+                    </div>
+                    <div class="hud-stage-step-tag" id="hud-stage-step">STAGE 1 OF 5</div>
+                </div>
+            </div>
+
+            <!-- Hairline Linear Progress Track -->
+            <div class="hud-linear-track">
+                <div id="hud-bar-fill" class="hud-linear-bar"></div>
+            </div>
+
+            <!-- WP Relay Metrics Grid -->
+            <div class="stats-grid" style="margin: 0 0 12px; width:100%; gap:8px;">
+                <div class="stat-card" style="padding:8px 10px; cursor:default; text-align:center;">
+                    <div class="stat-label" style="font-size:10px;">Elapsed Time</div>
+                    <div class="stat-value" id="hud-timer-value" style="font-size:14px; margin-top:2px; font-family:-apple-system-monospaced, 'SF Mono', monospace;">00:00.0s</div>
+                </div>
+                <div class="stat-card" style="padding:8px 10px; cursor:default; text-align:center;">
+                    <div class="stat-label" style="font-size:10px;">Processing Rate</div>
+                    <div class="stat-value" id="hud-latency-value" style="font-size:14px; margin-top:2px; color:var(--success); font-family:-apple-system-monospaced, 'SF Mono', monospace;">0.0%/s</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Status Box -->
+            <div class="hud-status-box" id="hud-status-box">
+                <div class="hud-live-dot" id="hud-live-dot"></div>
+                <span id="hud-status-text" style="flex:1; text-align:left;">Connecting to screenplay engine...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            try {
+                tg.BackButton.onClick(() => {
+                    closeAllModals();
+                });
+            } catch(e){}
+        }
+
+        // Global State
+        let currentUser = null;
+        let studioMeta = null;
+        let savedCharacters = [];
+        let storyHistory = [];
+        let activeJobId = null;
+        let currentConcepts = [];
+        let selectedConceptIndex = 0;
+        let currentRecommendationReason = "";
+        let recommendedConceptId = 1;
+        let referenceImageBase64 = null;
+
+        // =====================================================================
+        // REAL-TIME AI PROGRESS & TIME TRACKER CONTROLLER (GENUINE CALIBRATION)
+        // =====================================================================
+        const AIProgressTracker = {
+            intervalId: null,
+            timerId: null,
+            startTime: 0,
+            currentPercent: 0,
+            targetMaxPercent: 97,
+            estimatedDurationMs: 12000,
+            stages: [],
+            currentStageIdx: 0,
+
+            start(title, estimatedDurationSec, stages, engineName) {
+                this.stop();
+                const hud = document.getElementById('ai-progress-hud');
+                if (!hud) return;
+                hud.classList.add('active');
+
+                const titleEl = document.getElementById('hud-op-title');
+                if (titleEl) {
+                    titleEl.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg><span>${title.toUpperCase()}</span>`;
+                }
+
+                const engineEl = document.getElementById('hud-engine-chip');
+                if (engineEl) {
+                    const modelName = engineName || (currentUser?.selected_model ? currentUser.selected_model.replace('gemini-', '').toUpperCase() : 'GEMINI 3.8');
+                    engineEl.innerText = modelName;
+                }
+
+                const circle = document.getElementById('hud-circle-meter');
+                if (circle) {
+                    circle.style.stroke = 'var(--accent)';
+                    circle.style.strokeDashoffset = '264';
+                }
+
+                const fillEl = document.getElementById('hud-bar-fill');
+                if (fillEl) {
+                    fillEl.style.width = '0%';
+                    fillEl.classList.remove('completed');
+                }
+
+                const dot = document.getElementById('hud-live-dot');
+                if (dot) dot.style.background = 'var(--accent)';
+
+                this.stages = (stages && stages.length) ? stages : [
+                    { at: 0, text: "Connecting to neural screenplay cluster..." },
+                    { at: 20, text: "Extracting narrative context & cultural anchors..." },
+                    { at: 50, text: "Synthesizing narrative scenes & dialogue beats..." },
+                    { at: 75, text: "Evaluating viral retention & narrative continuity..." },
+                    { at: 90, text: "Formulating final script package & dual PDFs..." }
+                ];
+
+                this.startTime = Date.now();
+                this.currentPercent = 0;
+                this.currentStageIdx = 0;
+                this.estimatedDurationMs = Math.max(5, estimatedDurationSec || 12) * 1000;
+                this.targetMaxPercent = 97;
+
+                this.updateDisplay(0, this.stages[0].text, 1, this.stages.length);
+
+                const timerEl = document.getElementById('hud-timer-value');
+                if (timerEl) timerEl.innerText = "00:00.0s";
+
+                // Real Stopwatch Timer (50ms interval)
+                this.timerId = setInterval(() => {
+                    const elapsedMs = Date.now() - this.startTime;
+                    const sec = Math.floor(elapsedMs / 1000);
+                    const tenths = Math.floor((elapsedMs % 1000) / 100);
+                    const mins = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    const timeStr = `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}s`;
+                    const tEl = document.getElementById('hud-timer-value');
+                    if (tEl) tEl.innerText = timeStr;
+
+                    // Real-time Computed Velocity Rate
+                    const rateEl = document.getElementById('hud-latency-value');
+                    if (rateEl) {
+                        const elapsedSec = elapsedMs / 1000;
+                        if (elapsedSec > 0.3) {
+                            const rate = (this.currentPercent / elapsedSec).toFixed(1);
+                            rateEl.innerText = `${rate}%/s`;
+                        } else {
+                            rateEl.innerText = "CALIBRATING";
+                        }
+                    }
+                }, 50);
+
+                // Steady, Honest Linear-Stage Progression
+                // Progress tracks elapsed time smoothly without aggressive artificial 95% freeze!
+                this.intervalId = setInterval(() => {
+                    const elapsedMs = Date.now() - this.startTime;
+                    let targetPct;
+
+                    if (elapsedMs <= this.estimatedDurationMs) {
+                        // Regular linear progress up to 90% across the expected duration
+                        targetPct = (elapsedMs / this.estimatedDurationMs) * 90;
+                    } else {
+                        // Once past expected baseline, smoothly ease from 90% toward 97% without stopping dead
+                        const overtimeMs = elapsedMs - this.estimatedDurationMs;
+                        const overtimeFraction = 1 - Math.exp(-overtimeMs / 6000);
+                        targetPct = 90 + (overtimeFraction * 7); // smoothly caps at 97%
+                    }
+
+                    if (targetPct > this.currentPercent) {
+                        this.currentPercent = Math.min(this.targetMaxPercent, targetPct);
+                    }
+
+                    // Determine active stage
+                    let stageIdx = 0;
+                    for (let i = this.stages.length - 1; i >= 0; i--) {
+                        if (this.currentPercent >= this.stages[i].at) {
+                            stageIdx = i;
+                            break;
+                        }
+                    }
+                    this.currentStageIdx = stageIdx;
+                    const stageText = (elapsedMs > this.estimatedDurationMs && stageIdx === this.stages.length - 1)
+                        ? "Receiving model output stream & finalizing..."
+                        : this.stages[stageIdx].text;
+
+                    this.updateDisplay(
+                        Math.round(this.currentPercent),
+                        stageText,
+                        stageIdx + 1,
+                        this.stages.length
+                    );
+                }, 40);
+            },
+
+            updateDisplay(percent, text, stageNum, totalStages) {
+                const pEl = document.getElementById('hud-percent-value');
+                const fillEl = document.getElementById('hud-bar-fill');
+                const circle = document.getElementById('hud-circle-meter');
+                const statusEl = document.getElementById('hud-status-text');
+                const stepEl = document.getElementById('hud-stage-step');
+
+                if (pEl) pEl.innerText = percent;
+                if (fillEl) fillEl.style.width = percent + '%';
+                if (circle) {
+                    const circumference = 264;
+                    const offset = circumference - (circumference * Math.min(100, Math.max(0, percent)) / 100);
+                    circle.style.strokeDashoffset = offset;
+                }
+                if (statusEl && text) statusEl.innerText = text;
+                if (stepEl && stageNum && totalStages) {
+                    stepEl.innerText = `STAGE ${stageNum} OF ${totalStages}`;
+                }
+            },
+
+            async complete(successText = "Operation Complete") {
+                clearInterval(this.intervalId);
+                clearInterval(this.timerId);
+
+                const totalElapsedSec = ((Date.now() - this.startTime) / 1000).toFixed(1);
+                this.updateDisplay(100, `${successText} (${totalElapsedSec}s)`, this.stages.length, this.stages.length);
+
+                const fillEl = document.getElementById('hud-bar-fill');
+                if (fillEl) {
+                    fillEl.style.width = '100%';
+                    fillEl.classList.add('completed');
+                }
+                const circle = document.getElementById('hud-circle-meter');
+                if (circle) {
+                    circle.style.strokeDashoffset = '0';
+                    circle.style.stroke = 'var(--success)';
+                }
+                const pEl = document.getElementById('hud-percent-value');
+                if (pEl) pEl.innerText = 100;
+
+                const dot = document.getElementById('hud-live-dot');
+                if (dot) dot.style.background = 'var(--success)';
+
+                const rateEl = document.getElementById('hud-latency-value');
+                if (rateEl) rateEl.innerText = "COMPLETE";
+
+                await new Promise(r => setTimeout(r, 450));
+                const hud = document.getElementById('ai-progress-hud');
+                if (hud) hud.classList.remove('active');
+                if (fillEl) fillEl.classList.remove('completed');
+            },
+
+            stop() {
+                clearInterval(this.intervalId);
+                clearInterval(this.timerId);
+                const hud = document.getElementById('ai-progress-hud');
+                if (hud) hud.classList.remove('active');
+            }
+        };
+
+        // Auth Headers
+        function getHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            if (tg && tg.initData) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            const params = new URLSearchParams(window.location.search);
+            const uid = params.get('user_id');
+            if (uid) headers['X-User-Id'] = uid;
+            return headers;
+        }
+
+        // Toast Feedback
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+            toastText.innerText = msg;
+            toast.style.borderColor = isSuccess ? 'rgba(48, 209, 88, 0.4)' : 'rgba(255, 69, 58, 0.4)';
+            toastIcon.style.stroke = isSuccess ? 'var(--success)' : 'var(--danger)';
+            toast.classList.add('show');
+            try {
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
+                }
+            } catch(e){}
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Modal Controls
+        function openModal(id) {
+            try { if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e){}
+            closeAllModals(false);
+            const overlay = document.getElementById('modal-overlay');
+            const target = document.getElementById(`modal-${id}`);
+            if (overlay && target) {
+                overlay.classList.add('active');
+                target.classList.add('active');
+                try { tg?.BackButton?.show(); } catch(e){}
+            }
+        }
+
+        function closeAllModals(hideBackButton = true) {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) overlay.classList.remove('active');
+            closeAdminModal();
+            if (hideBackButton) {
+                try { tg?.BackButton?.hide(); } catch(e){}
+            }
+        }
+
+        // Initial App Load
+        async function initApp() {
+            try {
+                const res = await fetch('/api/user_info' + window.location.search, {
+                    headers: getHeaders()
+                });
+                const d = await res.json();
+                if (d.success) {
+                    currentUser = d.user;
+                    studioMeta = d;
+                    savedCharacters = d.characters || [];
+                    storyHistory = d.history || [];
+                    renderDashboard();
+                    renderCharacterSelect();
+                    renderCharacterRoster();
+                    renderHistoryVault();
+                    initGenreOptions();
+                    renderAnnouncementBanner();
+                } else {
+                    showToast(d.error || 'Initialization failed', false);
+                }
+            } catch (err) {
+                console.error("Init Error:", err);
+            }
+        }
+
+        // Render Top Announcement Banner
+        function renderAnnouncementBanner() {
+            const banner = document.getElementById('app-announcement-banner');
+            const textEl = document.getElementById('announcement-text');
+            if (!banner || !textEl || !studioMeta) return;
+
+            const ann = studioMeta.announcement;
+            if (ann && (ann.active === true || ann.active === 1 || ann.active === "1") && ann.text && ann.text.trim()) {
+                textEl.innerText = ann.text;
+                banner.className = `announcement-banner ${ann.type || 'info'}`;
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function dismissAnnouncement() {
+            const banner = document.getElementById('app-announcement-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        // Render Dashboard UI Elements
+        function renderDashboard() {
+            if (!currentUser) return;
+            const uname = currentUser.username || 'Creator';
+            document.getElementById('user-greeting').innerText = `Hi, ${uname}!`;
+            document.getElementById('avatar-image').innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            document.getElementById('tier-name').innerText = (currentUser.tier || 'Builder').toUpperCase();
+
+            // Admin Suite Elements Visibility (100% WP Relay Design)
+            const badgeAdmin = document.getElementById('badge-admin');
+            const secAdmin = document.getElementById('admin-studio-section');
+            const fabAdmin = document.getElementById('admin-fab');
+            if (currentUser.is_admin) {
+                if (badgeAdmin) badgeAdmin.style.display = 'inline-flex';
+                if (secAdmin) secAdmin.style.display = 'block';
+                if (fabAdmin) fabAdmin.style.display = 'flex';
+            } else {
+                if (badgeAdmin) badgeAdmin.style.display = 'none';
+                if (secAdmin) secAdmin.style.display = 'none';
+                if (fabAdmin) fabAdmin.style.display = 'none';
+            }
+
+            const creditsVal = currentUser.credits ?? 0;
+            document.getElementById('header-credits-count').innerText = `${creditsVal} Credits`;
+            document.getElementById('stat-credits').innerText = creditsVal;
+            document.getElementById('settings-credits-display').innerText = `${creditsVal} Credits`;
+
+            const modelName = currentUser.selected_model || 'gemini-3.8-flash';
+            document.getElementById('header-model-name').innerText = modelName.replace('gemini-', '');
+            document.getElementById('sub-model-name').innerText = modelName;
+            document.getElementById('settings-sel-model').value = modelName;
+
+            const hasKey = currentUser.has_custom_key;
+            const chipKey = document.getElementById('chip-key-status');
+            const subKey = document.getElementById('sub-key-status');
+            const bannerKey = document.getElementById('settings-key-banner');
+            const byokLockedBanner = document.getElementById('settings-byok-locked-banner');
+            const keyInput = document.getElementById('settings-api-key');
+            const btnSaveByok = document.getElementById('btn-save-byok');
+            const btnTestByok = document.getElementById('btn-test-byok');
+
+            const byokAllowed = studioMeta ? studioMeta.byok_enabled : true;
+
+            // Handle BYOK Lock Policy
+            if (!byokAllowed && !currentUser.is_admin) {
+                if (byokLockedBanner) byokLockedBanner.style.display = 'flex';
+                if (keyInput) {
+                    keyInput.disabled = true;
+                    keyInput.placeholder = "BYOK Locked by Administrator";
+                }
+                if (btnSaveByok) btnSaveByok.disabled = true;
+                if (btnTestByok) btnTestByok.disabled = true;
+                if (chipKey) {
+                    chipKey.innerText = 'LOCKED';
+                    chipKey.className = 'chip model';
+                }
+                if (subKey) subKey.innerText = 'BYOK locked by Studio Admin (Standard credits required)';
+                document.getElementById('stat-engine-mode').innerText = 'Credits Only';
+                if (bannerKey) bannerKey.style.display = 'none';
+                document.getElementById('badge-engine').className = 'badge free';
+            } else {
+                if (byokLockedBanner) byokLockedBanner.style.display = 'none';
+                if (keyInput) {
+                    keyInput.disabled = false;
+                    keyInput.placeholder = "AIzaSy...";
+                }
+                if (btnSaveByok) btnSaveByok.disabled = false;
+                if (btnTestByok) btnTestByok.disabled = false;
+
+                if (hasKey) {
+                    chipKey.innerText = 'BYOK ACTIVE';
+                    chipKey.className = 'chip byok';
+                    subKey.innerText = `Custom key enabled (${currentUser.custom_key_preview || 'Connected'})`;
+                    document.getElementById('stat-engine-mode').innerText = 'BYOK Active';
+                    bannerKey.style.display = 'flex';
+                    document.getElementById('badge-engine').className = 'badge key';
+                } else {
+                    chipKey.innerText = 'DEFAULT';
+                    chipKey.className = 'chip model';
+                    subKey.innerText = 'Standard quota active (Credits deducted)';
+                    document.getElementById('stat-engine-mode').innerText = 'Standard';
+                    bannerKey.style.display = 'none';
+                    document.getElementById('badge-engine').className = 'badge free';
+                }
+            }
+
+            document.getElementById('stat-stories').innerText = currentUser.stories_created || storyHistory.length;
+            document.getElementById('stat-characters').innerText = savedCharacters.length;
+            document.getElementById('chip-roster-count').innerText = savedCharacters.length;
+            document.getElementById('chip-history-count').innerText = storyHistory.length;
+        }
+
+        // Cultural Genre Reactivity
+        function initGenreOptions() {
+            onCultureChanged();
+        }
+
+        function onCultureChanged() {
+            const cultureSel = document.getElementById('story-sel-culture');
+            const genreSel = document.getElementById('story-sel-genre');
+            if (!cultureSel || !genreSel || !studioMeta) return;
+
+            const chosen = cultureSel.value;
+            const genres = studioMeta.genres_by_culture?.[chosen] || [
+                "Auto-Detect / Adaptive (Inferred from Story)",
+                "Personal Story & Real Life Memoir",
+                "True Life Experience & Storytime",
+                "Motivational & Founder Journey",
+                "Documentary & Investigative Deep Dive",
+                "Slice of Life & Everyday Realities",
+                "High-Octane Action Thriller",
+                "Crime Investigation & Whodunit",
+                "Psychological Thriller & Suspense",
+                "Futuristic Sci-Fi Dystopia",
+                "Custom / Write Your Own..."
+            ];
+
+            genreSel.innerHTML = genres.map(g => `<option value="${g}">${g}</option>`).join('');
+            onGenreChanged();
+        }
+
+        function onGenreChanged() {
+            const genreSel = document.getElementById('story-sel-genre');
+            const customWrap = document.getElementById('story-custom-genre-wrap');
+            if (!genreSel || !customWrap) return;
+
+            if (genreSel.value && genreSel.value.startsWith('Custom')) {
+                customWrap.style.display = 'block';
+                const inp = document.getElementById('story-custom-genre-input');
+                if (inp) inp.focus();
+            } else {
+                customWrap.style.display = 'none';
+            }
+        }
+
+        // Populate Character Dropdown in StoryCraft
+        function renderCharacterSelect() {
+            const sel = document.getElementById('story-sel-character');
+            if (!sel) return;
+            let html = '<option value="">Auto-Invent AI Protagonist</option>';
+            savedCharacters.forEach(c => {
+                html += `<option value="${c.id}">${c.name} (${c.gender}, ${c.art_style})</option>`;
+            });
+            sel.innerHTML = html;
+        }
+
+        // Render Character Roster
+        function renderCharacterRoster() {
+            const container = document.getElementById('character-roster-container');
+            if (!container) return;
+
+            if (savedCharacters.length === 0) {
+                container.innerHTML = '<div class="form-hint" style="text-align:center; padding:20px;">No characters registered yet. Tap \'Forge New Character\' above to register your first character.</div>';
+                return;
+            }
+
+            let html = '';
+            savedCharacters.forEach(c => {
+                html += `
+                    <div class="item-row">
+                        <div class="item-row-left">
+                            <div class="item-row-title">${c.name}</div>
+                            <div class="item-row-sub">${c.gender} &bull; ${c.age} yrs &bull; ${c.complexion} &bull; ${c.art_style}</div>
+                        </div>
+                        <div class="item-row-right">
+                            <button class="btn-danger" onclick="deleteCharacter(${c.id})">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Render History Vault
+        function renderHistoryVault() {
+            const container = document.getElementById('history-items-container');
+            if (!container) return;
+
+            if (storyHistory.length === 0) {
+                container.innerHTML = '<div class="form-hint" style="text-align:center; padding:20px;">No screenplays produced yet. Use StoryCraft Studio to produce your first screenplay.</div>';
+                return;
+            }
+
+            let html = '';
+            storyHistory.forEach(h => {
+                const title = h.source_title || 'Untitled Screenplay';
+                const date = h.created_at ? h.created_at.slice(0, 10) : '';
+                const bibleUrl = h.story_bible_pdf ? `/download_pdf/${h.story_bible_pdf.split(/[\/\\]/).pop()}` : null;
+                const sceneUrl = h.scene_prompts_pdf ? `/download_pdf/${h.scene_prompts_pdf.split(/[\/\\]/).pop()}` : null;
+
+                html += `
+                    <div class="form-card" style="margin-bottom:10px;">
+                        <div class="concept-header">
+                            <span class="concept-num">${h.length_tier || 'Short'} &bull; ${h.culture || 'Universal'}</span>
+                            <span class="chip ready">${h.status || 'completed'}</span>
+                        </div>
+                        <div class="item-row-title" style="margin-bottom:4px;">${title}</div>
+                        <div class="item-row-sub" style="margin-bottom:10px;">Genre: ${h.genre || 'Action'} &bull; Date: ${date}</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            ${bibleUrl ? `<a href="${bibleUrl}" target="_blank" class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Image Bible</a>` : ''}
+                            ${sceneUrl ? `<a href="${sceneUrl}" target="_blank" class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Scene Prompts</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // =====================================================================
+        // STORYCRAFT ACTIONS
+        // =====================================================================
+        async function submitStoryConcepts() {
+            const source = document.getElementById('story-input-source').value.trim();
+            if (!source) {
+                showToast('Please enter a YouTube link or premise', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-concepts');
+            btn.disabled = true;
+            btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Synthesizing 10 Concepts...';
+
+            const culture = document.getElementById('story-sel-culture').value;
+            let genre = document.getElementById('story-sel-genre').value;
+            let customGenre = '';
+            if (genre && genre.startsWith('Custom')) {
+                const customInp = document.getElementById('story-custom-genre-input');
+                customGenre = customInp ? customInp.value.trim() : '';
+            }
+            const tier = document.getElementById('story-sel-tier').value;
+
+            const genreDisplay = (genre.startsWith('Custom') && customGenre) ? customGenre : genre;
+            AIProgressTracker.start(
+                "Generating 10 Story Concepts",
+                12,
+                [
+                    { at: 0, text: `Connecting to screenplay engine for ${culture}...` },
+                    { at: 20, text: `Analyzing ${genreDisplay} narrative style & tone...` },
+                    { at: 45, text: "Synthesizing 10 adaptive story concepts..." },
+                    { at: 75, text: "Evaluating emotional stakes & authentic hooks..." },
+                    { at: 90, text: "Formulating AI Editor's Recommended Pick & payload..." }
+                ]
+            );
+
+            const payload = {
+                source_input: source,
+                culture: culture,
+                style: document.getElementById('story-sel-style').value,
+                genre: genre,
+                custom_genre: customGenre,
+                length_tier: tier,
+                locked_lead_id: document.getElementById('story-sel-character').value || null
+            };
+
+            try {
+                const res = await fetch('/api/story_concepts', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    activeJobId = d.job_id;
+                    const rawC = d.concepts;
+                    if (Array.isArray(rawC)) {
+                        currentConcepts = rawC;
+                    } else if (rawC && Array.isArray(rawC.concepts)) {
+                        currentConcepts = rawC.concepts;
+                    } else {
+                        currentConcepts = [];
+                    }
+                    currentRecommendationReason = d.recommendation_reason || "";
+                    recommendedConceptId = d.recommended_concept_id || 1;
+
+                    // Auto-select the recommended concept by default!
+                    let recIdx = currentConcepts.findIndex(c => c.id == recommendedConceptId);
+                    if (recIdx === -1 && currentConcepts.length > 0) {
+                        if (recommendedConceptId > 0 && recommendedConceptId <= currentConcepts.length) {
+                            recIdx = recommendedConceptId - 1;
+                        } else {
+                            recIdx = 0;
+                        }
+                    }
+                    selectedConceptIndex = recIdx !== -1 ? recIdx : 0;
+
+                    await AIProgressTracker.complete("10 Story Concepts Ready");
+                    renderStoryConcepts(true);
+
+                    if (currentUser && d.credits !== undefined) {
+                        currentUser.credits = d.credits;
+                        renderDashboard();
+                    }
+                    showToast('10 Concepts generated with Editor\'s Pick!');
+                } else {
+                    AIProgressTracker.stop();
+                    showToast(d.error || 'Failed to generate concepts', false);
+                    const section = document.getElementById('story-concepts-section');
+                    const list = document.getElementById('story-concepts-list');
+                    if (section && list) {
+                        section.style.display = 'block';
+                        list.innerHTML = `
+                            <div class="form-card" style="border:1px solid var(--danger); text-align:center; padding:18px 14px; margin-bottom:12px;">
+                                <div style="font-weight:700; color:var(--danger); font-size:14px; margin-bottom:4px;">Generation Notice</div>
+                                <div style="font-size:12px; color:var(--text-muted); line-height:1.45;">${d.error || 'Could not generate concepts. Please verify your connection or API key.'}</div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (err) {
+                AIProgressTracker.stop();
+                console.error("Story concepts error:", err);
+                showToast(err.message || 'Error generating concepts', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Re-Generate 10 Concepts';
+            }
+        }
+
+        function renderStoryConcepts(shouldScroll = false) {
+            const section = document.getElementById('story-concepts-section');
+            const list = document.getElementById('story-concepts-list');
+            if (!section || !list) return;
+
+            section.style.display = 'block';
+            if (!Array.isArray(currentConcepts) || currentConcepts.length === 0) {
+                list.innerHTML = '<div class="form-hint" style="text-align:center; padding:15px;">No concepts returned. Please try again.</div>';
+                return;
+            }
+
+            let html = '';
+
+            // 1. Sleek Recommended Concept Callout Banner at Top
+            const recNum = recommendedConceptId || 1;
+            html += `
+                <div class="recommendation-callout">
+                    <div class="rec-callout-header">
+                        <span class="chip-recommended">AI RECOMMENDED CONCEPT #${recNum}</span>
+                        <span style="font-size:11px; font-weight:800; color:var(--accent); letter-spacing:0.5px;">TOP VIRAL HOOK</span>
+                    </div>
+                    <div class="rec-callout-text">
+                        ${currentRecommendationReason ? currentRecommendationReason : 'Selected by our screenplay engine as the highest-performing narrative hook for viral YouTube retention, emotional conflict, and cinematic visual scope.'}
+                    </div>
+                </div>
+            `;
+
+            // 2. Concepts Cards with Recommended Highlighting
+            currentConcepts.forEach((c, idx) => {
+                const isSelected = idx === selectedConceptIndex;
+                const isRecommended = (c.id == recommendedConceptId) || (idx + 1 == recommendedConceptId);
+                html += `
+                    <div class="concept-card ${isSelected ? 'selected' : ''} ${isRecommended ? 'recommended-card' : ''}" onclick="selectConcept(${idx})">
+                        <div class="concept-header">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="concept-num" style="${isRecommended ? 'color:var(--accent); font-weight:800;' : ''}">CONCEPT #${idx + 1}</span>
+                                ${isRecommended ? '<span class="chip-recommended">RECOMMENDED</span>' : ''}
+                            </div>
+                            <span class="chip ${isSelected ? 'active' : ''}">${isSelected ? 'SELECTED' : 'SELECT'}</span>
+                        </div>
+                        <div class="concept-title">${c.title || 'Untitled Concept'}</div>
+                        <div class="concept-hook">${c.hook || c.logline || ''}</div>
+                        ${c.premise ? `<div class="form-hint" style="margin-bottom:8px; color:var(--text-main); font-size:12px; line-height:1.45;"><strong>Premise:</strong> ${c.premise}</div>` : ''}
+                        ${c.viral_trigger ? `<div class="form-hint" style="margin-bottom:8px; color:var(--accent);"><strong>Viral Hook:</strong> ${c.viral_trigger}</div>` : ''}
+                        <div class="concept-meta">
+                            <span class="chip">${c.protagonist_archetype || 'Protagonist'}</span>
+                            <span class="chip">${c.core_conflict || 'Conflict'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+            updateProductionHint();
+
+            if (shouldScroll) {
+                setTimeout(() => {
+                    const modalBody = section.closest('.modal-body') || document.querySelector('#modal-story .modal-body');
+                    if (modalBody) {
+                        modalBody.scrollTo({ top: section.offsetTop - 12, behavior: 'smooth' });
+                    } else {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+            }
+        }
+
+        function selectConcept(idx) {
+            selectedConceptIndex = idx;
+            renderStoryConcepts(false);
+        }
+
+        function updateProductionHint() {
+            const hint = document.getElementById('story-production-hint');
+            if (!hint || !currentConcepts[selectedConceptIndex]) return;
+            const c = currentConcepts[selectedConceptIndex];
+            const isRec = (c.id == recommendedConceptId) || (selectedConceptIndex + 1 == recommendedConceptId);
+            hint.innerText = `Selected: Concept #${selectedConceptIndex + 1} ${isRec ? '(Recommended)' : ''} — ${c.title || ''}`;
+        }
+
+        async function submitProduceStory() {
+            if (!activeJobId) {
+                showToast('No active job selected', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-produce-story');
+            btn.disabled = true;
+
+            const selectedC = currentConcepts[selectedConceptIndex] || {};
+            const conceptTitle = selectedC.title || "Screenplay";
+
+            AIProgressTracker.start(
+                "Producing Screenplay & Dual PDFs",
+                25,
+                [
+                    { at: 5, text: `Locking protagonist biometrics & act structure for "${conceptTitle}"...` },
+                    { at: 22, text: "Synthesizing complete screenplay scenes & dialogue beats..." },
+                    { at: 52, text: "Compiling Image Prompts Production Bible with Midjourney syntax..." },
+                    { at: 75, text: "Compiling Video Scene Action Prompts for Gen-3 & Sora..." },
+                    { at: 90, text: "Assembling & rendering Dual Production PDF documents..." }
+                ]
+            );
+
+            const payload = {
+                job_id: activeJobId,
+                selected_concept_idx: selectedConceptIndex,
+                locked_lead_id: document.getElementById('story-sel-character').value || null
+            };
+
+            try {
+                const res = await fetch('/api/story_generate', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    await AIProgressTracker.complete("Screenplay & Dual PDFs Produced!");
+                    showToast('Screenplay & Dual PDFs Produced!');
+                    const resSection = document.getElementById('story-result-section');
+                    resSection.style.display = 'block';
+
+                    if (d.bible_pdf_url) {
+                        const btnBible = document.getElementById('btn-download-bible');
+                        btnBible.href = d.bible_pdf_url;
+                        btnBible.style.display = 'flex';
+                    }
+                    if (d.scene_pdf_url) {
+                        const btnScenes = document.getElementById('btn-download-scenes');
+                        btnScenes.href = d.scene_pdf_url;
+                        btnScenes.style.display = 'flex';
+                    }
+
+                    if (currentUser && d.credits !== undefined) {
+                        currentUser.credits = d.credits;
+                        currentUser.stories_created = (currentUser.stories_created || 0) + 1;
+                        renderDashboard();
+                    }
+                    loadHistory();
+                } else {
+                    AIProgressTracker.stop();
+                    showToast(d.error || 'Production failed', false);
+                }
+            } catch (err) {
+                AIProgressTracker.stop();
+                console.error("Produce story error:", err);
+                showToast(err.message || 'Error during story production', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & Dual PDFs';
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history', { headers: getHeaders() });
+                const d = await res.json();
+                if (d.success) {
+                    storyHistory = d.history || [];
+                    renderHistoryVault();
+                    renderDashboard();
+                }
+            } catch(e){}
+        }
+
+        // =====================================================================
+        // CASTLOCK CHARACTER ACTIONS
+        // =====================================================================
+        function handleImageFileSelect(input) {
+            const file = input.files?.[0];
+            if (!file) {
+                referenceImageBase64 = null;
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                referenceImageBase64 = e.target.result;
+                showToast('Reference image loaded for biometric scan');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function submitCharacterForge() {
+            const name = document.getElementById('forge-name').value.trim();
+            if (!name) {
+                showToast('Please enter character name', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-forge');
+            btn.disabled = true;
+
+            const artStyle = document.getElementById('forge-style')?.value || 'cinematic';
+            AIProgressTracker.start(
+                `Forging CastLock 3D Character: ${name}`,
+                16,
+                [
+                    { at: 5, text: `Scanning biometric complexion, facial symmetry & age markers for "${name}"...` },
+                    { at: 25, text: `Sculpting cranial proportions in ${artStyle} stylization...` },
+                    { at: 55, text: "Synthesizing multi-angle CastLock consistency anchors..." },
+                    { at: 80, text: "Rendering biometric preview & writing persistent character record..." }
+                ]
+            );
+
+            const payload = {
+                name: name,
+                age: document.getElementById('forge-age').value,
+                gender: document.getElementById('forge-gender').value,
+                complexion: document.getElementById('forge-complexion').value,
+                noseType: document.getElementById('forge-nose').value,
+                hairstyle: document.getElementById('forge-hair').value,
+                hairColor: document.getElementById('forge-hair-color').value,
+                bodySize: document.getElementById('forge-body').value,
+                height: document.getElementById('forge-height').value,
+                expression: document.getElementById('forge-expression').value,
+                outfitStyle: document.getElementById('forge-outfit').value,
+                artStyle: artStyle,
+                reference_image_b64: referenceImageBase64,
+                reference_instruction: document.getElementById('forge-ref-instruction').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/character_forge', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    await AIProgressTracker.complete(`CastLock Anchor '${name}' Forged!`);
+                    showToast(`CastLock Anchor '${name}' forged successfully!`);
+                    if (currentUser && d.credits !== undefined) {
+                        currentUser.credits = d.credits;
+                    }
+                    await refreshCharacters();
+                    closeAllModals();
+                    openModal('characters');
+                } else {
+                    AIProgressTracker.stop();
+                    showToast(d.error || 'Failed to forge character', false);
+                }
+            } catch (err) {
+                AIProgressTracker.stop();
+                console.error("Character forge error:", err);
+                showToast(err.message || 'Error forging character', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg> Forge CastLock Character (5 Credits)';
+            }
+        }
+
+        async function deleteCharacter(charId) {
+            try {
+                const res = await fetch('/api/character_delete', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ character_id: charId })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('Character deleted');
+                    await refreshCharacters();
+                }
+            } catch (err) {
+                showToast('Error deleting character', false);
+            }
+        }
+
+        async function refreshCharacters() {
+            try {
+                const res = await fetch('/api/characters', { headers: getHeaders() });
+                const d = await res.json();
+                if (d.success) {
+                    savedCharacters = d.characters || [];
+                    renderCharacterSelect();
+                    renderCharacterRoster();
+                    renderDashboard();
+                }
+            } catch(e){}
+        }
+
+        // =====================================================================
+        // YOUTUBE THUMBNAIL LAB ACTIONS
+        // =====================================================================
+        async function submitThumbnailGenerate() {
+            const topic = document.getElementById('thumb-topic').value.trim();
+            if (!topic) {
+                showToast('Please enter video title or topic', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-thumb');
+            btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Engineering High-CTR Thumbnails",
+                12,
+                [
+                    { at: 5, text: `Deconstructing video hooks & psychology for "${topic.slice(0, 30)}..."` },
+                    { at: 28, text: "Formulating 3 viral visual angles (curiosity, shock & contrast)..." },
+                    { at: 60, text: "Calculating bold text overlay placement & rule-of-thirds focal anchors..." },
+                    { at: 85, text: "Generating Midjourney & Flux generative visual prompts..." }
+                ]
+            );
+
+            try {
+                const res = await fetch('/api/thumbnail_generate', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ topic: topic })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    await AIProgressTracker.complete("3 High-CTR Thumbnail Concepts Generated!");
+                    const rawThumbs = d.thumbnails;
+                    let concepts = [];
+                    if (Array.isArray(rawThumbs)) {
+                        concepts = rawThumbs;
+                    } else if (rawThumbs && Array.isArray(rawThumbs.thumbnail_concepts)) {
+                        concepts = rawThumbs.thumbnail_concepts;
+                    } else if (rawThumbs && Array.isArray(rawThumbs.concepts)) {
+                        concepts = rawThumbs.concepts;
+                    }
+                    renderThumbnails(concepts);
+                    if (currentUser && d.credits !== undefined) {
+                        currentUser.credits = d.credits;
+                        renderDashboard();
+                    }
+                    showToast('3 Thumbnail Concepts generated!');
+                } else {
+                    AIProgressTracker.stop();
+                    showToast(d.error || 'Failed to generate thumbnails', false);
+                }
+            } catch (err) {
+                AIProgressTracker.stop();
+                console.error("Thumbnail error:", err);
+                showToast(err.message || 'Error generating thumbnails', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Generate 3 Thumbnail Concepts (3 Credits)';
+            }
+        }
+
+        function renderThumbnails(concepts) {
+            const container = document.getElementById('thumb-results-container');
+            if (!container) return;
+            container.style.display = 'block';
+
+            if (!Array.isArray(concepts) || concepts.length === 0) {
+                container.innerHTML = '<div class="form-hint" style="text-align:center; padding:15px;">No thumbnail concepts returned.</div>';
+                return;
+            }
+
+            let html = '<div class="section-label" style="padding-left:0; display:flex; justify-content:space-between; align-items:center;"><span>High-CTR Composition Concepts</span><span style="font-size:11px; color:var(--accent); font-weight:700;">TOP PICK HIGHLIGHTED</span></div>';
+
+            concepts.forEach((c, idx) => {
+                const isTopPick = (idx === 0);
+                const cardStyle = isTopPick 
+                    ? 'margin-bottom:12px; border: 1.5px solid rgba(10, 132, 255, 0.45); background: linear-gradient(145deg, rgba(10, 132, 255, 0.05), rgba(255, 255, 255, 0.02)); box-shadow: 0 4px 18px rgba(10, 132, 255, 0.08);' 
+                    : 'margin-bottom:10px;';
+
+                html += `
+                    <div class="form-card" style="${cardStyle}">
+                        <div class="concept-header">
+                            <span class="concept-num">THUMBNAIL #${idx + 1} &bull; ${c.angle || 'Visual Hook'}</span>
+                            ${isTopPick ? '<span class="concept-rec-chip" style="margin-left:auto;">TOP CTR PICK</span>' : ''}
+                        </div>
+                        <div class="item-row-title" style="margin-bottom:4px; ${isTopPick ? 'color:#ffd700;' : ''}">${c.overlay_text || c.text_overlay || 'Bold Text Hook'}</div>
+                        <div class="form-hint" style="margin-bottom:6px;"><strong>Visual Composition:</strong> ${c.visual_composition || c.concept || ''}</div>
+                        <div class="form-hint" style="margin-bottom:6px;"><strong>Focal Subject:</strong> ${c.focal_element || ''}</div>
+                        <div class="form-hint" style="margin-bottom:0;"><strong>Lighting & Color:</strong> ${c.color_scheme || c.midjourney_prompt || ''}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // =====================================================================
+        // VISUAL FRAME RENDERER ACTIONS
+        // =====================================================================
+        async function submitRenderFrame() {
+            const prompt = document.getElementById('render-prompt').value.trim();
+            if (!prompt) {
+                showToast('Please enter a render prompt', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-render');
+            btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Rendering High-Res Visual Frame",
+                14,
+                [
+                    { at: 5, text: "Configuring Imagen / FLUX neural pipeline & aspect ratio..." },
+                    { at: 25, text: "Synthesizing cinematic lighting, ray-tracing & specular highlights..." },
+                    { at: 60, text: "Refining 8K texture details, skin subsurface scattering & depth..." },
+                    { at: 85, text: "Encoding visual frame buffer & generating live download..." }
+                ]
+            );
+
+            const payload = {
+                prompt: prompt,
+                aspect_ratio: document.getElementById('render-aspect').value
+            };
+
+            try {
+                const res = await fetch('/api/render_frame', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success && d.image_data) {
+                    await AIProgressTracker.complete("Frame Rendered Successfully!");
+                    const container = document.getElementById('render-result-container');
+                    const img = document.getElementById('render-img-preview');
+                    const dl = document.getElementById('btn-render-download');
+                    img.src = d.image_data;
+                    dl.href = d.image_data;
+                    container.style.display = 'block';
+                    showToast('Frame rendered successfully!');
+                } else if (d.cooldown) {
+                    AIProgressTracker.stop();
+                    showToast(`Render cooldown: wait ${d.remaining_seconds}s`, false);
+                } else {
+                    AIProgressTracker.stop();
+                    showToast(d.error || 'Failed to render frame', false);
+                }
+            } catch (err) {
+                AIProgressTracker.stop();
+                console.error("Render frame error:", err);
+                showToast(err.message || 'Error rendering frame', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Render Frame';
+            }
+        }
+
+        // =====================================================================
+        // SETTINGS & BYOK ACTIONS
+        // =====================================================================
+        async function submitSaveApiKey() {
+            const key = document.getElementById('settings-api-key').value.trim();
+            try {
+                const res = await fetch('/api/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ custom_gemini_key: key })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    currentUser.has_custom_key = d.has_custom_key;
+                    renderDashboard();
+                    showToast(d.has_custom_key ? 'BYOK Gemini Key saved!' : 'Custom key removed');
+                }
+            } catch (err) {
+                showToast('Error saving API key', false);
+            }
+        }
+
+        async function submitTestApiKey() {
+            const key = document.getElementById('settings-api-key').value.trim();
+            if (!key) {
+                showToast('Enter key to test first', false);
+                return;
+            }
+            showToast('Testing key against Google GenAI...');
+            try {
+                const res = await fetch('/api/test_key', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ api_key: key })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(d.message || 'Key authenticated successfully!');
+                } else {
+                    showToast(d.error || 'Key authentication failed', false);
+                }
+            } catch (err) {
+                showToast('Test request failed', false);
+            }
+        }
+
+        async function submitUpdateModel() {
+            const model = document.getElementById('settings-sel-model').value;
+            try {
+                const res = await fetch('/api/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ selected_model: model })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    currentUser.selected_model = d.selected_model;
+                    renderDashboard();
+                    showToast(`Model set to ${model}`);
+                }
+            } catch (err) {
+                showToast('Error changing model', false);
+            }
+        }
+
+        // =====================================================================
+        // MASTER ADMIN CONTROLLER (WP RELAY DESIGN PATTERN)
+        // =====================================================================
+        let adminCachedData = null;
+        let currentAdminTab = 'overview';
+        let adminSelectedUser = null;
+        let adminUserSearchQuery = '';
+        let adminUserSearchResults = [];
+
+        async function openAdminModal() {
+            if (!currentUser || !currentUser.is_admin) {
+                showToast("Admin authorization required", false);
+                return;
+            }
+            try { tg.HapticFeedback?.impactOccurred('light'); } catch(e){}
+            const modal = document.getElementById('admin-modal');
+            const overlay = document.getElementById('admin-modal-overlay');
+            const body = document.getElementById('admin-modal-body');
+
+            body.innerHTML = `
+                <div style="text-align:center; padding:36px; color:var(--text-muted);">
+                    <div class="spinner" style="margin: 0 auto 12px; width:28px; height:28px; border:2px solid var(--border-color); border-top-color:var(--text-main); border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+                    Loading Admin Control Center...
+                </div>
+            `;
+            overlay.style.display = 'block';
+            setTimeout(() => {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            }, 10);
+
+            await loadAdminOverview();
+        }
+
+        function openAdminSuite() {
+            openAdminModal();
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            const overlay = document.getElementById('admin-modal-overlay');
+            if (modal) modal.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            setTimeout(() => {
+                if (overlay) overlay.style.display = 'none';
+            }, 280);
+        }
+
+        function switchAdminTab(tabName) {
+            currentAdminTab = tabName;
+            try { tg.HapticFeedback?.impactOccurred('light'); } catch(e){}
+            renderAdminModalContent();
+            if (tabName === 'creators' && (!adminUserSearchResults || adminUserSearchResults.length === 0)) {
+                adminSearchUsers();
+            }
+        }
+
+        async function loadAdminOverview() {
+            try {
+                const res = await fetch('/api/admin/overview', {
+                    headers: getHeaders()
+                });
+                const d = await res.json();
+                if (!d.success) {
+                    const body = document.getElementById('admin-modal-body');
+                    if (body) {
+                        body.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-title">Access Denied</div>
+                                <div>${d.error || 'Failed to fetch admin overview.'}</div>
+                            </div>
+                        `;
+                    }
+                    showToast(d.error || 'Failed to fetch admin overview', false);
+                    return;
+                }
+                adminCachedData = d;
+                renderAdminModalContent();
+            } catch (err) {
+                console.error("Admin Overview Error:", err);
+                const body = document.getElementById('admin-modal-body');
+                if (body) {
+                    body.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-title">Network Error</div>
+                            <div>Unable to reach admin API.</div>
+                        </div>
+                    `;
+                }
+                showToast("Failed to connect to Admin API", false);
+            }
+        }
+
+        function renderAdminModalContent() {
+            const body = document.getElementById('admin-modal-body');
+            const d = adminCachedData;
+            if (!body || !d) return;
+
+            const stats = d.stats || {};
+            const keys = d.keys || {};
+            const pKey = keys.primary || {};
+            const fKey = keys.fallback || {};
+            const settings = d.settings || {};
+            const pricing = d.pricing || {};
+            const recentTxs = d.recent_transactions || [];
+
+            const tabs = [
+                { id: 'overview', label: 'Overview' },
+                { id: 'keys', label: 'API Keys' },
+                { id: 'locks', label: 'Locks & BYOK' },
+                { id: 'creators', label: 'Creators' },
+                { id: 'pricing', label: 'Pricing' },
+                { id: 'broadcast', label: 'Broadcast' }
+            ];
+
+            let tabHtml = '';
+
+            // 1. OVERVIEW TAB
+            if (currentAdminTab === 'overview') {
+                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1);
+                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1);
+
+                let txRows = '';
+                if (recentTxs.length === 0) {
+                    txRows = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No ledger transactions recorded yet.</div>';
+                } else {
+                    txRows = recentTxs.slice(0, 5).map(t => {
+                        const dateStr = t.created_at ? t.created_at.slice(5, 16) : '';
+                        const isPlus = t.action === 'add' || t.amount > 0;
+                        const sign = isPlus ? '+' : '';
+                        const color = isPlus ? 'var(--success)' : 'var(--danger)';
+                        return `
+                            <div class="item-row" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size:13px; font-weight:600; color:var(--text-main);">User #${t.target_user_id} (${t.username || 'Creator'})</div>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${t.reason || 'Admin Adjustment'} &bull; ${dateStr}</div>
+                                </div>
+                                <div style="font-size:13px; font-weight:700; color:${color}; margin-left:8px;">
+                                    ${sign}${t.amount} Cr
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                tabHtml = `
+                    <!-- STATS GRID -->
+                    <div class="stats-grid" style="margin: 0 0 14px;">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total_users ?? 0}</div>
+                            <div class="stat-label">Total Creators</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.active_users_24h ?? 0}</div>
+                            <div class="stat-label">Active (24h)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${(stats.total_credits_in_circulation ?? 0).toLocaleString()}</div>
+                            <div class="stat-label">Circulating Cr</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total_story_jobs ?? 0}</div>
+                            <div class="stat-label">Story Jobs</div>
+                        </div>
+                    </div>
+
+                    <!-- CLUSTER GATEWAY HEALTH -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="form-label" style="margin-bottom:0;">Cluster Gateway & Policy Status</div>
+                            <button class="btn-sm-action" onclick="loadAdminOverview()">Refresh</button>
+                        </div>
+                        <div class="list-group" style="margin:0;">
+                            <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Primary Gemini API Key</div>
+                                    <div class="item-subtitle">${pKey.configured ? `Configured (${pKey.preview})` : 'Missing master API key'}</div>
+                                </div>
+                                <span class="chip ${pKey.configured ? 'ready' : 'danger'}" style="font-size:10px;">${pKey.configured ? 'ACTIVE' : 'MISSING'}</span>
+                            </div>
+                            <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Fallback Key (429 Pool)</div>
+                                    <div class="item-subtitle">${fKey.configured ? `Configured (${fKey.preview})` : 'No secondary key (single point of failure)'}</div>
+                                </div>
+                                <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'ACTIVE' : 'UNSET'}</span>
+                            </div>
+                            <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">BYOK Policy</div>
+                                    <div class="item-subtitle">${byokAllowed ? 'Creators can connect personal keys' : 'Personal keys locked. Credits required'}</div>
+                                </div>
+                                <span class="chip ${byokAllowed ? 'ready' : 'byok'}" style="font-size:10px;">${byokAllowed ? 'OPEN' : 'LOCKED'}</span>
+                            </div>
+                            <div class="list-item" style="padding:10px 0;">
+                                <div class="item-text">
+                                    <div class="item-title">Platform Gateway</div>
+                                    <div class="item-subtitle">${maintActive ? (settings.maintenance_message || 'Maintenance lock active') : 'All services online and accepting runs'}</div>
+                                </div>
+                                <span class="chip ${maintActive ? 'danger' : 'ready'}" style="font-size:10px;">${maintActive ? 'MAINTENANCE' : 'ONLINE'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECENT AUDIT LEDGER -->
+                    <div class="form-card">
+                        <div class="form-label" style="margin-bottom:8px;">Recent Ledger Transactions</div>
+                        ${txRows}
+                    </div>
+                `;
+
+            // 2. API KEYS TAB
+            } else if (currentAdminTab === 'keys') {
+                tabHtml = `
+                    <!-- PRIMARY KEY -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div class="form-label" style="margin-bottom:0;">Primary Google GenAI Key</div>
+                            <span class="chip ${pKey.configured ? 'ready' : 'danger'}" style="font-size:10px;">${pKey.configured ? 'CONFIGURED' : 'UNSET'}</span>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:10px;">Default master key utilized across all StoryCraft screenplays, Character Forge sheets, and Thumbnail Lab covers.</div>
+                        <input type="password" id="admin-key-primary" class="form-input" placeholder="Paste new AIzaSy... key to update" style="margin-bottom:10px; font-family:monospace;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button class="btn-sm-action" style="padding:9px; text-align:center; font-weight:600;" onclick="testAdminKey('primary')">Test Gemini Auth</button>
+                            <button class="btn-submit" style="margin-top:0; padding:9px; font-weight:600;" onclick="adminSaveKeys()">Save Key</button>
+                        </div>
+                    </div>
+
+                    <!-- FALLBACK KEY -->
+                    <div class="form-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div class="form-label" style="margin-bottom:0;">Fallback Key (429 Failover Pool)</div>
+                            <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'CONFIGURED' : 'UNSET'}</span>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:10px;">Secondary key automatically rotated in if the primary key triggers quota exhaustion or rate limits.</div>
+                        <input type="password" id="admin-key-fallback" class="form-input" placeholder="Paste new fallback AIzaSy... key" style="margin-bottom:10px; font-family:monospace;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button class="btn-sm-action" style="padding:9px; text-align:center; font-weight:600;" onclick="testAdminKey('fallback')">Test Gemini Auth</button>
+                            <button class="btn-submit" style="margin-top:0; padding:9px; font-weight:600;" onclick="adminSaveKeys()">Save Key</button>
+                        </div>
+                    </div>
+                `;
+
+            // 3. LOCKS & BYOK TAB
+            } else if (currentAdminTab === 'locks') {
+                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1);
+                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1);
+                const craftActive = (settings.feature_storycraft === '1' || settings.feature_storycraft === 1 || settings.feature_storycraft === undefined);
+                const forgeActive = (settings.feature_character_forge === '1' || settings.feature_character_forge === 1 || settings.feature_character_forge === undefined);
+                const thumbActive = (settings.feature_thumbnail_lab === '1' || settings.feature_thumbnail_lab === 1 || settings.feature_thumbnail_lab === undefined);
+                const frameActive = (settings.feature_frame_renderer === '1' || settings.feature_frame_renderer === 1 || settings.feature_frame_renderer === undefined);
+
+                tabHtml = `
+                    <!-- MAINTENANCE MODE -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="margin-bottom:0;">Maintenance Mode</span>
+                            <label class="switch">
+                                <input type="checkbox" id="admin-lock-maintenance" ${maintActive ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:10px;">When enabled, non-admin creators cannot generate or run jobs.</div>
+                        <input type="text" id="admin-maintenance-msg" class="form-input" placeholder="Custom maintenance message shown to users..." value="${(settings.maintenance_message || '').replace(/"/g, '&quot;')}">
+                    </div>
+
+                    <!-- BYOK GOVERNANCE -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="margin-bottom:0;">BYOK Policy (Personal Keys)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="admin-lock-byok" ${byokAllowed ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-hint">Allow creators to connect and use their own Google GenAI API keys. When toggled OFF, personal keys are locked out and all users must use platform credits.</div>
+                    </div>
+
+                    <!-- GRANULAR FEATURE KILL-SWITCHES -->
+                    <div class="form-card" style="margin-bottom:14px;">
+                        <div class="form-label" style="margin-bottom:10px;">Feature Kill-Switches</div>
+                        <div class="list-group" style="margin:0;">
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">StoryCraft Studio</div>
+                                    <div class="item-subtitle">Short, Medium & Long screenplay generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-storycraft" ${craftActive ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Character Forge</div>
+                                    <div class="item-subtitle">Multi-angle visual character sheet generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-character-forge" ${forgeActive ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Thumbnail Lab</div>
+                                    <div class="item-subtitle">High-CTR YouTube cover generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-thumbnail-lab" ${thumbActive ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="list-item" style="padding:8px 0;">
+                                <div class="item-text">
+                                    <div class="item-title">Frame Renderer</div>
+                                    <div class="item-subtitle">Single scene camera frame generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-frame-renderer" ${frameActive ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-submit" onclick="adminSaveGovernance()">Save Governance & Locks</button>
+                `;
+
+            // 4. CREATORS & LEDGER TAB
+            } else if (currentAdminTab === 'creators') {
+                let userCardsHtml = '';
+                if (adminUserSearchResults.length === 0) {
+                    userCardsHtml = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No creators found. Type a query above and search.</div>';
+                } else {
+                    userCardsHtml = adminUserSearchResults.map(u => {
+                        const isSelected = adminSelectedUser && adminSelectedUser.id === u.id;
+                        const byokChip = u.has_custom_key ? '<span class="chip byok" style="font-size:9px;">BYOK</span>' : '<span class="chip model" style="font-size:9px;">Platform</span>';
+                        return `
+                            <div class="admin-user-card ${isSelected ? 'selected' : ''}" onclick="adminSelectUserById(${u.id})">
+                                <div class="admin-user-header">
+                                    <div style="font-weight:700; font-size:13px; color:var(--text-main);">
+                                        ${u.username || 'Creator'} <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">#${u.id}</span>
+                                    </div>
+                                    <span class="chip active" style="font-size:10px;">${u.tier || 'Builder'}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        ${byokChip}
+                                        <span style="font-size:12px; font-weight:600; color:var(--text-main);">${u.credits ?? 0} Credits</span>
+                                    </div>
+                                    <span style="font-size:11px; color:var(--accent); font-weight:600;">Manage &rarr;</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                let selectedUserCardHtml = '';
+                if (adminSelectedUser) {
+                    const u = adminSelectedUser;
+                    selectedUserCardHtml = `
+                        <div class="form-card" style="margin-bottom:12px; border:1px solid var(--accent); background:rgba(255,255,255,0.03);">
+                            <!-- USER HEADER -->
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                                <div>
+                                    <div style="font-weight:700; font-size:15px; color:var(--text-main);">${u.username || 'Creator'} (#${u.id})</div>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Role: ${u.role || 'user'} &bull; Balance: <strong style="color:var(--text-main); font-size:13px;">${u.credits ?? 0} Cr</strong></div>
+                                </div>
+                                <span class="chip active" id="selected-user-tier-chip" style="font-size:11px;">${u.tier || 'Builder'}</span>
+                            </div>
+
+                            <!-- QUICK ADJUST PILLS -->
+                            <div class="form-label" style="font-size:11px; margin-bottom:6px;">Quick Add / Deduct</div>
+                            <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; margin-bottom:12px;">
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 50)">+50</button>
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 100)">+100</button>
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 500)">+500</button>
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 1000)">+1k</button>
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 50)">-50</button>
+                                <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 100)">-100</button>
+                            </div>
+
+                            <!-- CUSTOM ADJUST FORM -->
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+                                <div>
+                                    <div class="form-label" style="font-size:10px; margin-bottom:4px;">Action</div>
+                                    <select id="admin-user-action" class="form-input" style="font-size:12px; padding:7px 8px;">
+                                        <option value="add">Add (+)</option>
+                                        <option value="deduct">Deduct (-)</option>
+                                        <option value="set">Set Balance (=)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="form-label" style="font-size:10px; margin-bottom:4px;">Amount</div>
+                                    <input type="number" id="admin-user-amount" class="form-input" placeholder="e.g. 250" style="font-size:12px; padding:7px 8px;">
+                                </div>
+                            </div>
+                            <input type="text" id="admin-user-reason" class="form-input" placeholder="Audit note (e.g. Contest winner reward)" style="font-size:12px; margin-bottom:8px;">
+                            <button class="btn-submit" style="margin-top:0; padding:8px; font-size:12px;" onclick="adminApplyCreditAction()">Apply Credit Modification</button>
+
+                            <!-- TIER SELECTOR -->
+                            <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; gap:8px; align-items:center;">
+                                <div style="flex:1;">
+                                    <div class="form-label" style="font-size:10px; margin-bottom:4px;">Creator Tier</div>
+                                    <select id="admin-user-tier-sel" class="form-input" style="font-size:12px; padding:7px 8px;">
+                                        <option value="Builder" ${u.tier==='Builder'?'selected':''}>Builder</option>
+                                        <option value="Pro" ${u.tier==='Pro'?'selected':''}>Pro</option>
+                                        <option value="Studio" ${u.tier==='Studio'?'selected':''}>Studio</option>
+                                        <option value="VIP" ${u.tier==='VIP'?'selected':''}>VIP</option>
+                                    </select>
+                                </div>
+                                <button class="btn-sm-action" style="align-self:flex-end; padding:8px 14px; font-size:12px;" onclick="adminApplyUserTier()">Set Tier</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                tabHtml = `
+                    <!-- SEARCH BAR -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div class="form-label">Search Creators by Username or ID</div>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="admin-user-search-input" class="form-input" placeholder="Search by name or numeric ID..." value="${(adminUserSearchQuery || '').replace(/"/g, '&quot;')}" onkeydown="if(event.key==='Enter') adminSearchUsers()">
+                            <button class="btn-submit" style="width:auto; margin-top:0; padding:10px 16px; white-space:nowrap;" onclick="adminSearchUsers()">Search</button>
+                        </div>
+                    </div>
+
+                    ${selectedUserCardHtml}
+
+                    <!-- SEARCH RESULTS LIST -->
+                    <div class="form-card">
+                        <div class="form-label" style="margin-bottom:8px;">Search Results (${adminUserSearchResults.length})</div>
+                        <div id="admin-users-list">
+                            ${userCardsHtml}
+                        </div>
+                    </div>
+                `;
+
+            // 5. PRICING TAB
+            } else if (currentAdminTab === 'pricing') {
+                const sTier = pricing.Short || { concepts_cost: 10, pdfs_cost: 40 };
+                const mTier = pricing.Medium || { concepts_cost: 50, pdfs_cost: 250 };
+                const lTier = pricing.Long || { concepts_cost: 100, pdfs_cost: 300 };
+
+                tabHtml = `
+                    <!-- STORY GENERATION MATRIX -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div class="form-label" style="margin-bottom:8px;">StoryCraft Credit Matrix</div>
+                        <div class="form-hint" style="margin-bottom:12px;">Set the cost in platform credits for generating concept beats vs final dual PDFs.</div>
+
+                        <!-- SHORT -->
+                        <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Short Format (~2-4 Mins | ≤ 40 scenes)</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <input type="number" id="price-story-short-concept" class="form-input" value="${sTier.concepts_cost ?? 10}">
+                                </div>
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Dual PDFs (Cr)</span>
+                                    <input type="number" id="price-story-short-pdf" class="form-input" value="${sTier.pdfs_cost ?? 40}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MEDIUM -->
+                        <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Medium Format (~8-15 Mins | ≤ 120 scenes)</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <input type="number" id="price-story-med-concept" class="form-input" value="${mTier.concepts_cost ?? 50}">
+                                </div>
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Dual PDFs (Cr)</span>
+                                    <input type="number" id="price-story-med-pdf" class="form-input" value="${mTier.pdfs_cost ?? 250}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LONG -->
+                        <div style="margin-bottom:6px;">
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Long Feature (~1-2+ Hours | ≤ 250 scenes)</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <input type="number" id="price-story-long-concept" class="form-input" value="${lTier.concepts_cost ?? 100}">
+                                </div>
+                                <div>
+                                    <span style="font-size:10px; color:var(--text-muted);">Dual PDFs (Cr)</span>
+                                    <input type="number" id="price-story-long-pdf" class="form-input" value="${lTier.pdfs_cost ?? 300}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISUAL LAB COSTS -->
+                    <div class="form-card" style="margin-bottom:14px;">
+                        <div class="form-label" style="margin-bottom:8px;">Visual Engine Tool Costs</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Forge Sheet</span>
+                                <input type="number" id="price-forge" class="form-input" value="${settings.cost_character_forge ?? 5}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Thumb Lab</span>
+                                <input type="number" id="price-thumbnail" class="form-input" value="${settings.cost_thumbnail_lab ?? 3}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Frame Render</span>
+                                <input type="number" id="price-renderer" class="form-input" value="${settings.cost_frame_renderer ?? 2}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-submit" onclick="adminSavePricing()">Save Dynamic Pricing Matrix</button>
+                `;
+
+            // 6. BROADCAST TAB
+            } else if (currentAdminTab === 'broadcast') {
+                const bcActive = (settings.announcement_active === '1' || settings.announcement_active === 1);
+                const bcType = settings.announcement_type || 'info';
+                const bcText = settings.announcement_text || '';
+
+                tabHtml = `
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="margin-bottom:0;">Live Announcement Banner</span>
+                            <label class="switch">
+                                <input type="checkbox" id="admin-toggle-broadcast-active" ${bcActive ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:12px;">Display a top alert bar to all creators across the Mini App in real time.</div>
+
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Tone / Theme</div>
+                        <select id="admin-broadcast-type" class="form-input" style="margin-bottom:12px;">
+                            <option value="info" ${bcType==='info'?'selected':''}>Information (Blue)</option>
+                            <option value="warning" ${bcType==='warning'?'selected':''}>Important Warning (Orange)</option>
+                            <option value="success" ${bcType==='success'?'selected':''}>Success / Release (Green)</option>
+                        </select>
+
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Message Text</div>
+                        <textarea id="admin-broadcast-text" class="form-input" style="height:90px; resize:vertical; margin-bottom:14px;" placeholder="Announcement text displayed to all creators...">${bcText}</textarea>
+
+                        <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Announcement Banner</button>
+                    </div>
+                `;
+            }
+
+            // WP RELAY SEGMENTED CONTROL HEADER
+            body.innerHTML = `
+                <div class="segmented-control" style="margin-bottom:14px; overflow-x:auto;">
+                    ${tabs.map(t => `<button class="seg-btn ${currentAdminTab === t.id ? 'active' : ''}" onclick="switchAdminTab('${t.id}')">${t.label}</button>`).join('')}
+                </div>
+                ${tabHtml}
+            `;
+        }
+
+        async function adminSaveKeys() {
+            const pKeyInput = document.getElementById('admin-key-primary');
+            const fKeyInput = document.getElementById('admin-key-fallback');
+            const pKey = pKeyInput ? pKeyInput.value.trim() : '';
+            const fKey = fKeyInput ? fKeyInput.value.trim() : '';
+
+            const payload = {};
+            if (pKey) payload.primary_key = pKey;
+            if (fKey) payload.fallback_key = fKey;
+
+            if (Object.keys(payload).length === 0) {
+                showToast("Enter a key in the input field to save", false);
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast("Master API keys updated successfully!");
+                    if (pKeyInput) pKeyInput.value = '';
+                    if (fKeyInput) fKeyInput.value = '';
+                    await loadAdminOverview();
+                } else {
+                    showToast(d.error || 'Failed to update keys', false);
+                }
+            } catch (err) {
+                showToast('Network error saving keys', false);
+            }
+        }
+
+        async function testAdminKey(which) {
+            const inputId = which === 'primary' ? 'admin-key-primary' : 'admin-key-fallback';
+            const inputEl = document.getElementById(inputId);
+            const key = inputEl ? inputEl.value.trim() : '';
+            if (!key) {
+                showToast("Enter the key in the input field first to test", false);
+                return;
+            }
+            showToast(`Authenticating ${which} key with Google GenAI...`);
+            try {
+                const res = await fetch('/api/test_key', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ api_key: key })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(`${which.toUpperCase()} key is valid and active!`);
+                } else {
+                    showToast(d.error || 'Key authentication failed', false);
+                }
+            } catch (err) {
+                showToast("Network error testing key", false);
+            }
+        }
+
+        async function adminSaveGovernance() {
+            const maintCheck = document.getElementById('admin-lock-maintenance');
+            const maintMsg = document.getElementById('admin-maintenance-msg');
+            const byokCheck = document.getElementById('admin-lock-byok');
+            const craftCheck = document.getElementById('admin-toggle-storycraft');
+            const forgeCheck = document.getElementById('admin-toggle-character-forge');
+            const thumbCheck = document.getElementById('admin-toggle-thumbnail-lab');
+            const frameCheck = document.getElementById('admin-toggle-frame-renderer');
+
+            const payload = {
+                maintenance_mode: (maintCheck && maintCheck.checked) ? 1 : 0,
+                maintenance_message: (maintMsg ? maintMsg.value.trim() : ''),
+                byok_enabled: (byokCheck && byokCheck.checked) ? 1 : 0,
+                feature_storycraft: (craftCheck && craftCheck.checked) ? 1 : 0,
+                feature_character_forge: (forgeCheck && forgeCheck.checked) ? 1 : 0,
+                feature_thumbnail_lab: (thumbCheck && thumbCheck.checked) ? 1 : 0,
+                feature_frame_renderer: (frameCheck && frameCheck.checked) ? 1 : 0
+            };
+
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    if (studioMeta) {
+                        studioMeta.byok_enabled = (payload.byok_enabled === 1);
+                    }
+                    renderDashboard();
+                    showToast("Governance policies & feature locks updated!");
+                    await loadAdminOverview();
+                } else {
+                    showToast(d.error || 'Failed to save governance', false);
+                }
+            } catch (err) {
+                showToast("Error updating governance", false);
+            }
+        }
+
+        async function adminSearchUsers() {
+            const input = document.getElementById('admin-user-search-input');
+            const q = input ? input.value.trim() : adminUserSearchQuery;
+            adminUserSearchQuery = q;
+            const listEl = document.getElementById('admin-users-list');
+            if (listEl) {
+                listEl.innerHTML = '<div style="text-align:center; padding:16px; color:var(--text-muted);"><div class="spinner" style="margin: 0 auto 8px; width:20px; height:20px; border:2px solid var(--border-color); border-top-color:var(--text-main); border-radius:50%; animation: spin 0.8s linear infinite;"></div>Searching creators...</div>';
+            }
+
+            try {
+                const res = await fetch(`/api/admin/users?q=${encodeURIComponent(q)}`, {
+                    headers: getHeaders()
+                });
+                const d = await res.json();
+                if (d.success) {
+                    adminUserSearchResults = d.users || [];
+                    renderAdminModalContent();
+                } else {
+                    if (listEl) listEl.innerHTML = `<div class="empty-state"><div class="empty-title">Search Error</div><div>${d.error || 'Failed to search users'}</div></div>`;
+                }
+            } catch (err) {
+                if (listEl) listEl.innerHTML = '<div class="empty-state"><div class="empty-title">Network Error</div><div>Could not connect to user API.</div></div>';
+            }
+        }
+
+        function adminSelectUserById(userId) {
+            const u = adminUserSearchResults.find(x => x.id === userId);
+            if (u) {
+                adminSelectedUser = u;
+                renderAdminModalContent();
+            }
+        }
+
+        function adminSelectUser(u) {
+            adminSelectedUser = u;
+            renderAdminModalContent();
+        }
+
+        async function adminQuickCredits(action, amount) {
+            if (!adminSelectedUser) {
+                showToast("Select a creator first", false);
+                return;
+            }
+            const reason = `Admin quick ${action} ${amount} credits`;
+            await adminExecuteCreditModification(action, amount, reason);
+        }
+
+        async function adminApplyCreditAction() {
+            if (!adminSelectedUser) {
+                showToast("Select a creator first", false);
+                return;
+            }
+            const actionEl = document.getElementById('admin-user-action');
+            const amountEl = document.getElementById('admin-user-amount');
+            const reasonEl = document.getElementById('admin-user-reason');
+
+            const action = actionEl ? actionEl.value : 'add';
+            const amount = amountEl ? parseInt(amountEl.value, 10) : 0;
+            const reason = reasonEl && reasonEl.value.trim() ? reasonEl.value.trim() : 'Admin manual modification';
+
+            if (isNaN(amount) || amount < 0) {
+                showToast("Enter a valid positive amount", false);
+                return;
+            }
+            await adminExecuteCreditModification(action, amount, reason);
+        }
+
+        async function adminExecuteCreditModification(action, amount, reason) {
+            try {
+                const res = await fetch('/api/admin/modify_credits', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        target_user_id: adminSelectedUser.id,
+                        action: action,
+                        amount: amount,
+                        reason: reason
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    adminSelectedUser.credits = d.new_balance;
+                    const found = adminUserSearchResults.find(x => x.id === adminSelectedUser.id);
+                    if (found) found.credits = d.new_balance;
+                    showToast(`User #${adminSelectedUser.id} balance is now ${d.new_balance} credits!`);
+                    await loadAdminOverview();
+                } else {
+                    showToast(d.error || 'Failed to modify credits', false);
+                }
+            } catch (err) {
+                showToast("Network error executing ledger transaction", false);
+            }
+        }
+
+        async function adminApplyUserTier() {
+            if (!adminSelectedUser) {
+                showToast("Select a creator first", false);
+                return;
+            }
+            const tierEl = document.getElementById('admin-user-tier-sel');
+            const tier = tierEl ? tierEl.value : 'Builder';
+            try {
+                const res = await fetch('/api/admin/update_tier', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        target_user_id: adminSelectedUser.id,
+                        tier: tier
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    adminSelectedUser.tier = d.tier;
+                    const found = adminUserSearchResults.find(x => x.id === adminSelectedUser.id);
+                    if (found) found.tier = d.tier;
+                    showToast(`User #${adminSelectedUser.id} tier updated to ${d.tier}!`);
+                    renderAdminModalContent();
+                } else {
+                    showToast(d.error || 'Failed to update tier', false);
+                }
+            } catch (err) {
+                showToast("Network error updating tier", false);
+            }
+        }
+
+        async function adminSavePricing() {
+            const sConcept = parseInt(document.getElementById('price-story-short-concept')?.value, 10) || 10;
+            const sPdf = parseInt(document.getElementById('price-story-short-pdf')?.value, 10) || 40;
+            const mConcept = parseInt(document.getElementById('price-story-med-concept')?.value, 10) || 50;
+            const mPdf = parseInt(document.getElementById('price-story-med-pdf')?.value, 10) || 250;
+            const lConcept = parseInt(document.getElementById('price-story-long-concept')?.value, 10) || 100;
+            const lPdf = parseInt(document.getElementById('price-story-long-pdf')?.value, 10) || 300;
+
+            const forgeCost = parseInt(document.getElementById('price-forge')?.value, 10) || 5;
+            const thumbCost = parseInt(document.getElementById('price-thumbnail')?.value, 10) || 3;
+            const frameCost = parseInt(document.getElementById('price-renderer')?.value, 10) || 2;
+
+            const pricingPayload = {
+                pricing_tiers: {
+                    Short: {
+                        label: "Short (~2-4 Mins | ≤ 40 scenes)",
+                        duration: "~2-4 Mins",
+                        runtime_detail: "~2 to 4 Minutes YouTube Video",
+                        concepts_cost: sConcept,
+                        pdfs_cost: sPdf,
+                        total: sConcept + sPdf,
+                        scenes: "15-25 scenes (~2 to 4 mins, ceiling 40)"
+                    },
+                    Medium: {
+                        label: "Medium (~8-15 Mins | ≤ 120 scenes)",
+                        duration: "~8-15 Mins",
+                        runtime_detail: "~8 to 15 Minutes YouTube Video",
+                        concepts_cost: mConcept,
+                        pdfs_cost: mPdf,
+                        total: mConcept + mPdf,
+                        scenes: "40-60 scenes (~8 to 15 mins, ceiling 120)"
+                    },
+                    Long: {
+                        label: "Long (~1-2+ Hours | ≤ 250 scenes)",
+                        duration: "~1-2+ Hours",
+                        runtime_detail: "~1 to 2+ Hours Feature/Doc",
+                        concepts_cost: lConcept,
+                        pdfs_cost: lPdf,
+                        total: lConcept + lPdf,
+                        scenes: "80-120 scenes (~1 to 2+ hours, ceiling 250)"
+                    }
+                },
+                cost_character_forge: forgeCost,
+                cost_thumbnail_lab: thumbCost,
+                cost_frame_renderer: frameCost
+            };
+
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(pricingPayload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast("Dynamic pricing matrix saved successfully!");
+                    await loadAdminOverview();
+                } else {
+                    showToast(d.error || 'Failed to save pricing', false);
+                }
+            } catch (err) {
+                showToast("Network error saving pricing", false);
+            }
+        }
+
+        async function adminSaveAnnouncement() {
+            const activeEl = document.getElementById('admin-toggle-broadcast-active');
+            const typeEl = document.getElementById('admin-broadcast-type');
+            const textEl = document.getElementById('admin-broadcast-text');
+
+            const payload = {
+                announcement_active: (activeEl && activeEl.checked) ? 1 : 0,
+                announcement_type: typeEl ? typeEl.value : 'info',
+                announcement_text: textEl ? textEl.value.trim() : ''
+            };
+
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    if (studioMeta) {
+                        studioMeta.announcement = {
+                            active: payload.announcement_active,
+                            type: payload.announcement_type,
+                            text: payload.announcement_text
+                        };
+                    }
+                    renderAnnouncementBanner();
+                    showToast("Announcement broadcast published!");
+                    await loadAdminOverview();
+                } else {
+                    showToast(d.error || 'Failed to publish announcement', false);
+                }
+            } catch (err) {
+                showToast("Network error publishing announcement", false);
+            }
+        }
+
+        // Bootstrap on load
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

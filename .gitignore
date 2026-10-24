@@ -1,0 +1,38 @@
+# Environment and Secrets
+.env
+*.env
+*.session
+*.session-journal
+
+# Python Bytecode and Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.cache
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary Profiles and Generated Assets
+chrome_tmp_profile/
+generated_pdfs/*
+!generated_pdfs/.gitkeep
+webapp_legacy/
+temp_*.png
+test_*.png
+test_*.pdf
+test_*.txt
+visual_card.png
+*.log
+*.bak*
+
+# OS Metadata
+.DS_Store
+Thumbs.db

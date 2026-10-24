@@ -131,35 +131,28 @@ DELIVERY_FORMATS = ["Dialogue / Narrative", "Dialogue", "Narrative"]
 def get_main_keyboard(user):
     has_key = bool(user.get("custom_gemini_key"))
     key_indicator = "BYOK: Active" if has_key else "Platform Pool Key"
-    miniapp_url = os.getenv("WEB_APP_URL") or os.getenv("MINIAPP_URL", "http://localhost:8085/miniapp")
     user_id = user.get("id") or user.get("user_id")
-    if user_id:
-        sep = "&" if "?" in miniapp_url else "?"
-        miniapp_url = f"{miniapp_url}{sep}user_id={user_id}"
     
     rows = [
         [
-            Button.url("🚀 Open WP Studio (Mini App)", miniapp_url)
+            Button.inline("WP StoryCraft", b"menu_story"),
+            Button.inline("WP CastLock", b"menu_character")
         ],
         [
-            Button.inline("🎬 WP StoryCraft", b"menu_story"),
-            Button.inline("🔨 WP CastLock", b"menu_character")
-        ],
-        [
-            Button.inline("🖼 WP ClickThumb", b"menu_thumbnail"),
-            Button.inline("🧠 AI Models", b"menu_models")
+            Button.inline("WP ClickThumb", b"menu_thumbnail"),
+            Button.inline("AI Models", b"menu_models")
         ],
         [
             Button.inline(f"{key_indicator}", b"menu_byok"),
-            Button.inline("💳 Credits & Tier", b"menu_wallet")
+            Button.inline("Credits & Tier", b"menu_wallet")
         ],
         [
-            Button.inline("❓ Creator Guide", b"menu_guide")
+            Button.inline("Creator Guide", b"menu_guide")
         ]
     ]
 
     if user_id and database.is_admin(user_id):
-        rows.append([Button.inline("🛡️ Studio Admin Suite", b"admin_menu")])
+        rows.append([Button.inline("Studio Admin Suite", b"admin_menu")])
 
     return rows
 

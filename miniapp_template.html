@@ -1270,8 +1270,8 @@
                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
             <div class="item-text">
-                <div class="item-title">Character Continuity Roster</div>
-                <div class="item-subtitle">Manage CastLock anchors and 3-angle visual bibles</div>
+                <div class="item-title">Saved Characters</div>
+                <div class="item-subtitle">View and manage your saved characters</div>
             </div>
             <div class="item-right">
                 <span class="chip" id="chip-roster-count">0</span>
@@ -1284,8 +1284,8 @@
                 <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
             </div>
             <div class="item-text">
-                <div class="item-title">Forge New Character</div>
-                <div class="item-subtitle">Define facial biometrics, ethnicity, and wardrobe</div>
+                <div class="item-title">Create New Character</div>
+                <div class="item-subtitle">Set face, style, age, and clothes</div>
             </div>
             <div class="item-right">
                 <span class="chip ready">FORGE</span>
@@ -1543,23 +1543,23 @@
             <div class="modal-header-top">
                 <div class="modal-title">
                     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    CastLock Roster
+                    Saved Characters
                 </div>
                 <button class="modal-close" onclick="closeAllModals()">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Persistent characters with fixed facial biometrics for multi-scene continuity</div>
+            <div class="modal-subtitle">Keep characters looking the same across all scenes</div>
         </div>
         <div class="modal-body">
             <div style="margin-bottom:12px;">
                 <button class="btn-submit" onclick="openModal('new-character')" style="margin-top:0;">
                     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Forge New Character
+                    Create New Character
                 </button>
             </div>
             <div id="character-roster-container">
-                <div class="form-hint" style="text-align:center; padding:20px;">No characters registered yet. Tap 'Forge New Character' above to register your first character.</div>
+                <div class="form-hint" style="text-align:center; padding:20px;">No characters yet. Tap 'Create New Character' above to add one.</div>
             </div>
         </div>
     </div>
@@ -1573,13 +1573,13 @@
             <div class="modal-header-top">
                 <div class="modal-title">
                     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    Forge CastLock Character
+                    Create New Character
                 </div>
                 <button class="modal-close" onclick="closeAllModals()">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Generate a 3-angle turnaround visual anchor with lockable facial biometrics</div>
+            <div class="modal-subtitle">Generate front, side, and 3/4 views of your character</div>
         </div>
         <div class="modal-body">
             <div class="form-card">
@@ -1706,7 +1706,7 @@
                 <div>
                     <div class="form-label" style="font-size:10px;">Optional Reference Image</div>
                     <input id="forge-image-input" type="file" accept="image/*" class="form-input" style="padding:6px;" onchange="handleImageFileSelect(this)">
-                    <div class="form-hint" style="margin-top:4px;">Upload a face or character reference image to extract biometrics.</div>
+                    <div class="form-hint" style="margin-top:4px;">Upload a photo of the face you want to use.</div>
                     <input id="forge-ref-instruction" type="text" class="form-input" placeholder="e.g. Keep same bone structure and eye shape, change hair to braids" style="margin-top:6px;">
                 </div>
             </div>
@@ -1765,7 +1765,7 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Test-render high fidelity cinematics directly via Google GenAI vision cluster</div>
+            <div class="modal-subtitle">Generate sample scene images with Google AI</div>
         </div>
         <div class="modal-body">
             <div class="form-card">
@@ -1902,7 +1902,7 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Master platform controls, API keys, locks, ledger & pricing</div>
+            <div class="modal-subtitle">Manage app settings, API keys, user credits, and pricing</div>
         </div>
         <div class="modal-body" id="admin-modal-body">
             <!-- Dynamically populated in openAdminModal() with segmented tabs -->
@@ -2036,11 +2036,11 @@
                 if (dot) dot.style.background = 'var(--accent)';
 
                 this.stages = (stages && stages.length) ? stages : [
-                    { at: 0, text: "Connecting to neural screenplay cluster..." },
-                    { at: 20, text: "Extracting narrative context & cultural anchors..." },
-                    { at: 50, text: "Synthesizing narrative scenes & dialogue beats..." },
-                    { at: 75, text: "Evaluating viral retention & narrative continuity..." },
-                    { at: 90, text: "Formulating final script package & dual PDFs..." }
+                    { at: 0, text: "Connecting to AI..." },
+                    { at: 20, text: "Reading story idea..." },
+                    { at: 50, text: "Writing scenes and dialogue..." },
+                    { at: 75, text: "Checking story flow..." },
+                    { at: 90, text: "Creating script and PDF files..." }
                 ];
 
                 this.startTime = Date.now();
@@ -2897,7 +2897,7 @@
 
             const btn = document.getElementById('btn-generate-concepts');
             btn.disabled = true;
-            btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Synthesizing 10 Concepts...';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Creating 10 Concepts...';
 
             const culture = document.getElementById('story-sel-culture').value;
             let genre = document.getElementById('story-sel-genre').value;
@@ -2910,14 +2910,14 @@
 
             const genreDisplay = (genre.startsWith('Custom') && customGenre) ? customGenre : genre;
             AIProgressTracker.start(
-                "Generating 10 Story Concepts",
+                "Creating 10 Story Concepts",
                 12,
                 [
-                    { at: 0, text: `Connecting to screenplay engine for ${culture}...` },
-                    { at: 20, text: `Analyzing ${genreDisplay} narrative style & tone...` },
-                    { at: 45, text: "Synthesizing 10 adaptive story concepts..." },
-                    { at: 75, text: "Evaluating emotional stakes & authentic hooks..." },
-                    { at: 90, text: "Formulating AI Editor's Recommended Pick & payload..." }
+                    { at: 0, text: `Connecting to AI for ${culture}...` },
+                    { at: 20, text: `Setting ${genreDisplay} tone and style...` },
+                    { at: 45, text: "Writing 10 story ideas..." },
+                    { at: 75, text: "Checking story hooks and drama..." },
+                    { at: 90, text: "Picking best recommended story..." }
                 ]
             );
 
@@ -3087,14 +3087,14 @@
             const conceptTitle = selectedC.title || "Screenplay";
 
             AIProgressTracker.start(
-                "Producing Screenplay & Dual PDFs",
+                "Writing Complete Screenplay",
                 25,
                 [
-                    { at: 5, text: `Locking protagonist biometrics & act structure for "${conceptTitle}"...` },
-                    { at: 22, text: "Synthesizing complete screenplay scenes & dialogue beats..." },
-                    { at: 52, text: "Compiling Image Prompts Production Bible with Midjourney syntax..." },
-                    { at: 75, text: "Compiling Video Scene Action Prompts for Gen-3 & Sora..." },
-                    { at: 90, text: "Assembling & rendering Dual Production PDF documents..." }
+                    { at: 5, text: `Setting main character and outline for "${conceptTitle}"...` },
+                    { at: 22, text: "Writing all story scenes and dialogue..." },
+                    { at: 52, text: "Formatting image prompts for Midjourney & Flux..." },
+                    { at: 75, text: "Formatting video scene prompts..." },
+                    { at: 90, text: "Creating Image & Video PDF files..." }
                 ]
             );
 
@@ -3189,13 +3189,13 @@
 
             const artStyle = document.getElementById('forge-style')?.value || 'cinematic';
             AIProgressTracker.start(
-                `Forging CastLock 3D Character: ${name}`,
+                `Creating Character: ${name}`,
                 16,
                 [
-                    { at: 5, text: `Scanning biometric complexion, facial symmetry & age markers for "${name}"...` },
-                    { at: 25, text: `Sculpting cranial proportions in ${artStyle} stylization...` },
-                    { at: 55, text: "Synthesizing multi-angle CastLock consistency anchors..." },
-                    { at: 80, text: "Rendering biometric preview & writing persistent character record..." }
+                    { at: 5, text: `Scanning face features for "${name}"...` },
+                    { at: 25, text: `Setting ${artStyle} art style and look...` },
+                    { at: 55, text: "Creating matching character views..." },
+                    { at: 80, text: "Saving character profile..." }
                 ]
             );
 
@@ -3390,13 +3390,13 @@
             btn.disabled = true;
 
             AIProgressTracker.start(
-                "Rendering High-Res Visual Frame",
+                "Creating Scene Image",
                 14,
                 [
-                    { at: 5, text: "Configuring Imagen / FLUX neural pipeline & aspect ratio..." },
-                    { at: 25, text: "Synthesizing cinematic lighting, ray-tracing & specular highlights..." },
-                    { at: 60, text: "Refining 8K texture details, skin subsurface scattering & depth..." },
-                    { at: 85, text: "Encoding visual frame buffer & generating live download..." }
+                    { at: 5, text: "Connecting to AI image model..." },
+                    { at: 25, text: "Drawing scene lighting and background..." },
+                    { at: 60, text: "Adding fine details, colors, and depth..." },
+                    { at: 85, text: "Finalizing and preparing image download..." }
                 ]
             );
 
@@ -3627,7 +3627,7 @@
 
                 let txRows = '';
                 if (recentTxs.length === 0) {
-                    txRows = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No ledger transactions recorded yet.</div>';
+                    txRows = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No credit changes yet.</div>';
                 } else {
                     txRows = recentTxs.slice(0, 5).map(t => {
                         const dateStr = t.created_at ? t.created_at.slice(5, 16) : '';
@@ -3661,7 +3661,7 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${(stats.total_credits_in_circulation ?? 0).toLocaleString()}</div>
-                            <div class="stat-label">Circulating Cr</div>
+                            <div class="stat-label">Total Credits</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${stats.total_story_jobs ?? 0}</div>
@@ -3672,7 +3672,7 @@
                     <!-- CLUSTER GATEWAY HEALTH -->
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <div class="form-label" style="margin-bottom:0;">Cluster Gateway & Policy Status</div>
+                            <div class="form-label" style="margin-bottom:0;">Server & Key Status</div>
                             <button class="btn-sm-action" onclick="loadAdminOverview()">Refresh</button>
                         </div>
                         <div class="list-group" style="margin:0;">
@@ -3685,22 +3685,22 @@
                             </div>
                             <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
-                                    <div class="item-title">Fallback Key (429 Pool)</div>
-                                    <div class="item-subtitle">${fKey.configured ? `Configured (${fKey.preview})` : 'No secondary key (single point of failure)'}</div>
+                                    <div class="item-title">Fallback Key (Backup)</div>
+                                    <div class="item-subtitle">${fKey.configured ? `Configured (${fKey.preview})` : 'No backup key'}</div>
                                 </div>
                                 <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'ACTIVE' : 'UNSET'}</span>
                             </div>
                             <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
-                                    <div class="item-title">BYOK Policy</div>
-                                    <div class="item-subtitle">${byokAllowed ? 'Creators can connect personal keys' : 'Personal keys locked. Credits required'}</div>
+                                    <div class="item-title">Custom Key Access</div>
+                                    <div class="item-subtitle">${byokAllowed ? 'Users can use their own Gemini keys' : 'Custom keys disabled. Credits required'}</div>
                                 </div>
                                 <span class="chip ${byokAllowed ? 'ready' : 'byok'}" style="font-size:10px;">${byokAllowed ? 'OPEN' : 'LOCKED'}</span>
                             </div>
                             <div class="list-item" style="padding:10px 0;">
                                 <div class="item-text">
-                                    <div class="item-title">Platform Gateway</div>
-                                    <div class="item-subtitle">${maintActive ? (settings.maintenance_message || 'Maintenance lock active') : 'All services online and accepting runs'}</div>
+                                    <div class="item-title">App Status</div>
+                                    <div class="item-subtitle">${maintActive ? (settings.maintenance_message || 'Maintenance lock active') : 'All services online and working'}</div>
                                 </div>
                                 <span class="chip ${maintActive ? 'danger' : 'ready'}" style="font-size:10px;">${maintActive ? 'MAINTENANCE' : 'ONLINE'}</span>
                             </div>
@@ -3709,7 +3709,7 @@
 
                     <!-- RECENT AUDIT LEDGER -->
                     <div class="form-card">
-                        <div class="form-label" style="margin-bottom:8px;">Recent Ledger Transactions</div>
+                        <div class="form-label" style="margin-bottom:8px;">Recent Credit History</div>
                         ${txRows}
                     </div>
                 `;

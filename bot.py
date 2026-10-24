@@ -536,13 +536,13 @@ def format_castlock_roster_card(user_chars: list, credits_balance: int) -> str:
     total = len(user_chars)
     if total == 0:
         return (
-            "🎭 **WP CastLock — 3D Character Continuity Studio**\n"
+            "🎭 **WP CastLock — Character Studio**\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "Locks your characters' 3D facial anatomy, skin shader, and wardrobe so AI generates the **exact same person** across all your YouTube and animation scenes with zero face morphing!\n\n"
-            "📂 **Your Cast Roster is currently empty.**\n\n"
-            "✨ Create your first character using our step-by-step guided wizard, or pick a 1-Tap Hollywood Preset below to get started immediately:\n"
+            "Keep your characters looking the same across every scene with no face changing!\n\n"
+            "📂 **You have no saved characters yet.**\n\n"
+            "✨ Create your first character step-by-step, or pick a preset character below to get started right away:\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 **Balance:** `{credits_balance} Credits` | 9-Panel Sheet: `{CASTLOCK_COST} Credits`"
+            f"💰 **Balance:** `{credits_balance} Credits` | 9-Angle Sheet: `{CASTLOCK_COST} Credits`"
         )
 
     roster_lines = []
@@ -557,13 +557,13 @@ def format_castlock_roster_card(user_chars: list, credits_balance: int) -> str:
 
     roster_text = "\n".join(roster_lines)
     return (
-        f"🎭 **WP CastLock — Cast Continuity Roster ({total} Saved)**\n"
+        f"🎭 **WP CastLock — Saved Characters ({total} Total)**\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "Locks your characters' 3D facial anatomy, skin shader, and wardrobe so AI generates the **exact same person** across all your YouTube and animation scenes with zero face morphing!\n\n"
+        "Keep your characters looking the same across every scene with no face changing!\n\n"
         f"{roster_text}\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"💰 **Balance:** `{credits_balance} Credits` | 9-Panel Sheet: `{CASTLOCK_COST} Credits`\n\n"
-        "👇 **Select a character below** to produce 9-panel sheets or edit, or create a new character to expand your cast:"
+        f"💰 **Balance:** `{credits_balance} Credits` | 9-Angle Sheet: `{CASTLOCK_COST} Credits`\n\n"
+        "👇 **Select a character below** to get 9-angle sheets or edit, or create a new character:"
     )
 
 def get_castlock_roster_keyboard(user_chars: list) -> list:
@@ -1060,7 +1060,7 @@ async def main():
             user_chars = database.get_user_characters(user_id)
             cur_lead = state.get("locked_lead_name", "🤖 Auto-Invent (AI)")
             menu_text = (
-                "👑 **WP StoryCraft — Select Lead Protagonist**\n"
+                "👑 **WP StoryCraft — Select Main Character**\n"
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 "Lock your story's main character to an exact **WP CastLock** profile!\n"
                 "The AI will maintain 100% identical facial landmarks, hair architecture, skin shader, and wardrobe across all scene prompts and turnarounds.\n\n"
@@ -1106,7 +1106,7 @@ async def main():
                         "art_style": char.get("art_style", "Realistic"),
                         "reference_instruction": char.get("reference_instruction", "")
                     }
-                    await event.answer(f"👑 Lead Protagonist locked to {cname}!", alert=False)
+                    await event.answer(f"👑 Main Character locked to {cname}!", alert=False)
                     await update_creative_direction_card(event, state)
 
         elif data.startswith("sc_set_cast_preset_"):
@@ -1133,7 +1133,7 @@ async def main():
                         "outfit": eff_outfit,
                         "art_style": preset.get("art_style", "Realistic")
                     }
-                    await event.answer(f"👑 Lead Protagonist locked to {pname}!", alert=False)
+                    await event.answer(f"👑 Main Character locked to {pname}!", alert=False)
                     await update_creative_direction_card(event, state)
 
         elif data == "sc_set_cast_auto":
@@ -1253,7 +1253,7 @@ async def main():
                 f"• Visual Style: `{state['style']}`\n"
                 f"• Culture: `{state['culture']}` | Genre: `{state['genre']}`\n"
                 f"• Story Delivery: `{delivery_fmt}`\n"
-                f"• Lead Protagonist: {lead_display}\n"
+                f"• Main Character: {lead_display}\n"
                 f"• Length Tier: `{tier}` ({tier_info['scenes']} • {tier_info['duration']})\n"
                 f"• Target Upload Timezone: `{state['timezone']}`\n"
                 f"• Dual PDFs: `1. Story Bible` + `2. Scene Prompts Blueprint`\n\n"
@@ -1466,7 +1466,7 @@ async def main():
                 caption = (
                     f"🎬 **Scene {scene_num}: {scene_title} — Visual Render Preview**\n"
                     f"📖 **Story:** `{story_title}`\n"
-                    f"👑 **Lead Protagonist:** `{lead_name}`\n"
+                    f"👑 **Main Character:** `{lead_name}`\n"
                     f"📐 **Aspect Ratio:** `16:9 Landscape` (YouTube Automation Standard)\n\n"
                     f"💡 *Generated with locked facial continuity & ARRI Alexa lighting profile.*"
                 )
@@ -2317,7 +2317,7 @@ async def main():
         text = (
             "🎬 **WP StoryCraft — Step 2: Creative Direction**\n\n"
             f"📹 **Source:** `{state['source_title'][:40]}`\n"
-            f"👑 **Lead Protagonist:** `{lead_label}`\n"
+            f"👑 **Main Character:** `{lead_label}`\n"
             f"🌍 **Culture Anchor:** `{state['culture']}`\n"
             f"🎨 **Visual Style:** `{state['style']}`\n"
             f"🎭 **Genre:** `{state['genre']}`\n"
@@ -2852,7 +2852,7 @@ async def main():
             card_text = (
                 "🎬 **WP StoryCraft — Step 2: Creative Direction**\n\n"
                 f"📹 **Source:** `{source_title[:40]}`\n"
-                f"👑 **Lead Protagonist:** `🤖 Auto-Invent (AI)`\n"
+                f"👑 **Main Character:** `🤖 Auto-Invent (AI)`\n"
                 f"🌍 **Culture Anchor:** `{state_data['culture']}`\n"
                 f"🎨 **Visual Style:** `{state_data['style']}`\n"
                 f"🎭 **Genre:** `{state_data['genre']}`\n"

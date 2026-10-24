@@ -908,32 +908,7 @@
             100% { opacity: 1; }
         }
 
-        /* Toast */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-60px);
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 18px;
-            border-radius: 24px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.25);
-            z-index: 999999;
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            max-width: 90%;
-            pointer-events: none;
-        }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
 
             /* ===================================================================== */
         /* MASTER ADMIN SUITE STYLES - 100% WP RELAY DESIGN                      */
@@ -1157,11 +1132,6 @@
         </button>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <svg id="toast-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span id="toast-text">Success</span>
-    </div>
 
     <!-- Header -->
     <div class="header">
@@ -2342,18 +2312,28 @@
         }
 
         // Native Telegram Feedback - Non-Blocking Native Floating Toast
+        // 100% Native Telegram Dialogs
         function showTelegramAlert(msg, callback) {
             const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
-            showToast(text, false);
-            if (typeof callback === 'function') {
-                try { callback(); } catch(e){}
+            try {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.HapticFeedback?.notificationOccurred('error');
+                    if (typeof window.Telegram.WebApp.showAlert === 'function') {
+                        window.Telegram.WebApp.showAlert(text, callback || (() => {}));
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.warn("tg.showAlert failed:", e);
             }
+            alert(text);
+            if (typeof callback === 'function') callback();
         }
 
         function showTelegramConfirm(msg, onConfirm, onCancel) {
             const text = String(msg);
-            if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.showConfirm === 'function') {
-                try {
+            try {
+                if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.showConfirm === 'function') {
                     window.Telegram.WebApp.HapticFeedback?.impactOccurred('medium');
                     window.Telegram.WebApp.showConfirm(text, (ok) => {
                         if (ok) {
@@ -2363,53 +2343,32 @@
                         }
                     });
                     return;
-                } catch(e) {
-                    console.warn("tg.showConfirm failed:", e);
                 }
+            } catch(e) {
+                console.warn("tg.showConfirm failed:", e);
             }
-            // Seamless non-blocking confirm fallback
-            if (typeof onConfirm === 'function') onConfirm();
+            if (window.confirm(text)) {
+                if (typeof onConfirm === 'function') onConfirm();
+            } else {
+                if (typeof onCancel === 'function') onCancel();
+            }
         }
 
         function showToast(msg, isSuccess = true) {
-            const toast = document.getElementById('toast');
-            const toastText = document.getElementById('toast-text');
-            const toastIcon = document.getElementById('toast-icon');
             const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
-
-            // Native Telegram Haptic Feedback
             try {
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    if (isSuccess) {
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    } else {
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.HapticFeedback?.notificationOccurred(isSuccess ? 'success' : 'error');
+                    if (typeof window.Telegram.WebApp.showAlert === 'function') {
+                        window.Telegram.WebApp.showAlert(text);
+                        return;
                     }
                 }
-            } catch(e){}
-
-            if (toast && toastText && toastIcon) {
-                toastText.innerText = text;
-                if (isSuccess) {
-                    toast.style.borderColor = 'rgba(48, 209, 88, 0.4)';
-                    toastIcon.style.stroke = 'var(--success)';
-                } else {
-                    toast.style.borderColor = 'rgba(255, 69, 58, 0.5)';
-                    toastIcon.style.stroke = 'var(--danger)';
-                }
-                toast.classList.add('show');
-                if (window._toastTimeout) clearTimeout(window._toastTimeout);
-                window._toastTimeout = setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3500);
-            } else {
-                console.log("[WP Studio Feedback]", text);
-            }
+            } catch(e) {}
+            alert(text);
         }
 
-        // Global safeguard: completely suppress any native browser alert or confirm modals
-        window.alert = function(msg) { showToast(msg, false); };
-        window.confirm = function(msg) { return true; };
+        window.alert = function(msg) { showTelegramAlert(msg); };
 
 
         // Modal Controls

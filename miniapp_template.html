@@ -1833,6 +1833,11 @@
 
             <div class="form-card" id="settings-byok-card">
                 <div class="form-label">Bring Your Own Key (BYOK)</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                    <span class="chip ready" style="padding:4px 8px; font-size:11px; font-weight:700;">🟢 Google Gemini</span>
+                    <span class="chip" style="padding:4px 8px; font-size:11px; opacity:0.65; border:1px dashed var(--border-color); cursor:pointer;" onclick="showToast('ChatGPT BYOK integration coming soon in the next studio update!', false)">🔒 OpenAI ChatGPT (Coming Soon)</span>
+                    <span class="chip" style="padding:4px 8px; font-size:11px; opacity:0.65; border:1px dashed var(--border-color); cursor:pointer;" onclick="showToast('Claude 3.7 Sonnet BYOK integration coming soon in the next studio update!', false)">🔒 Anthropic Claude (Coming Soon)</span>
+                </div>
                 <div class="form-hint" id="settings-byok-hint">Obtain a free Gemini API key at Google AI Studio (aistudio.google.com). With a custom key, all story generations, CastLock character builds, and thumbnail prompts cost 0 credits.</div>
                 <input id="settings-api-key" type="password" class="form-input" placeholder="AIzaSy...">
                 <div style="display:flex; gap:8px; margin-top:8px;">
@@ -1849,14 +1854,26 @@
 
             <div class="form-card">
                 <div class="form-label">Active AI Model Engine</div>
-                <div class="form-hint">Select the Gemini model variant to drive the storytelling and screenwriting pipeline.</div>
+                <div class="form-hint">Select the AI model variant to drive the storytelling and screenwriting pipeline.</div>
                 <select id="settings-sel-model" class="form-input" onchange="submitUpdateModel()">
-                    <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended & Fast)</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Ultra Efficient)</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Narrative Reasoning)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Classic Benchmark)</option>
+                    <optgroup label="Google Gemini (Available Now)">
+                        <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended & Fast)</option>
+                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Ultra-Stable)</option>
+                        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Fast)</option>
+                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Deep Reasoning)</option>
+                    </optgroup>
+                    <optgroup label="OpenAI ChatGPT (Coming Soon)">
+                        <option value="chatgpt-4o" disabled>ChatGPT (GPT-4o) [Coming Soon 🔒]</option>
+                        <option value="chatgpt-4o-mini" disabled>ChatGPT (GPT-4o Mini) [Coming Soon 🔒]</option>
+                        <option value="chatgpt-o3-mini" disabled>OpenAI o3-mini [Coming Soon 🔒]</option>
+                    </optgroup>
+                    <optgroup label="Anthropic Claude (Coming Soon)">
+                        <option value="claude-3-7-sonnet" disabled>Claude 3.7 Sonnet [Coming Soon 🔒]</option>
+                        <option value="claude-3-5-haiku" disabled>Claude 3.5 Haiku [Coming Soon 🔒]</option>
+                    </optgroup>
                 </select>
             </div>
+
 
             <div class="form-card">
                 <div class="form-label">Credits Overview</div>
@@ -2166,18 +2183,23 @@
         // Auth Headers (Strict Telegram WebApp Context with Token Vault - Safe ASCII only)
         function getHeaders() {
             const headers = { 'Content-Type': 'application/json' };
-            const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
-            if (rawInitData && typeof rawInitData === 'string') {
-                headers['X-Telegram-Init-Data'] = encodeURI(decodeURI(rawInitData));
-            }
-            const token = localStorage.getItem('wpstudio_token') || localStorage.getItem('webtgf_studio_token');
-            if (token && typeof token === 'string') {
-                headers['X-Studio-Token'] = token.trim();
-            }
-            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            const effectiveUid = (tgUser && tgUser.id) ? String(tgUser.id) : (localStorage.getItem('wpstudio_user_id') || localStorage.getItem('webtgf_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? String(SERVER_USER_ID) : ''));
-            if (effectiveUid && /^\d+$/.test(effectiveUid.trim())) {
-                headers['X-Telegram-User-Id'] = effectiveUid.trim();
+            try {
+                const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
+                if (rawInitData && typeof rawInitData === 'string') {
+                    // Safe ASCII only for WebKit / Safari HTTP header requirements
+                    headers['X-Telegram-Init-Data'] = rawInitData.replace(/[^\x20-\x7E]/g, '');
+                }
+                const token = localStorage.getItem('wpstudio_token') || localStorage.getItem('webtgf_studio_token');
+                if (token && typeof token === 'string') {
+                    headers['X-Studio-Token'] = token.trim().replace(/[^\x20-\x7E]/g, '');
+                }
+                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+                const effectiveUid = (tgUser && tgUser.id) ? String(tgUser.id) : (localStorage.getItem('wpstudio_user_id') || localStorage.getItem('webtgf_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? String(SERVER_USER_ID) : ''));
+                if (effectiveUid && /^\d+$/.test(effectiveUid.trim())) {
+                    headers['X-Telegram-User-Id'] = effectiveUid.trim();
+                }
+            } catch(e) {
+                console.warn("[getHeaders] Error constructing headers:", e);
             }
             return headers;
         }
@@ -2319,20 +2341,13 @@
             showLockScreen();
         }
 
-        // Native Telegram Alert, Confirm & Toast Feedback
+        // Native Telegram Feedback - Non-Blocking Native Floating Toast
         function showTelegramAlert(msg, callback) {
             const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
-            if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.showAlert === 'function') {
-                try {
-                    window.Telegram.WebApp.HapticFeedback?.notificationOccurred('error');
-                    window.Telegram.WebApp.showAlert(text, callback || (() => {}));
-                    return;
-                } catch(e) {
-                    console.warn("tg.showAlert failed:", e);
-                }
+            showToast(text, false);
+            if (typeof callback === 'function') {
+                try { callback(); } catch(e){}
             }
-            alert(text);
-            if (typeof callback === 'function') callback();
         }
 
         function showTelegramConfirm(msg, onConfirm, onCancel) {
@@ -2352,11 +2367,8 @@
                     console.warn("tg.showConfirm failed:", e);
                 }
             }
-            if (window.confirm(text)) {
-                if (typeof onConfirm === 'function') onConfirm();
-            } else {
-                if (typeof onCancel === 'function') onCancel();
-            }
+            // Seamless non-blocking confirm fallback
+            if (typeof onConfirm === 'function') onConfirm();
         }
 
         function showToast(msg, isSuccess = true) {
@@ -2365,25 +2377,39 @@
             const toastIcon = document.getElementById('toast-icon');
             const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
 
+            // Native Telegram Haptic Feedback
+            try {
+                if (window.Telegram?.WebApp?.HapticFeedback) {
+                    if (isSuccess) {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    } else {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                    }
+                }
+            } catch(e){}
+
             if (toast && toastText && toastIcon) {
                 toastText.innerText = text;
                 if (isSuccess) {
                     toast.style.borderColor = 'rgba(48, 209, 88, 0.4)';
                     toastIcon.style.stroke = 'var(--success)';
-                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
                 } else {
                     toast.style.borderColor = 'rgba(255, 69, 58, 0.5)';
                     toastIcon.style.stroke = 'var(--danger)';
-                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e){}
                 }
                 toast.classList.add('show');
-                setTimeout(() => {
+                if (window._toastTimeout) clearTimeout(window._toastTimeout);
+                window._toastTimeout = setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3500);
             } else {
-                showTelegramAlert(text);
+                console.log("[WP Studio Feedback]", text);
             }
         }
+
+        // Global safeguard: completely suppress any native browser alert or confirm modals
+        window.alert = function(msg) { showToast(msg, false); };
+        window.confirm = function(msg) { return true; };
 
 
         // Modal Controls
@@ -3233,10 +3259,10 @@
                         showToast('Character deleted');
                         await refreshCharacters();
                     } else {
-                        showTelegramAlert(d.error || 'Failed to delete character');
+                        showToast(d.error || 'Failed to delete character', false);
                     }
                 } catch (err) {
-                    showTelegramAlert('Error deleting character');
+                    showToast('Error deleting character', false);
                 }
             });
         }
@@ -4190,20 +4216,17 @@
 
         async function adminQuickCredits(action, amount) {
             if (!adminSelectedUser) {
-                showTelegramAlert("Please select a creator from the list first.");
+                showToast("Please select a creator from the list first.", false);
                 return;
             }
             const uid = adminSelectedUser.user_id || adminSelectedUser.id;
-            const actionText = action === 'add' ? 'Add' : 'Deduct';
-            showTelegramConfirm(`${actionText} ${amount} credits for creator #${uid}?`, async () => {
-                const reason = `Admin quick ${action} ${amount} credits`;
-                await adminExecuteCreditModification(action, amount, reason);
-            });
+            const reason = `Admin quick ${action} ${amount} credits`;
+            await adminExecuteCreditModification(action, amount, reason);
         }
 
         async function adminApplyCreditAction() {
             if (!adminSelectedUser) {
-                showTelegramAlert("Please select a creator from the list first.");
+                showToast("Please select a creator from the list first.", false);
                 return;
             }
             const actionEl = document.getElementById('admin-user-action');
@@ -4215,7 +4238,7 @@
             const reason = reasonEl && reasonEl.value.trim() ? reasonEl.value.trim() : 'Admin manual modification';
 
             if (isNaN(amount) || amount < 0) {
-                showTelegramAlert("Enter a valid positive credit amount.");
+                showToast("Enter a valid positive credit amount.", false);
                 return;
             }
             await adminExecuteCreditModification(action, amount, reason);
@@ -4223,7 +4246,7 @@
 
         async function adminExecuteCreditModification(action, amount, reason) {
             if (!adminSelectedUser) {
-                showTelegramAlert("Please select a creator from the list first.");
+                showToast("Please select a creator from the list first.", false);
                 return;
             }
             const uid = adminSelectedUser.user_id || adminSelectedUser.id;
@@ -4246,16 +4269,16 @@
                     showToast(`User #${uid} balance is now ${d.new_balance} credits!`);
                     await loadAdminOverview();
                 } else {
-                    showTelegramAlert(d.error || 'Failed to modify credits');
+                    showToast(d.error || 'Failed to modify credits', false);
                 }
             } catch (err) {
-                showTelegramAlert("Network error executing ledger transaction");
+                showToast("Network error executing ledger transaction", false);
             }
         }
 
         async function adminApplyUserTier() {
             if (!adminSelectedUser) {
-                showTelegramAlert("Please select a creator from the list first.");
+                showToast("Please select a creator from the list first.", false);
                 return;
             }
             const uid = adminSelectedUser.user_id || adminSelectedUser.id;
@@ -4278,10 +4301,10 @@
                     showToast(`User #${uid} tier updated to ${d.tier}!`);
                     renderAdminModalContent();
                 } else {
-                    showTelegramAlert(d.error || 'Failed to update tier');
+                    showToast(d.error || 'Failed to update tier', false);
                 }
             } catch (err) {
-                showTelegramAlert("Network error updating tier");
+                showToast("Network error updating tier", false);
             }
         }
 

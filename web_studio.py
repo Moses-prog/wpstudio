@@ -1130,11 +1130,17 @@ def api_admin_modify_credits():
     if not target_id or amount is None:
         return jsonify({"success": False, "error": "Missing target_user_id or amount."}), 400
 
+    try:
+        t_id = int(target_id)
+        amt = int(amount)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid target_user_id or amount format."}), 400
+
     res = database.admin_modify_user_credits(
         admin_id=user["user_id"],
-        target_user_id=int(target_id),
+        target_user_id=t_id,
         action=action,
-        amount=int(amount),
+        amount=amt,
         reason=reason
     )
     return jsonify(res)
@@ -1152,7 +1158,12 @@ def api_admin_update_tier():
     if not target_id:
         return jsonify({"success": False, "error": "Missing target_user_id."}), 400
 
-    database.admin_set_user_tier(user["user_id"], int(target_id), tier)
+    try:
+        t_id = int(target_id)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid target_user_id format."}), 400
+
+    database.admin_set_user_tier(user["user_id"], t_id, tier)
     return jsonify({"success": True, "tier": tier})
 
 @app.route('/api/admin/update_settings', methods=['POST'])

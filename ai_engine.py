@@ -15,13 +15,16 @@ logger = logging.getLogger("WPStudio")
 
 DEFAULT_KEY = os.getenv("DEFAULT_GEMINI_API_KEY", "")
 
-# Available Gemini Models for YouTube Automation Creators
+# Available AI Models for YouTube Automation Creators
 AVAILABLE_MODELS = {
     "gemini-3.8-flash": "Gemini 3.8 Flash (Cinematic Pacing & Fast)",
     "gemini-3.5-flash": "Gemini 3.5 Flash (Ultra-Stable)",
     "gemini-3.5-flash-lite": "Gemini 3.5 Flash Lite (Fast)",
     "gemini-3.1-pro-preview": "Gemini 3.1 Pro (BYOK High-Tier)",
+    "chatgpt-4o": "ChatGPT (GPT-4o) [Coming Soon 🔒]",
+    "claude-3-7-sonnet": "Claude 3.7 Sonnet [Coming Soon 🔒]"
 }
+
 
 DEFAULT_MODEL = "gemini-3.8-flash"
 

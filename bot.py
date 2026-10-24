@@ -2238,6 +2238,9 @@ async def main():
 
         elif data.startswith("set_model_"):
             new_model = data.replace("set_model_", "")
+            if new_model in ["chatgpt-4o", "claude-3-7-sonnet"]:
+                await event.answer("⏳ Coming Soon! ChatGPT and Claude BYOK integrations are currently in final development.", alert=True)
+                return
             if new_model in ai_engine.AVAILABLE_MODELS:
                 database.update_user_model(user_id, new_model)
                 user["selected_model"] = new_model
@@ -2581,7 +2584,11 @@ async def main():
             "• `/broadcast <announcement message>`"
         )
 
-        miniapp_url = os.getenv("MINIAPP_URL", "http://localhost:8085/miniapp")
+        miniapp_url = os.getenv("MINIAPP_URL", "").strip() or os.getenv("RENDER_EXTERNAL_URL", "").strip()
+        if not miniapp_url or "localhost" in miniapp_url or "127.0.0.1" in miniapp_url or not miniapp_url.startswith("http"):
+            miniapp_url = "https://wpstudio.onrender.com/miniapp"
+        if not miniapp_url.endswith("/miniapp"):
+            miniapp_url = miniapp_url.rstrip("/") + "/miniapp"
         admin_web_url = f"{miniapp_url}?user_id={user_id}"
 
         byok_btn_text = "🔒 Lock BYOK" if byok_on else "🔓 Unlock BYOK"

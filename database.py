@@ -617,12 +617,18 @@ def get_all_users(search: str = None, limit: int = 50) -> list:
     return [dict(r) for r in rows]
 
 def admin_modify_user_credits(admin_id: int, target_user_id: int, action: str, amount: int, reason: str = "") -> dict:
+    try:
+        target_user_id = int(target_user_id)
+        amount = int(amount)
+        admin_id = int(admin_id)
+    except (ValueError, TypeError):
+        return {"success": False, "error": "Invalid target_user_id or amount format."}
+
     target_user = get_user(target_user_id)
     if not target_user:
         return {"success": False, "error": f"User ID {target_user_id} not found."}
 
     prev_balance = int(target_user.get("credits", 0))
-    amount = int(amount)
 
     if action == "add":
         new_balance = prev_balance + amount
@@ -664,6 +670,11 @@ def admin_modify_user_credits(admin_id: int, target_user_id: int, action: str, a
     }
 
 def admin_set_user_tier(admin_id: int, target_user_id: int, tier: str) -> bool:
+    try:
+        target_user_id = int(target_user_id)
+        admin_id = int(admin_id)
+    except (ValueError, TypeError):
+        return False
     now_ts = datetime.utcnow().isoformat()
     conn = get_connection()
     cursor = conn.cursor()

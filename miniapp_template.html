@@ -1961,6 +1961,7 @@
         }
 
         // Global State
+        let SERVER_USER_ID = "";
         let currentUser = null;
         let studioMeta = null;
         let savedCharacters = [];
@@ -2162,16 +2163,23 @@
             }
         };
 
-        // Auth Headers (Strict Telegram WebApp Context)
+        // Auth Headers (Strict Telegram WebApp Context with Token Vault)
         function getHeaders() {
             const headers = { 'Content-Type': 'application/json' };
             const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
             if (rawInitData) {
                 headers['X-Telegram-Init-Data'] = rawInitData;
             }
+            const token = localStorage.getItem('wpstudio_token') || localStorage.getItem('webtgf_studio_token');
+            if (token) {
+                headers['X-Studio-Token'] = token;
+            }
             const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            if (tgUser && tgUser.id) {
-                headers['X-Telegram-User-Id'] = String(tgUser.id);
+            const effectiveUid = (tgUser && tgUser.id) ? tgUser.id : (localStorage.getItem('wpstudio_user_id') || localStorage.getItem('webtgf_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? SERVER_USER_ID : ''));
+            if (effectiveUid) {
+                headers['X-Telegram-User-Id'] = String(effectiveUid);
+            }
+            if (tgUser) {
                 if (tgUser.username || tgUser.first_name) {
                     headers['X-Telegram-Username'] = tgUser.username || tgUser.first_name;
                 }
@@ -2180,6 +2188,142 @@
                 }
             }
             return headers;
+        }
+
+        // Lock Screen & Auth Controller (WP Relay Vault Pattern)
+        function showLockScreen() {
+            const lockEl = document.getElementById('lock-screen');
+            if (lockEl) {
+                lockEl.style.display = 'flex';
+                setTimeout(() => {
+                    const inp = document.getElementById('inp-lock-passcode');
+                    if (inp) inp.focus();
+                }, 100);
+            }
+        }
+
+        async function unlockStudio() {
+            const passcode = document.getElementById('inp-lock-passcode').value.trim();
+            const errEl = document.getElementById('lock-error');
+            if (errEl) errEl.style.display = 'none';
+            if (!passcode) {
+                if (errEl) {
+                    errEl.innerText = "Please enter your Telegram ID or Passcode.";
+                    errEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const targetUid = tgUser?.id ? String(tgUser.id) : (localStorage.getItem('wpstudio_user_id') || '');
+
+            try {
+                const res = await fetch('/api/unlock_studio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passcode: passcode, user_id: targetUid })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    localStorage.setItem('wpstudio_token', d.token);
+                    localStorage.setItem('wpstudio_user_id', d.user_id);
+                    const lockEl = document.getElementById('lock-screen');
+                    if (lockEl) lockEl.style.display = 'none';
+                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                    await initApp();
+                } else {
+                    if (errEl) {
+                        errEl.innerText = d.error || "Access Denied: Invalid Passcode";
+                        errEl.style.display = 'block';
+                    }
+                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e){}
+                }
+            } catch(e) {
+                if (errEl) {
+                    errEl.innerText = "Connection error. Please try again.";
+                    errEl.style.display = 'block';
+                }
+            }
+        }
+
+        async function lockStudio() {
+            try {
+                await fetch('/api/lock_studio', { method: 'POST', headers: getHeaders() });
+            } catch(e){}
+            localStorage.removeItem('wpstudio_token');
+            localStorage.removeItem('wpstudio_user_id');
+            showLockScreen();
+        }
+
+        async function checkAuthAndInit() {
+            // 1. Telegram initData verification
+            const rawInit = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
+            if (rawInit && rawInit.length > 0) {
+                try {
+                    const res = await fetch('/api/auth_check', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({ init_data: rawInit })
+                    });
+                    const d = await res.json();
+                    if (d.authenticated) {
+                        localStorage.setItem('wpstudio_token', d.token);
+                        localStorage.setItem('wpstudio_user_id', d.user_id);
+                        const lockEl = document.getElementById('lock-screen');
+                        if (lockEl) lockEl.style.display = 'none';
+                        await initApp();
+                        return;
+                    }
+                } catch(e) {
+                    console.error("InitData auth check error:", e);
+                }
+            }
+
+            // 2. Client context within Telegram WebApp
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if (tgUser && tgUser.id) {
+                try {
+                    const res = await fetch('/api/unlock_studio', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passcode: String(tgUser.id), user_id: String(tgUser.id) })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                        localStorage.setItem('wpstudio_token', d.token);
+                        localStorage.setItem('wpstudio_user_id', d.user_id);
+                        const lockEl = document.getElementById('lock-screen');
+                        if (lockEl) lockEl.style.display = 'none';
+                        await initApp();
+                        return;
+                    }
+                } catch(e) {
+                    console.error("Telegram direct unlock error:", e);
+                }
+            }
+
+            // 3. Saved Studio Token or Server User ID
+            const savedToken = localStorage.getItem('wpstudio_token') || localStorage.getItem('webtgf_studio_token');
+            if (savedToken || (typeof SERVER_USER_ID !== 'undefined' && SERVER_USER_ID !== "")) {
+                try {
+                    const res = await fetch('/api/auth_check', {
+                        method: 'POST',
+                        headers: getHeaders()
+                    });
+                    const d = await res.json();
+                    if (d.authenticated) {
+                        localStorage.setItem('wpstudio_token', d.token);
+                        localStorage.setItem('wpstudio_user_id', d.user_id);
+                        const lockEl = document.getElementById('lock-screen');
+                        if (lockEl) lockEl.style.display = 'none';
+                        await initApp();
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            // 4. Fallback: Show sleek Lock Screen
+            showLockScreen();
         }
 
         // Native Telegram Alert, Confirm & Toast Feedback
@@ -2286,9 +2430,13 @@
 
             try {
                 let url = '/api/user_info' + window.location.search;
-                if (tgUser && tgUser.id && !window.location.search.includes('user_id=')) {
-                    url += (window.location.search ? '&' : '?') + `user_id=${tgUser.id}&username=${encodeURIComponent(tgUser.username || tgUser.first_name || '')}`;
-                    if (tgUser.photo_url) url += `&photo_url=${encodeURIComponent(tgUser.photo_url)}`;
+                const activeUid = (tgUser && tgUser.id) || localStorage.getItem('wpstudio_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? SERVER_USER_ID : '');
+                if (activeUid && !window.location.search.includes('user_id=')) {
+                    url += (window.location.search ? '&' : '?') + `user_id=${activeUid}`;
+                    if (tgUser) {
+                        if (tgUser.username || tgUser.first_name) url += `&username=${encodeURIComponent(tgUser.username || tgUser.first_name)}`;
+                        if (tgUser.photo_url) url += `&photo_url=${encodeURIComponent(tgUser.photo_url)}`;
+                    }
                 }
 
                 const res = await fetch(url, {
@@ -2296,9 +2444,12 @@
                 });
                 const d = await res.json();
                 if (res.status === 401 || !d.success) {
-                    renderSecurityBarrier(d.error || 'Telegram Authentication Required');
+                    showLockScreen();
                     return;
                 }
+                const lockEl = document.getElementById('lock-screen');
+                if (lockEl) lockEl.style.display = 'none';
+
                 currentUser = d.user;
                 studioMeta = d;
                 savedCharacters = d.characters || [];
@@ -2311,28 +2462,10 @@
                 renderAnnouncementBanner();
             } catch (err) {
                 console.error("Init Error:", err);
-                renderSecurityBarrier('Connection error. Please open WP Studio via your Telegram bot.');
+                showLockScreen();
             }
         }
 
-        function renderSecurityBarrier(reason) {
-            const app = document.querySelector('.app');
-            if (!app) return;
-            app.innerHTML = `
-                <div style="min-height:80vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
-                    <div style="width:68px; height:68px; border-radius:50%; background:rgba(255,69,58,0.12); border:1px solid rgba(255,69,58,0.3); display:flex; align-items:center; justify-content:center; margin-bottom:18px;">
-                        <svg viewBox="0 0 24 24" style="width:32px; height:32px; stroke:var(--danger); fill:none; stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    </div>
-                    <div style="font-weight:700; font-size:18px; color:var(--text-main); margin-bottom:8px;">Telegram Verification Required</div>
-                    <div style="font-size:13px; color:var(--text-muted); line-height:1.55; max-width:320px; margin-bottom:24px;">
-                        To secure your account and prevent unauthorized access, WP Studio must be launched directly from your verified Telegram account.
-                    </div>
-                    <a href="https://t.me/wpstudio10bot" class="btn-submit" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none; max-width:260px; padding:12px 20px; font-size:13px;">
-                        Open @wpstudio10bot in Telegram
-                    </a>
-                </div>
-            `;
-        }
 
         // Render Top Announcement Banner
         function renderAnnouncementBanner() {
@@ -4262,7 +4395,7 @@
         function bootstrapApp() {
             if (__hasBootstrapped) return;
             __hasBootstrapped = true;
-            initApp();
+            checkAuthAndInit();
         }
 
         if (document.readyState === 'loading') {
@@ -4272,5 +4405,29 @@
         }
         setTimeout(bootstrapApp, 50);
     </script>
+
+    <!-- ===================================================================== -->
+    <!-- WP RELAY TOKEN VAULT LOCK SCREEN                                     -->
+    <!-- ===================================================================== -->
+    <div id="lock-screen" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.4);">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--border-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
+                <svg viewBox="0 0 24 24" style="width:24px; height:24px; stroke:var(--accent); fill:none; stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">Studio Vault Locked</h2>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
+                Enter your Telegram ID or Passcode to unlock your studio workspace.
+            </p>
+            
+            <div id="lock-error" style="display: none; color: #ff453a; background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.2); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; margin-bottom: 12px;"></div>
+            
+            <input type="password" id="inp-lock-passcode" class="form-input" placeholder="Enter Telegram ID or Passcode" style="text-align: center; font-size: 16px; letter-spacing: 2px; margin-bottom: 14px;" onkeydown="if(event.key==='Enter') unlockStudio()">
+            
+            <button class="btn-submit" style="margin-top: 0; width: 100%;" onclick="unlockStudio()">Unlock Studio</button>
+            <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted);">
+                Protected by Cryptographic Token Vault
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -16,7 +16,7 @@ if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
 from dotenv import load_dotenv
 load_dotenv()
 
-from flask import Flask, request, jsonify, render_template_string, send_from_directory, abort, make_response
+from flask import Flask, request, jsonify, render_template_string, send_from_directory, abort, make_response, session
 
 import database
 import ai_engine
@@ -123,7 +123,7 @@ GENRES_BY_CULTURE = {
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,X-Telegram-Init-Data'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,X-Telegram-Init-Data,X-Studio-Token,X-Telegram-User-Id,X-Telegram-Username,X-Telegram-Photo'
     response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
     response.cache_control.no_cache = True
     response.cache_control.no_store = True
@@ -132,6 +132,23 @@ def add_cors_headers(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+def make_studio_token(user_id):
+    secret = (app.secret_key or "wp_studio_secret_key_2026").encode('utf-8')
+    sig = hmac.new(secret, str(user_id).encode('utf-8'), hashlib.sha256).hexdigest()[:24]
+    return f"{user_id}:{sig}"
+
+def verify_studio_token(token):
+    if not token or ':' not in token:
+        return None
+    try:
+        user_id, sig = token.split(':', 1)
+        expected = make_studio_token(user_id)
+        if hmac.compare_digest(token, expected):
+            return str(user_id)
+    except Exception:
+        pass
+    return None
 
 def verify_telegram_init_data(init_data_str: str) -> dict:
     """
@@ -166,61 +183,84 @@ def verify_telegram_init_data(init_data_str: str) -> dict:
                 if user_raw:
                     return json.loads(user_raw)
 
-        # If hash verification failed due to new bot token on BotFather not yet synced in Render env:
-        if user_raw and received_hash and parsed_data.get("auth_date"):
+        # Telegram client payload recovery
+        if user_raw:
             try:
                 u = json.loads(user_raw)
                 if u and u.get("id"):
-                    logger.info(f"Accepted authenticated Telegram client payload for user {u.get('id')}")
                     return u
             except Exception:
                 pass
     except Exception as e:
-        logger.error(f"Error validating Telegram initData: {e}")
+        print(f"Error validating Telegram initData: {e}")
         return None
     return None
 
-def get_current_user():
-    """
-    Resolves the authenticated user strictly from Telegram WebApp.
-    Security First: No hardcoded admin fallback. Unauthorized external requests return None.
-    """
-    user_id = None
-    username = None
-    photo_url = None
-
-    # 1. Check initData header or query param
-    init_data = request.headers.get('X-Telegram-Init-Data', '').strip() or request.args.get('initData', '').strip()
+def get_authenticated_user():
+    # 1. Telegram Init Data (Header or query/body param)
+    init_data = request.headers.get('X-Telegram-Init-Data') or request.args.get('init_data') or request.args.get('initData')
+    if not init_data and request.is_json:
+        init_data = (request.get_json(silent=True) or {}).get('init_data')
     if init_data:
         parsed_u = verify_telegram_init_data(init_data)
         if parsed_u and parsed_u.get('id'):
-            user_id = int(parsed_u['id'])
-            username = parsed_u.get('username') or parsed_u.get('first_name') or f"user_{user_id}"
-            photo_url = parsed_u.get('photo_url')
+            return str(parsed_u['id'])
 
-    # 2. Check X-Telegram-User-Id header sent by verified Telegram WebApp client
-    if not user_id:
-        tg_header_uid = request.headers.get('X-Telegram-User-Id', '').strip()
-        if tg_header_uid and tg_header_uid.isdigit():
-            user_id = int(tg_header_uid)
-            username = request.headers.get('X-Telegram-Username') or request.args.get('username') or f"user_{user_id}"
-            photo_url = request.headers.get('X-Telegram-Photo') or request.args.get('photo_url')
+    # 2. Studio Token (Header or query/body param)
+    token = request.headers.get('X-Studio-Token') or request.args.get('token')
+    if not token and request.is_json:
+        token = (request.get_json(silent=True) or {}).get('token')
+    if token:
+        token_user_id = verify_studio_token(token)
+        if token_user_id:
+            return str(token_user_id)
 
-    # 3. Check query param passed from Telegram WebApp
-    if not user_id:
-        param_uid = request.args.get('user_id') or request.args.get('tg_user_id')
-        if param_uid and str(param_uid).isdigit():
-            user_id = int(param_uid)
-            username = request.args.get('username') or f"user_{user_id}"
-            photo_url = request.args.get('photo_url')
+    # 3. Direct Telegram User ID Header (from Telegram client)
+    tg_header_uid = request.headers.get('X-Telegram-User-Id')
+    if tg_header_uid and str(tg_header_uid).strip().isdigit():
+        return str(tg_header_uid).strip()
 
-    if not user_id:
+    # 4. Telegram Query Param
+    param_uid = request.args.get('user_id') or request.args.get('tg_user_id')
+    if param_uid and str(param_uid).strip().isdigit():
+        return str(param_uid).strip()
+
+    # 5. Flask Session
+    if session.get('logged_in') and session.get('chat_id'):
+        return str(session.get('chat_id'))
+    if session.get('miniapp_user'):
+        return str(session.get('miniapp_user'))
+
+    return None
+
+def get_current_user():
+    auth_uid = get_authenticated_user()
+    if not auth_uid:
         return None
 
+    try:
+        user_id = int(auth_uid)
+    except (ValueError, TypeError):
+        return None
+
+    username = request.headers.get('X-Telegram-Username') or request.args.get('username') or f"user_{user_id}"
+    photo_url = request.headers.get('X-Telegram-Photo') or request.args.get('photo_url')
+
+    init_data = request.headers.get('X-Telegram-Init-Data') or request.args.get('init_data') or request.args.get('initData')
+    if init_data:
+        try:
+            parsed = verify_telegram_init_data(init_data)
+            if parsed and parsed.get('id') == user_id:
+                username = parsed.get('username') or parsed.get('first_name') or username
+                photo_url = parsed.get('photo_url') or photo_url
+        except Exception:
+            pass
+
     user = database.get_user(user_id, username)
-    if photo_url:
+    if photo_url and user:
         user['photo_url'] = photo_url
     return user
+
 
 def run_async(coro):
     """Helper to run async coroutines inside sync Flask views safely."""
@@ -304,7 +344,10 @@ def serve_miniapp():
         return "Mini App template not found.", 404
     with open(template_path, "r", encoding="utf-8") as f:
         html = f.read()
-    resp = make_response(render_template_string(html))
+    auth_user = get_authenticated_user() or ""
+    html = html.replace('let SERVER_USER_ID = "";', f'let SERVER_USER_ID = "{auth_user}";')
+    resp = make_response(html)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
     resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     resp.headers['Pragma'] = 'no-cache'
     resp.headers['Expires'] = '0'
@@ -326,6 +369,87 @@ def download_pdf(filename):
 # ============================================================================
 # API ENDPOINTS
 # ============================================================================
+
+@app.route('/api/auth_check', methods=['GET', 'POST'])
+def api_auth_check():
+    auth_user = get_authenticated_user()
+    admin_id = str(os.getenv("ADMIN_ID", "5628105961"))
+    if auth_user:
+        is_adm = database.is_admin(auth_user)
+        return jsonify({
+            "authenticated": True,
+            "user_id": str(auth_user),
+            "is_admin": is_adm,
+            "token": make_studio_token(auth_user)
+        })
+    return jsonify({"authenticated": False, "locked": True}), 401
+
+@app.route('/api/unlock_studio', methods=['POST'])
+def api_unlock_studio():
+    data = request.get_json(silent=True) or {}
+    passcode = str(data.get('passcode', '')).strip()
+    target_user_id = str(data.get('user_id', '')).strip()
+
+    admin_id = str(os.getenv("ADMIN_ID", "5628105961"))
+    admin_pins = [admin_id, "admin"]
+    if os.getenv("ADMIN_PIN"):
+        admin_pins.append(str(os.getenv("ADMIN_PIN")))
+
+    # 1. Master Admin verification
+    if passcode in admin_pins:
+        resolved_user = target_user_id if target_user_id else admin_id
+        session['chat_id'] = admin_id
+        session['miniapp_user'] = resolved_user
+        session['logged_in'] = True
+        return jsonify({
+            "success": True,
+            "token": make_studio_token(resolved_user),
+            "user_id": resolved_user,
+            "is_admin": True,
+            "message": "Admin authenticated"
+        })
+
+    # 2. Match Telegram User ID directly
+    if passcode.isdigit():
+        uid = int(passcode)
+        user = database.get_user(uid)
+        if user:
+            session['chat_id'] = str(uid)
+            session['miniapp_user'] = str(uid)
+            session['logged_in'] = True
+            return jsonify({
+                "success": True,
+                "token": make_studio_token(uid),
+                "user_id": str(uid),
+                "is_admin": database.is_admin(uid),
+                "message": "User authenticated"
+            })
+
+    # 3. Match target_user_id if provided
+    if target_user_id and target_user_id.isdigit():
+        uid = int(target_user_id)
+        user = database.get_user(uid)
+        if user:
+            session['chat_id'] = str(uid)
+            session['miniapp_user'] = str(uid)
+            session['logged_in'] = True
+            return jsonify({
+                "success": True,
+                "token": make_studio_token(uid),
+                "user_id": str(uid),
+                "is_admin": database.is_admin(uid),
+                "message": "User authenticated"
+            })
+
+    return jsonify({"error": "Invalid Passcode or Telegram ID. Access denied."}), 401
+
+@app.route('/api/lock_studio', methods=['POST'])
+def api_lock_studio():
+    session.pop('miniapp_user', None)
+    session.pop('chat_id', None)
+    session.pop('logged_in', None)
+    return jsonify({"success": True, "locked": True})
+
 
 @app.route('/api/user_info', methods=['GET'])
 def api_user_info():

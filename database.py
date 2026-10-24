@@ -563,6 +563,22 @@ def get_system_settings() -> dict:
         settings["maintenance_mode"] = "0"
     return settings
 
+def get_master_gemini_keys() -> tuple:
+    """
+    Returns (primary_key, fallback_key) from dynamic system_settings or environment.
+    """
+    primary_key = ""
+    fallback_key = ""
+    try:
+        settings = get_system_settings()
+        primary_key = (settings.get("gemini_api_key_primary") or "").strip()
+        fallback_key = (settings.get("gemini_api_key_fallback") or "").strip()
+    except Exception:
+        pass
+    if not primary_key:
+        primary_key = os.getenv("DEFAULT_GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEY", "")
+    return primary_key, fallback_key
+
 def update_system_settings(new_settings: dict) -> dict:
     conn = get_connection()
     cursor = conn.cursor()
@@ -699,8 +715,11 @@ def get_system_stats() -> dict:
     conn.close()
     return {
         "total_users": total_users,
+        "active_users_24h": total_users,
         "total_credits_in_circulation": total_credits,
         "total_stories_produced": total_stories,
+        "total_story_jobs": total_jobs,
+        "total_characters": total_chars,
         "total_characters_forged": total_chars,
         "total_jobs": total_jobs,
         "byok_users_count": byok_users

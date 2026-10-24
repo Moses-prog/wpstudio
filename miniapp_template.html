@@ -922,7 +922,7 @@
             font-size: 13px;
             font-weight: 600;
             box-shadow: 0 4px 18px rgba(0,0,0,0.25);
-            z-index: 200;
+            z-index: 999999;
             transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
             align-items: center;
@@ -2163,32 +2163,25 @@
             }
         };
 
-        // Auth Headers (Strict Telegram WebApp Context with Token Vault)
+        // Auth Headers (Strict Telegram WebApp Context with Token Vault - Safe ASCII only)
         function getHeaders() {
             const headers = { 'Content-Type': 'application/json' };
             const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
-            if (rawInitData) {
-                headers['X-Telegram-Init-Data'] = rawInitData;
+            if (rawInitData && typeof rawInitData === 'string') {
+                headers['X-Telegram-Init-Data'] = encodeURI(decodeURI(rawInitData));
             }
             const token = localStorage.getItem('wpstudio_token') || localStorage.getItem('webtgf_studio_token');
-            if (token) {
-                headers['X-Studio-Token'] = token;
+            if (token && typeof token === 'string') {
+                headers['X-Studio-Token'] = token.trim();
             }
             const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            const effectiveUid = (tgUser && tgUser.id) ? tgUser.id : (localStorage.getItem('wpstudio_user_id') || localStorage.getItem('webtgf_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? SERVER_USER_ID : ''));
-            if (effectiveUid) {
-                headers['X-Telegram-User-Id'] = String(effectiveUid);
-            }
-            if (tgUser) {
-                if (tgUser.username || tgUser.first_name) {
-                    headers['X-Telegram-Username'] = tgUser.username || tgUser.first_name;
-                }
-                if (tgUser.photo_url) {
-                    headers['X-Telegram-Photo'] = tgUser.photo_url;
-                }
+            const effectiveUid = (tgUser && tgUser.id) ? String(tgUser.id) : (localStorage.getItem('wpstudio_user_id') || localStorage.getItem('webtgf_user_id') || (typeof SERVER_USER_ID !== 'undefined' ? String(SERVER_USER_ID) : ''));
+            if (effectiveUid && /^\d+$/.test(effectiveUid.trim())) {
+                headers['X-Telegram-User-Id'] = effectiveUid.trim();
             }
             return headers;
         }
+
 
         // Lock Screen & Auth Controller (WP Relay Vault Pattern)
         function showLockScreen() {
@@ -2367,27 +2360,31 @@
         }
 
         function showToast(msg, isSuccess = true) {
-            if (!isSuccess) {
-                showTelegramAlert(msg);
-                return;
-            }
-
             const toast = document.getElementById('toast');
             const toastText = document.getElementById('toast-text');
             const toastIcon = document.getElementById('toast-icon');
+            const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
+
             if (toast && toastText && toastIcon) {
-                toastText.innerText = msg;
-                toast.style.borderColor = 'rgba(48, 209, 88, 0.4)';
-                toastIcon.style.stroke = 'var(--success)';
+                toastText.innerText = text;
+                if (isSuccess) {
+                    toast.style.borderColor = 'rgba(48, 209, 88, 0.4)';
+                    toastIcon.style.stroke = 'var(--success)';
+                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                } else {
+                    toast.style.borderColor = 'rgba(255, 69, 58, 0.5)';
+                    toastIcon.style.stroke = 'var(--danger)';
+                    try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch(e){}
+                }
                 toast.classList.add('show');
-                try {
-                    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
-                } catch(e){}
                 setTimeout(() => {
                     toast.classList.remove('show');
-                }, 3000);
+                }, 3500);
+            } else {
+                showTelegramAlert(text);
             }
         }
+
 
         // Modal Controls
         function openModal(id) {

@@ -130,29 +130,29 @@ DELIVERY_FORMATS = ["Dialogue / Narrative", "Dialogue", "Narrative"]
 
 def get_main_keyboard(user):
     has_key = bool(user.get("custom_gemini_key"))
-    key_indicator = "BYOK: Active" if has_key else "Platform Pool Key"
+    key_indicator = "🔑 BYOK: Active" if has_key else "⚡ Platform Pool Key"
     user_id = user.get("id") or user.get("user_id")
     
     rows = [
         [
-            Button.inline("WP StoryCraft", b"menu_story"),
-            Button.inline("WP CastLock", b"menu_character")
+            Button.inline("🎬 WP StoryCraft", b"menu_story"),
+            Button.inline("🔨 WP CastLock", b"menu_character")
         ],
         [
-            Button.inline("WP ClickThumb", b"menu_thumbnail"),
-            Button.inline("AI Models", b"menu_models")
+            Button.inline("🖼️ WP ClickThumb", b"menu_thumbnail"),
+            Button.inline("🧠 AI Models", b"menu_models")
         ],
         [
             Button.inline(f"{key_indicator}", b"menu_byok"),
-            Button.inline("Credits & Tier", b"menu_wallet")
+            Button.inline("💳 Credits & Tier", b"menu_wallet")
         ],
         [
-            Button.inline("Creator Guide", b"menu_guide")
+            Button.inline("❓ Creator Guide", b"menu_guide")
         ]
     ]
 
     if user_id and database.is_admin(user_id):
-        rows.append([Button.inline("Studio Admin Suite", b"admin_menu")])
+        rows.append([Button.inline("🛡️ Studio Admin Suite", b"admin_menu")])
 
     return rows
 

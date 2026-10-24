@@ -2162,35 +2162,77 @@
             }
         };
 
-        // Auth Headers
+        // Auth Headers (Strict Telegram initData)
         function getHeaders() {
             const headers = { 'Content-Type': 'application/json' };
-            if (tg && tg.initData) {
-                headers['X-Telegram-Init-Data'] = tg.initData;
+            const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
+            if (rawInitData) {
+                headers['X-Telegram-Init-Data'] = rawInitData;
             }
-            const params = new URLSearchParams(window.location.search);
-            const uid = params.get('user_id');
-            if (uid) headers['X-User-Id'] = uid;
             return headers;
         }
 
-        // Toast Feedback
+        // Native Telegram Alert, Confirm & Toast Feedback
+        function showTelegramAlert(msg, callback) {
+            const text = typeof msg === 'object' ? (msg.error || msg.message || JSON.stringify(msg)) : String(msg);
+            if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.showAlert === 'function') {
+                try {
+                    window.Telegram.WebApp.HapticFeedback?.notificationOccurred('error');
+                    window.Telegram.WebApp.showAlert(text, callback || (() => {}));
+                    return;
+                } catch(e) {
+                    console.warn("tg.showAlert failed:", e);
+                }
+            }
+            alert(text);
+            if (typeof callback === 'function') callback();
+        }
+
+        function showTelegramConfirm(msg, onConfirm, onCancel) {
+            const text = String(msg);
+            if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.showConfirm === 'function') {
+                try {
+                    window.Telegram.WebApp.HapticFeedback?.impactOccurred('medium');
+                    window.Telegram.WebApp.showConfirm(text, (ok) => {
+                        if (ok) {
+                            if (typeof onConfirm === 'function') onConfirm();
+                        } else {
+                            if (typeof onCancel === 'function') onCancel();
+                        }
+                    });
+                    return;
+                } catch(e) {
+                    console.warn("tg.showConfirm failed:", e);
+                }
+            }
+            if (window.confirm(text)) {
+                if (typeof onConfirm === 'function') onConfirm();
+            } else {
+                if (typeof onCancel === 'function') onCancel();
+            }
+        }
+
         function showToast(msg, isSuccess = true) {
+            if (!isSuccess) {
+                showTelegramAlert(msg);
+                return;
+            }
+
             const toast = document.getElementById('toast');
             const toastText = document.getElementById('toast-text');
             const toastIcon = document.getElementById('toast-icon');
-            toastText.innerText = msg;
-            toast.style.borderColor = isSuccess ? 'rgba(48, 209, 88, 0.4)' : 'rgba(255, 69, 58, 0.4)';
-            toastIcon.style.stroke = isSuccess ? 'var(--success)' : 'var(--danger)';
-            toast.classList.add('show');
-            try {
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
-                }
-            } catch(e){}
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            if (toast && toastText && toastIcon) {
+                toastText.innerText = msg;
+                toast.style.borderColor = 'rgba(48, 209, 88, 0.4)';
+                toastIcon.style.stroke = 'var(--success)';
+                toast.classList.add('show');
+                try {
+                    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+                } catch(e){}
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
         }
 
         // Modal Controls
@@ -2216,30 +2258,50 @@
             }
         }
 
-        // Initial App Load
+        // Initial App Load with Cryptographic Telegram Auth
         async function initApp() {
             try {
                 const res = await fetch('/api/user_info' + window.location.search, {
                     headers: getHeaders()
                 });
                 const d = await res.json();
-                if (d.success) {
-                    currentUser = d.user;
-                    studioMeta = d;
-                    savedCharacters = d.characters || [];
-                    storyHistory = d.history || [];
-                    renderDashboard();
-                    renderCharacterSelect();
-                    renderCharacterRoster();
-                    renderHistoryVault();
-                    initGenreOptions();
-                    renderAnnouncementBanner();
-                } else {
-                    showToast(d.error || 'Initialization failed', false);
+                if (res.status === 401 || !d.success) {
+                    renderSecurityBarrier(d.error || 'Telegram Authentication Required');
+                    return;
                 }
+                currentUser = d.user;
+                studioMeta = d;
+                savedCharacters = d.characters || [];
+                storyHistory = d.history || [];
+                renderDashboard();
+                renderCharacterSelect();
+                renderCharacterRoster();
+                renderHistoryVault();
+                initGenreOptions();
+                renderAnnouncementBanner();
             } catch (err) {
                 console.error("Init Error:", err);
+                renderSecurityBarrier('Connection error. Please open WP Studio via your Telegram bot.');
             }
+        }
+
+        function renderSecurityBarrier(reason) {
+            const app = document.querySelector('.app');
+            if (!app) return;
+            app.innerHTML = `
+                <div style="min-height:80vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
+                    <div style="width:68px; height:68px; border-radius:50%; background:rgba(255,69,58,0.12); border:1px solid rgba(255,69,58,0.3); display:flex; align-items:center; justify-content:center; margin-bottom:18px;">
+                        <svg viewBox="0 0 24 24" style="width:32px; height:32px; stroke:var(--danger); fill:none; stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <div style="font-weight:700; font-size:18px; color:var(--text-main); margin-bottom:8px;">Telegram Verification Required</div>
+                    <div style="font-size:13px; color:var(--text-muted); line-height:1.55; max-width:320px; margin-bottom:24px;">
+                        To secure your account and prevent unauthorized access, WP Studio must be launched directly from your verified Telegram account.
+                    </div>
+                    <a href="https://t.me/wpstudio10bot" class="btn-submit" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none; max-width:260px; padding:12px 20px; font-size:13px;">
+                        Open @wpstudio10bot in Telegram
+                    </a>
+                </div>
+            `;
         }
 
         // Render Top Announcement Banner
@@ -2266,9 +2328,19 @@
         // Render Dashboard UI Elements
         function renderDashboard() {
             if (!currentUser) return;
-            const uname = currentUser.username || 'Creator';
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const uname = (tgUser && (tgUser.first_name || tgUser.username)) ? (tgUser.first_name || tgUser.username) : (currentUser.username || 'Creator');
             document.getElementById('user-greeting').innerText = `Hi, ${uname}!`;
-            document.getElementById('avatar-image').innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
+            const photoUrl = (tgUser && tgUser.photo_url) || currentUser.photo_url;
+            const avatarEl = document.getElementById('avatar-image');
+            if (avatarEl) {
+                if (photoUrl) {
+                    avatarEl.innerHTML = `<img src="${photoUrl}" referrerpolicy="no-referrer" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" alt="Profile Picture" onerror="this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'/><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'/></svg>'">`;
+                } else {
+                    avatarEl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                }
+            }
             document.getElementById('tier-name').innerText = (currentUser.tier || 'Builder').toUpperCase();
 
             // Admin Suite Elements Visibility (100% WP Relay Design)
@@ -2989,20 +3061,24 @@
         }
 
         async function deleteCharacter(charId) {
-            try {
-                const res = await fetch('/api/character_delete', {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ character_id: charId })
-                });
-                const d = await res.json();
-                if (d.success) {
-                    showToast('Character deleted');
-                    await refreshCharacters();
+            showTelegramConfirm('Are you sure you want to delete this character anchor?', async () => {
+                try {
+                    const res = await fetch('/api/character_delete', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({ character_id: charId })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                        showToast('Character deleted');
+                        await refreshCharacters();
+                    } else {
+                        showTelegramAlert(d.error || 'Failed to delete character');
+                    }
+                } catch (err) {
+                    showTelegramAlert('Error deleting character');
                 }
-            } catch (err) {
-                showToast('Error deleting character', false);
-            }
+            });
         }
 
         async function refreshCharacters() {
@@ -3576,13 +3652,14 @@
                     userCardsHtml = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No creators found. Type a query above and search.</div>';
                 } else {
                     userCardsHtml = adminUserSearchResults.map(u => {
-                        const isSelected = adminSelectedUser && adminSelectedUser.id === u.id;
+                        const uid = u.user_id || u.id;
+                        const isSelected = adminSelectedUser && (adminSelectedUser.user_id == uid || adminSelectedUser.id == uid);
                         const byokChip = u.has_custom_key ? '<span class="chip byok" style="font-size:9px;">BYOK</span>' : '<span class="chip model" style="font-size:9px;">Platform</span>';
                         return `
-                            <div class="admin-user-card ${isSelected ? 'selected' : ''}" onclick="adminSelectUserById(${u.id})">
+                            <div class="admin-user-card ${isSelected ? 'selected' : ''}" onclick="adminSelectUserById('${uid}')">
                                 <div class="admin-user-header">
                                     <div style="font-weight:700; font-size:13px; color:var(--text-main);">
-                                        ${u.username || 'Creator'} <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">#${u.id}</span>
+                                        ${u.username || 'Creator'} <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">#${uid}</span>
                                     </div>
                                     <span class="chip active" style="font-size:10px;">${u.tier || 'Builder'}</span>
                                 </div>
@@ -3601,12 +3678,13 @@
                 let selectedUserCardHtml = '';
                 if (adminSelectedUser) {
                     const u = adminSelectedUser;
+                    const uid = u.user_id || u.id;
                     selectedUserCardHtml = `
                         <div class="form-card" style="margin-bottom:12px; border:1px solid var(--accent); background:rgba(255,255,255,0.03);">
                             <!-- USER HEADER -->
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                                 <div>
-                                    <div style="font-weight:700; font-size:15px; color:var(--text-main);">${u.username || 'Creator'} (#${u.id})</div>
+                                    <div style="font-weight:700; font-size:15px; color:var(--text-main);">${u.username || 'Creator'} (#${uid})</div>
                                     <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Role: ${u.role || 'user'} &bull; Balance: <strong style="color:var(--text-main); font-size:13px;">${u.credits ?? 0} Cr</strong></div>
                                 </div>
                                 <span class="chip active" id="selected-user-tier-chip" style="font-size:11px;">${u.tier || 'Builder'}</span>
@@ -3917,7 +3995,11 @@
                 });
                 const d = await res.json();
                 if (d.success) {
-                    adminUserSearchResults = d.users || [];
+                    adminUserSearchResults = (d.users || []).map(u => ({
+                        ...u,
+                        id: u.id || u.user_id,
+                        user_id: u.user_id || u.id
+                    }));
                     renderAdminModalContent();
                 } else {
                     if (listEl) listEl.innerHTML = `<div class="empty-state"><div class="empty-title">Search Error</div><div>${d.error || 'Failed to search users'}</div></div>`;
@@ -3928,30 +4010,40 @@
         }
 
         function adminSelectUserById(userId) {
-            const u = adminUserSearchResults.find(x => x.id === userId);
+            const u = adminUserSearchResults.find(x => (String(x.user_id) === String(userId) || String(x.id) === String(userId)));
             if (u) {
+                u.id = u.id || u.user_id;
+                u.user_id = u.user_id || u.id;
                 adminSelectedUser = u;
                 renderAdminModalContent();
             }
         }
 
         function adminSelectUser(u) {
+            if (u) {
+                u.id = u.id || u.user_id;
+                u.user_id = u.user_id || u.id;
+            }
             adminSelectedUser = u;
             renderAdminModalContent();
         }
 
         async function adminQuickCredits(action, amount) {
             if (!adminSelectedUser) {
-                showToast("Select a creator first", false);
+                showTelegramAlert("Please select a creator from the list first.");
                 return;
             }
-            const reason = `Admin quick ${action} ${amount} credits`;
-            await adminExecuteCreditModification(action, amount, reason);
+            const uid = adminSelectedUser.user_id || adminSelectedUser.id;
+            const actionText = action === 'add' ? 'Add' : 'Deduct';
+            showTelegramConfirm(`${actionText} ${amount} credits for creator #${uid}?`, async () => {
+                const reason = `Admin quick ${action} ${amount} credits`;
+                await adminExecuteCreditModification(action, amount, reason);
+            });
         }
 
         async function adminApplyCreditAction() {
             if (!adminSelectedUser) {
-                showToast("Select a creator first", false);
+                showTelegramAlert("Please select a creator from the list first.");
                 return;
             }
             const actionEl = document.getElementById('admin-user-action');
@@ -3963,19 +4055,24 @@
             const reason = reasonEl && reasonEl.value.trim() ? reasonEl.value.trim() : 'Admin manual modification';
 
             if (isNaN(amount) || amount < 0) {
-                showToast("Enter a valid positive amount", false);
+                showTelegramAlert("Enter a valid positive credit amount.");
                 return;
             }
             await adminExecuteCreditModification(action, amount, reason);
         }
 
         async function adminExecuteCreditModification(action, amount, reason) {
+            if (!adminSelectedUser) {
+                showTelegramAlert("Please select a creator from the list first.");
+                return;
+            }
+            const uid = adminSelectedUser.user_id || adminSelectedUser.id;
             try {
                 const res = await fetch('/api/admin/modify_credits', {
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify({
-                        target_user_id: adminSelectedUser.id,
+                        target_user_id: uid,
                         action: action,
                         amount: amount,
                         reason: reason
@@ -3984,23 +4081,24 @@
                 const d = await res.json();
                 if (d.success) {
                     adminSelectedUser.credits = d.new_balance;
-                    const found = adminUserSearchResults.find(x => x.id === adminSelectedUser.id);
+                    const found = adminUserSearchResults.find(x => (String(x.user_id) === String(uid) || String(x.id) === String(uid)));
                     if (found) found.credits = d.new_balance;
-                    showToast(`User #${adminSelectedUser.id} balance is now ${d.new_balance} credits!`);
+                    showToast(`User #${uid} balance is now ${d.new_balance} credits!`);
                     await loadAdminOverview();
                 } else {
-                    showToast(d.error || 'Failed to modify credits', false);
+                    showTelegramAlert(d.error || 'Failed to modify credits');
                 }
             } catch (err) {
-                showToast("Network error executing ledger transaction", false);
+                showTelegramAlert("Network error executing ledger transaction");
             }
         }
 
         async function adminApplyUserTier() {
             if (!adminSelectedUser) {
-                showToast("Select a creator first", false);
+                showTelegramAlert("Please select a creator from the list first.");
                 return;
             }
+            const uid = adminSelectedUser.user_id || adminSelectedUser.id;
             const tierEl = document.getElementById('admin-user-tier-sel');
             const tier = tierEl ? tierEl.value : 'Builder';
             try {
@@ -4008,22 +4106,22 @@
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify({
-                        target_user_id: adminSelectedUser.id,
+                        target_user_id: uid,
                         tier: tier
                     })
                 });
                 const d = await res.json();
                 if (d.success) {
                     adminSelectedUser.tier = d.tier;
-                    const found = adminUserSearchResults.find(x => x.id === adminSelectedUser.id);
+                    const found = adminUserSearchResults.find(x => (String(x.user_id) === String(uid) || String(x.id) === String(uid)));
                     if (found) found.tier = d.tier;
-                    showToast(`User #${adminSelectedUser.id} tier updated to ${d.tier}!`);
+                    showToast(`User #${uid} tier updated to ${d.tier}!`);
                     renderAdminModalContent();
                 } else {
-                    showToast(d.error || 'Failed to update tier', false);
+                    showTelegramAlert(d.error || 'Failed to update tier');
                 }
             } catch (err) {
-                showToast("Network error updating tier", false);
+                showTelegramAlert("Network error updating tier");
             }
         }
 

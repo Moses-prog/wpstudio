@@ -133,50 +133,67 @@ def add_cors_headers(response):
     response.headers['Expires'] = '0'
     return response
 
-def verify_telegram_init_data(init_data_str: str):
+def verify_telegram_init_data(init_data_str: str) -> dict:
     """
-    Validates Telegram initData hash. Falls back to parsing user info if validation is skipped in dev.
+    Cryptographically validates Telegram WebApp initData string using BOT_TOKEN via HMAC-SHA256.
+    Returns the parsed user dict if valid, or None if invalid/unauthenticated.
     """
     if not init_data_str:
         return None
     try:
-        parsed_data = dict(urllib.parse.parse_qsl(init_data_str))
-        user_json = parsed_data.get('user')
-        if user_json:
-            u = json.loads(user_json)
-            return u
-    except Exception:
-        pass
+        parsed_data = dict(urllib.parse.parse_qsl(init_data_str, keep_blank_values=True))
+        received_hash = parsed_data.pop("hash", None)
+        if not received_hash:
+            return None
+
+        # Data-check string: sorted key=value pairs joined with newline
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+
+        bot_token = os.getenv("BOT_TOKEN", "").strip()
+        if not bot_token:
+            logger.error("BOT_TOKEN missing in environment; cannot verify Telegram initData.")
+            return None
+
+        # Telegram secret key = HMAC-SHA256(key=b"WebAppData", data=bot_token)
+        secret_key = hmac.new(b"WebAppData", bot_token.encode("utf-8"), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, data_check_string.encode("utf-8"), hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(calculated_hash, received_hash):
+            logger.warning("Telegram initData HMAC signature verification failed!")
+            return None
+
+        user_raw = parsed_data.get("user")
+        if user_raw:
+            return json.loads(user_raw)
+    except Exception as e:
+        logger.error(f"Error validating Telegram initData: {e}")
+        return None
     return None
 
 def get_current_user():
     """
-    Resolves the authenticated user from Telegram initData header, query param, or fallback.
+    Resolves the authenticated user strictly from cryptographically validated Telegram initData.
+    Security First: No hardcoded admin fallback. Unauthorized requests return None.
     """
     user_id = None
     username = None
+    photo_url = None
 
-    # 1. Try initData header
+    # Check initData header or query param
     init_data = request.headers.get('X-Telegram-Init-Data', '').strip() or request.args.get('initData', '').strip()
     if init_data:
         parsed_u = verify_telegram_init_data(init_data)
         if parsed_u and parsed_u.get('id'):
             user_id = int(parsed_u['id'])
             username = parsed_u.get('username') or parsed_u.get('first_name') or f"user_{user_id}"
+            photo_url = parsed_u.get('photo_url')
 
-    # 2. Try explicit user_id query param (for browser testing / iframe preview)
     if not user_id:
-        param_id = request.args.get('user_id') or request.headers.get('X-User-Id')
-        if param_id and str(param_id).isdigit():
-            user_id = int(param_id)
-            username = request.args.get('username') or f"user_{user_id}"
-
-    # 3. Default fallback to master admin ID
-    if not user_id:
-        user_id = 5628105961
-        username = "Admin"
+        return None
 
     user = database.get_user(user_id, username)
+    if photo_url:
+        user['photo_url'] = photo_url
     return user
 
 def run_async(coro):
@@ -231,6 +248,8 @@ def get_active_pricing_tiers():
 
 def check_maintenance_and_feature(feature_key: str = None):
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     user_id = user["user_id"]
     if database.is_admin(user_id):
         return None  # Master Admin always has uninhibited access
@@ -286,7 +305,7 @@ def download_pdf(filename):
 def api_user_info():
     user = get_current_user()
     if not user:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
 
     chars = database.get_user_characters(user["user_id"])
     history = database.get_user_story_history(user["user_id"])
@@ -302,6 +321,7 @@ def api_user_info():
             "username": user.get("username", "Creator"),
             "credits": user.get("credits", 0),
             "tier": user.get("tier", "Builder"),
+            "photo_url": user.get("photo_url"),
             "has_custom_key": bool(user.get("custom_gemini_key")),
             "custom_key_preview": f"{user.get('custom_gemini_key')[:4]}...{user.get('custom_gemini_key')[-4:]}" if user.get("custom_gemini_key") else None,
             "selected_model": user.get("selected_model", sys_settings.get("default_model", ai_engine.DEFAULT_MODEL)),
@@ -336,6 +356,8 @@ def api_user_info():
 @app.route('/api/update_settings', methods=['POST'])
 def api_update_settings():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
     sys_settings = database.get_system_settings()
@@ -386,6 +408,8 @@ def api_test_key():
 @app.route('/api/characters', methods=['GET'])
 def api_characters():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     chars = database.get_user_characters(user["user_id"])
     return jsonify({
         "success": True,
@@ -395,6 +419,8 @@ def api_characters():
 @app.route('/api/character_forge', methods=['POST'])
 def api_character_forge():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
 
@@ -519,6 +545,8 @@ def api_character_forge():
 @app.route('/api/character_delete', methods=['POST'])
 def api_character_delete():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     char_id = data.get("character_id")
     if char_id:
@@ -528,6 +556,8 @@ def api_character_delete():
 @app.route('/api/story_concepts', methods=['POST'])
 def api_story_concepts():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
 
@@ -630,6 +660,8 @@ def api_story_concepts():
 @app.route('/api/story_generate', methods=['POST'])
 def api_story_generate():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
 
@@ -760,6 +792,8 @@ def api_story_generate():
 @app.route('/api/thumbnail_generate', methods=['POST'])
 def api_thumbnail_generate():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
 
@@ -801,6 +835,8 @@ def api_thumbnail_generate():
 @app.route('/api/render_frame', methods=['POST'])
 def api_render_frame():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     data = request.get_json(silent=True, force=True) or {}
     user_id = user["user_id"]
 
@@ -845,6 +881,8 @@ def api_render_frame():
 @app.route('/api/history', methods=['GET'])
 def api_history():
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     history = database.get_user_story_history(user["user_id"])
     return jsonify({
         "success": True,
@@ -854,6 +892,8 @@ def api_history():
 @app.route('/api/job/<int:job_id>', methods=['GET'])
 def api_job_detail(job_id):
     user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
     job = database.get_job(job_id)
     if not job or (job.get("user_id") != user["user_id"] and not database.is_admin(user["user_id"])):
         return jsonify({"success": False, "error": "Job not found"}), 404
@@ -866,7 +906,7 @@ def api_job_detail(job_id):
 @app.route('/api/admin/overview', methods=['GET'])
 def api_admin_overview():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
+    if not user or not database.is_admin(user["user_id"]):
         return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     stats = database.get_system_stats()
@@ -916,21 +956,23 @@ def api_admin_overview():
 @app.route('/api/admin/users', methods=['GET'])
 def api_admin_users():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
-        return jsonify({"success": False, "error": "Unauthorized."}), 403
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     q = request.args.get('q', '').strip()
     users = database.get_all_users(search=q if q else None, limit=40)
+    for u in users:
+        u["id"] = u.get("user_id")
     return jsonify({"success": True, "users": users})
 
 @app.route('/api/admin/modify_credits', methods=['POST'])
 def api_admin_modify_credits():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
-        return jsonify({"success": False, "error": "Unauthorized."}), 403
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     data = request.get_json(silent=True, force=True) or {}
-    target_id = data.get("target_user_id")
+    target_id = data.get("target_user_id") or data.get("user_id") or data.get("id")
     action = data.get("action", "add")
     amount = data.get("amount", 0)
     reason = str(data.get("reason", "")).strip()
@@ -950,11 +992,11 @@ def api_admin_modify_credits():
 @app.route('/api/admin/update_tier', methods=['POST'])
 def api_admin_update_tier():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
-        return jsonify({"success": False, "error": "Unauthorized."}), 403
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     data = request.get_json(silent=True, force=True) or {}
-    target_id = data.get("target_user_id")
+    target_id = data.get("target_user_id") or data.get("user_id") or data.get("id")
     tier = str(data.get("tier", "Builder")).strip()
 
     if not target_id:
@@ -966,8 +1008,8 @@ def api_admin_update_tier():
 @app.route('/api/admin/update_settings', methods=['POST'])
 def api_admin_update_settings():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
-        return jsonify({"success": False, "error": "Unauthorized."}), 403
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     data = request.get_json(silent=True, force=True) or {}
     updates = {}
@@ -1055,8 +1097,8 @@ def api_admin_update_settings():
 @app.route('/api/admin/jobs', methods=['GET'])
 def api_admin_jobs():
     user = get_current_user()
-    if not database.is_admin(user["user_id"]):
-        return jsonify({"success": False, "error": "Unauthorized."}), 403
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
 
     jobs = database.get_all_recent_jobs(35)
     return jsonify({"success": True, "jobs": jobs})

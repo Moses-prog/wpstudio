@@ -265,7 +265,8 @@ def serve_miniapp():
     resp.headers['Expires'] = '0'
     return resp
 
-@app.route('/health')
+@app.route('/health', methods=['GET', 'HEAD', 'OPTIONS'], strict_slashes=False)
+@app.route('/healthz', methods=['GET', 'HEAD', 'OPTIONS'], strict_slashes=False)
 def health():
     return jsonify({"status": "ok", "service": "wpstudio"}), 200
 

@@ -2162,12 +2162,22 @@
             }
         };
 
-        // Auth Headers (Strict Telegram initData)
+        // Auth Headers (Strict Telegram WebApp Context)
         function getHeaders() {
             const headers = { 'Content-Type': 'application/json' };
             const rawInitData = window.Telegram?.WebApp?.initData || (typeof tg !== 'undefined' && tg?.initData);
             if (rawInitData) {
                 headers['X-Telegram-Init-Data'] = rawInitData;
+            }
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if (tgUser && tgUser.id) {
+                headers['X-Telegram-User-Id'] = String(tgUser.id);
+                if (tgUser.username || tgUser.first_name) {
+                    headers['X-Telegram-Username'] = tgUser.username || tgUser.first_name;
+                }
+                if (tgUser.photo_url) {
+                    headers['X-Telegram-Photo'] = tgUser.photo_url;
+                }
             }
             return headers;
         }
@@ -2258,10 +2268,30 @@
             }
         }
 
-        // Initial App Load with Cryptographic Telegram Auth
+        // Initial App Load with Telegram Auth
         async function initApp() {
+            // Instant optimistic render from Telegram client context
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if (tgUser) {
+                const uname = tgUser.first_name || tgUser.username || 'Creator';
+                const greetingEl = document.getElementById('user-greeting');
+                if (greetingEl) greetingEl.innerText = `Hi, ${uname}!`;
+                if (tgUser.photo_url) {
+                    const avatarEl = document.getElementById('avatar-image');
+                    if (avatarEl) {
+                        avatarEl.innerHTML = `<img src="${tgUser.photo_url}" referrerpolicy="no-referrer" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" alt="Profile Picture" onerror="this.onerror=null; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'/><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'/></svg>';">`;
+                    }
+                }
+            }
+
             try {
-                const res = await fetch('/api/user_info' + window.location.search, {
+                let url = '/api/user_info' + window.location.search;
+                if (tgUser && tgUser.id && !window.location.search.includes('user_id=')) {
+                    url += (window.location.search ? '&' : '?') + `user_id=${tgUser.id}&username=${encodeURIComponent(tgUser.username || tgUser.first_name || '')}`;
+                    if (tgUser.photo_url) url += `&photo_url=${encodeURIComponent(tgUser.photo_url)}`;
+                }
+
+                const res = await fetch(url, {
                     headers: getHeaders()
                 });
                 const d = await res.json();
@@ -4227,8 +4257,20 @@
             }
         }
 
-        // Bootstrap on load
-        window.addEventListener('DOMContentLoaded', initApp);
+        // Multi-stage resilient bootstrap for mobile WebViews
+        let __hasBootstrapped = false;
+        function bootstrapApp() {
+            if (__hasBootstrapped) return;
+            __hasBootstrapped = true;
+            initApp();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrapApp);
+        } else {
+            bootstrapApp();
+        }
+        setTimeout(bootstrapApp, 50);
     </script>
 </body>
 </html>

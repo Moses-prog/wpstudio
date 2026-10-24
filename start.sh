@@ -19,7 +19,18 @@ echo " Starting WP Studio Production Suite"
 echo " Port: $PORT"
 echo "=========================================================="
 
-# 1. Start Telegram Bot Daemon with auto-restart supervisor
+# 1. Start Web Studio & Mini App FIRST (Binds port immediately for Render health checks)
+if command -v gunicorn >/dev/null 2>&1; then
+  echo "[1/2] Starting Web Studio with Gunicorn WSGI on port $PORT..."
+  gunicorn -w 2 -b "0.0.0.0:$PORT" --timeout 120 web_studio:app &
+  WEB_PID=$!
+else
+  echo "[1/2] Starting Web Studio with Python standard server on port $PORT..."
+  python web_studio.py &
+  WEB_PID=$!
+fi
+
+# 2. Start Telegram Bot Daemon with auto-restart supervisor in parallel
 (
   while true; do
     echo "[BOT SUPERVISOR] Launching bot.py..."
@@ -30,18 +41,7 @@ echo "=========================================================="
   done
 ) &
 BOT_SUPERVISOR_PID=$!
-echo "[1/2] Telegram Bot Supervisor started (PID: $BOT_SUPERVISOR_PID)"
-
-# 2. Start Web Studio & Mini App (Gunicorn if available, fallback to python)
-if command -v gunicorn >/dev/null 2>&1; then
-  echo "[2/2] Starting Web Studio with Gunicorn WSGI on port $PORT..."
-  gunicorn -w 2 -b "0.0.0.0:$PORT" --timeout 120 web_studio:app &
-  WEB_PID=$!
-else
-  echo "[2/2] Starting Web Studio with Python standard server on port $PORT..."
-  python web_studio.py &
-  WEB_PID=$!
-fi
+echo "[2/2] Telegram Bot Supervisor started (PID: $BOT_SUPERVISOR_PID)"
 
 # 3. Background keepalive worker (pings public Render URL every 8 mins to prevent idle spin-down)
 (

@@ -1467,11 +1467,11 @@
                 <div class="form-label" style="color:var(--success);">Production Complete</div>
                 <div class="form-hint" id="story-result-title" style="font-weight:600; color:var(--text-main); margin-bottom:10px;">Full Screenplay & Bibles Ready</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <a id="btn-download-bible" href="#" target="_blank" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                    <a id="btn-download-bible" href="#" onclick="event.preventDefault(); downloadPdfFile(this.getAttribute('data-url') || this.href);" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download Image Prompts Bible PDF
                     </a>
-                    <a id="btn-download-scenes" href="#" target="_blank" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                    <a id="btn-download-scenes" href="#" onclick="event.preventDefault(); downloadPdfFile(this.getAttribute('data-url') || this.href);" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download Video Scene Prompts PDF
                     </a>
@@ -2370,6 +2370,18 @@
 
         window.alert = function(msg) { showTelegramAlert(msg); };
 
+        function downloadPdfFile(url) {
+            if (!url) return;
+            const fullUrl = url.startsWith('http') ? url : (window.location.origin + url);
+            try {
+                if (window.Telegram?.WebApp?.openLink) {
+                    window.Telegram.WebApp.openLink(fullUrl);
+                    return;
+                }
+            } catch(e) {}
+            window.open(fullUrl, '_blank');
+        }
+
 
         // Modal Controls
         function openModal(id) {
@@ -2691,8 +2703,8 @@
                             </button>
 
                             <div style="display:flex; gap:6px;">
-                                ${bibleUrl ? `<a href="${bibleUrl}" target="_blank" onclick="event.stopPropagation();" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Bible</a>` : ''}
-                                ${sceneUrl ? `<a href="${sceneUrl}" target="_blank" onclick="event.stopPropagation();" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Prompts</a>` : ''}
+                                ${bibleUrl ? `<a href="${bibleUrl}" onclick="event.stopPropagation(); event.preventDefault(); downloadPdfFile('${bibleUrl}');" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Bible</a>` : ''}
+                                ${sceneUrl ? `<a href="${sceneUrl}" onclick="event.stopPropagation(); event.preventDefault(); downloadPdfFile('${sceneUrl}');" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Prompts</a>` : ''}
                             </div>
                         </div>
                     </div>
@@ -2819,11 +2831,13 @@
                 if (bibleBtn && job.story_bible_pdf) {
                     const safeBible = job.story_bible_pdf.split(/[\/\\]/).pop();
                     bibleBtn.href = `/download_pdf/${safeBible}`;
+                    bibleBtn.setAttribute('data-url', `/download_pdf/${safeBible}`);
                     bibleBtn.style.display = 'inline-flex';
                 }
                 if (sceneBtn && job.scene_prompts_pdf) {
                     const safeScenes = job.scene_prompts_pdf.split(/[\/\\]/).pop();
                     sceneBtn.href = `/download_pdf/${safeScenes}`;
+                    sceneBtn.setAttribute('data-url', `/download_pdf/${safeScenes}`);
                     sceneBtn.style.display = 'inline-flex';
                 }
             } else if (resultSec) {
@@ -3079,11 +3093,13 @@
                     if (d.bible_pdf_url) {
                         const btnBible = document.getElementById('btn-download-bible');
                         btnBible.href = d.bible_pdf_url;
+                        btnBible.setAttribute('data-url', d.bible_pdf_url);
                         btnBible.style.display = 'flex';
                     }
                     if (d.scene_pdf_url) {
                         const btnScenes = document.getElementById('btn-download-scenes');
                         btnScenes.href = d.scene_pdf_url;
+                        btnScenes.setAttribute('data-url', d.scene_pdf_url);
                         btnScenes.style.display = 'flex';
                     }
 

@@ -31,6 +31,33 @@ DEFAULT_MODEL = "gemini-3.8-flash"
 # Fallback chain excluding Pro to prevent free-tier 429 quota limits
 FALLBACK_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
+def clean_json_loads(text: str):
+    """Safely extracts and parses JSON even if wrapped in markdown code fences or with trailing text."""
+    if not text:
+        return {}
+    clean = text.strip()
+    if clean.startswith("```"):
+        clean = re.sub(r"^```(?:json)?\s*", "", clean)
+        clean = re.sub(r"\s*```$", "", clean)
+    try:
+        return json.loads(clean)
+    except Exception:
+        start_obj = clean.find("{")
+        end_obj = clean.rfind("}")
+        if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
+            try:
+                return json.loads(clean[start_obj:end_obj+1])
+            except Exception:
+                pass
+        start_arr = clean.find("[")
+        end_arr = clean.rfind("]")
+        if start_arr != -1 and end_arr != -1 and end_arr > start_arr:
+            try:
+                return json.loads(clean[start_arr:end_arr+1])
+            except Exception:
+                pass
+        raise
+
 def get_master_keys():
     """Fetches master primary and fallback keys from dynamic settings or environment."""
     primary_key = ""
@@ -187,7 +214,7 @@ Return JSON matching this exact schema:
         },
         user_api_key=user_api_key
     )
-    data = json.loads(response.text)
+    data = clean_json_loads(response.text)
     if isinstance(data, dict):
         return {
             "concepts": data.get("concepts", []),
@@ -214,11 +241,11 @@ async def generate_full_story_package(concept: dict, culture: str = "Universal",
     client = get_client(user_api_key)
 
     scene_targets = {
-        "Short": "15 to 25 scenes (~2 to 4 minutes YouTube video duration, ceiling 40)",
-        "Medium": "40 to 60 scenes (~8 to 15 minutes monetized YouTube video duration, ceiling 120)",
-        "Long": "80 to 120 scenes (~1 to 2+ hours extended feature/documentary duration, ceiling 250)"
+        "Short": "12 to 16 scenes (fast, complete 2 to 4 minutes story, ceiling 20)",
+        "Medium": "25 to 35 scenes (complete 8 to 12 minutes story, ceiling 50)",
+        "Long": "45 to 60 scenes (extended 20 to 30+ minutes story, ceiling 80)"
     }
-    target_scenes = scene_targets.get(length_tier, "15 to 25 scenes")
+    target_scenes = scene_targets.get(length_tier, "12 to 16 scenes")
 
     char_clause = ""
     if lead_character and isinstance(lead_character, dict):
@@ -396,7 +423,7 @@ Generate the complete production package with {target_scenes}."""
         },
         user_api_key=user_api_key
     )
-    data = json.loads(response.text)
+    data = clean_json_loads(response.text)
     if isinstance(data, dict):
         data["delivery_format"] = data.get("delivery_format", delivery_format)
     return data
@@ -486,7 +513,7 @@ Return strictly structured JSON:
         },
         user_api_key=user_api_key
     )
-    return json.loads(response.text)
+    return clean_json_loads(response.text)
 
 async def analyze_reference_image(image_bytes: bytes, instruction: str = "", user_api_key: str = None, model_name: str = None) -> dict:
     """
@@ -560,7 +587,7 @@ Return strictly structured JSON:
         },
         user_api_key=user_api_key
     )
-    return json.loads(response.text)
+    return clean_json_loads(response.text)
 
 async def generate_thumbnail_prompts(story_summary, user_api_key=None, model_name=None):
     """Generates 3 viral YouTube thumbnail concepts with high CTR."""
@@ -576,7 +603,7 @@ async def generate_thumbnail_prompts(story_summary, user_api_key=None, model_nam
         config={"response_mime_type": "application/json"},
         user_api_key=user_api_key
     )
-    return json.loads(response.text)
+    return clean_json_loads(response.text)
 
 class RenderCooldownError(Exception):
     def __init__(self, remaining_seconds: int):

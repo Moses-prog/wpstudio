@@ -1,7 +1,10 @@
 import os
 import re
 from datetime import datetime
-import fitz
+try:
+    import pymupdf as fitz
+except ImportError:
+    import fitz
 from markdown_pdf import MarkdownPdf, Section
 
 DARK_THEME_CSS = """

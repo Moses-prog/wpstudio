@@ -680,6 +680,12 @@ def api_character_forge():
         "vision_biometrics": vision_biometrics
     }
 
+    char_pdf_path = ""
+    try:
+        char_pdf_path = pdf_generator.generate_character_forge_pdf(turnaround, style=art_style)
+    except Exception as c_err:
+        print(f"[CHARACTER FORGE] PDF generation error: {c_err}")
+
     char_id = database.save_character(user_id, char_record)
     if cost > 0:
         database.deduct_credits(user_id, cost)
@@ -689,6 +695,7 @@ def api_character_forge():
         "success": True,
         "character_id": char_id,
         "turnaround": turnaround,
+        "pdf_url": f"/download_pdf/{os.path.basename(char_pdf_path)}" if char_pdf_path else None,
         "credits": refreshed_user.get("credits", 0)
     })
 
@@ -890,6 +897,8 @@ def api_story_generate():
         return jsonify({"success": False, "error": f"Script production error: {str(e)}"}), 500
 
     # Generate Dual Production PDFs
+    bible_pdf = ""
+    scene_pdf = ""
     try:
         bible_pdf = pdf_generator.generate_image_prompts_pdf(
             story_data=full_story,
@@ -912,9 +921,15 @@ def api_story_generate():
             timezone="Africa/Lagos"
         )
     except Exception as pdf_err:
-        print(f"[STORY GENERATE] PDF error: {pdf_err}")
-        bible_pdf = ""
-        scene_pdf = ""
+        import traceback
+        traceback.print_exc()
+        print(f"[STORY GENERATE] PDF creation error: {pdf_err}")
+
+    if not bible_pdf and not scene_pdf:
+        return jsonify({
+            "success": False,
+            "error": "The story was created, but building the PDF files failed. Please try again."
+        }), 500
 
     database.update_job_completion(int(job_id), json.dumps(full_story), bible_pdf, scene_pdf)
     database.log_story(

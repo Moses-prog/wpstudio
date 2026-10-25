@@ -229,7 +229,7 @@ Return JSON matching this exact schema:
         }
     return {"concepts": [], "recommended_concept_id": 1, "recommendation_reason": ""}
 
-async def generate_full_story_package(concept: dict, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", delivery_format: str = "Dialogue / Narrative", lead_character: dict = None, length_tier: str = "Short", timezone: str = "Africa/Lagos", user_api_key: str = None, model_name: str = None) -> dict:
+async def generate_full_story_package(concept: dict, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", delivery_format: str = "Dialogue / Narrative", lead_character: dict = None, length_tier: str = "Short", timezone: str = "Africa/Lagos", user_api_key: str = None, model_name: str = None, channel_name: str = "") -> dict:
     """
     Step 2 of WP StoryCraft:
     Generates the complete Story Bible + Scene Prompts Blueprint up to the chosen length ceiling.
@@ -290,6 +290,7 @@ STRICT IP CONTINUITY RULES:
 You are the Executive Showrunner & Lead Creative Director at WP Studio. Transform the selected concept into an exhaustive, Hollywood-grade YouTube Automation Story Package matching the highest industry standard (Infoxchange / StoryLab tier).
 
 CREATIVE PRODUCTION SPECIFICATIONS:
+- YouTube Channel Name: {channel_name or "WP Studio Production"}
 - Visual Art Style: {visual_style}
 {genre_spec}
 - Cultural Anchor: {culture} (Reflect authentic cultural nuance, speech cadence, and settings)
@@ -348,6 +349,7 @@ Every video prompt MUST be engineered for AI motion generators:
 
 Return strictly structured JSON:
 {{
+    "channel_name": "{channel_name or 'WP Studio Production'}",
     "title": "Final YouTube Video Title",
     "genre": "{genre}",
     "delivery_format": "{delivery_format}",
@@ -355,6 +357,7 @@ Return strictly structured JSON:
     "hook": "0-5s spoken hook line",
     "theme_and_takeaway": "Core moral and psychological theme",
     "synopsis": "Full narrative story arc synopsis (150-250 words)",
+    "youtube_description": "Comprehensive YouTube video description formatted with hook, 3-paragraph synopsis, chapter timestamps, call to action, and hashtags",
     "cultural_nuance": "How {culture} cultural flavor and authenticity are integrated",
     "hashtags": ["#Tag1", "#Tag2", "#Tag3"],
     "posting_schedule": {{
@@ -426,6 +429,9 @@ Generate the complete production package with {target_scenes}."""
     data = clean_json_loads(response.text)
     if isinstance(data, dict):
         data["delivery_format"] = data.get("delivery_format", delivery_format)
+        data["channel_name"] = channel_name or data.get("channel_name", "WP Studio Production")
+        if not data.get("youtube_description"):
+            data["youtube_description"] = f"{data.get('logline', '')}\n\n{data.get('synopsis', '')}\n\n🔔 Subscribe to {data['channel_name']} for more cinematic stories!\n\n" + " ".join(data.get("hashtags", []))
     return data
 
 async def generate_character_turnaround(character_desc, style="Stylised 3D", reference_image_bytes=None, reference_instruction=None, vision_biometrics=None, user_api_key=None, model_name=None):
@@ -589,18 +595,112 @@ Return strictly structured JSON:
     )
     return clean_json_loads(response.text)
 
-async def generate_thumbnail_prompts(story_summary, user_api_key=None, model_name=None):
-    """Generates 3 viral YouTube thumbnail concepts with high CTR."""
+async def generate_thumbnail_prompts(
+    story_summary: str,
+    channel_name: str = "",
+    thumbnail_style: str = "Hyper-Realistic Cinematic 3D",
+    lead_character: dict = None,
+    facial_emotion: str = "Shock & Disbelief (Jaw Dropped / Wide Eyes)",
+    composition_layout: str = "Extreme Face Close-Up on Left with Threat/Object on Right",
+    color_mood: str = "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)",
+    custom_notes: str = "",
+    user_api_key: str = None,
+    model_name: str = None
+):
+    """
+    Master YouTube Packaging & CTR Engine:
+    Intelligently polishes user's rough input, anchors character continuity,
+    and engineers 3 elite YouTube thumbnail prompt packages copy-ready for Midjourney/Flux/Google Flow.
+    """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
     client = get_client(user_api_key)
 
-    prompt = f"Generate 3 viral, high-CTR YouTube thumbnail concepts with text overlays and Midjourney prompts for this story:\n\n{story_summary}"
-    
+    char_clause = ""
+    if lead_character and isinstance(lead_character, dict):
+        c_name = lead_character.get("name", "Protagonist")
+        c_gender = lead_character.get("gender", "Character")
+        c_age = str(lead_character.get("age", "28"))
+        c_complexion = lead_character.get("complexion", "Medium brown")
+        c_hair = lead_character.get("hairstyle", "Braids")
+        c_body = lead_character.get("body_size") or lead_character.get("body", "Average")
+        c_outfit = lead_character.get("outfit_style") or lead_character.get("outfit", "Signature wardrobe")
+        char_clause = f"""
+CHARACTER CONTINUITY MANDATE:
+The thumbnail MUST feature the following recurring character as the central visual focal subject:
+- Name: {c_name} ({c_age}y/o {c_gender}, {c_complexion} skin, {c_hair} hairstyle, {c_body} build, wearing {c_outfit}).
+- Embed their exact biometric likeness and expression into the master image generation prompt.
+"""
+
+    notes_clause = f"\nCUSTOM ELEMENTS TO EMPHASIZE: {custom_notes}\n" if custom_notes else ""
+
+    system_instruction = f"""
+You are the World's #1 YouTube Packaging & Click-Through-Rate (CTR) Specialist at WP Studio (producing thumbnails on par with MrBeast, Vox, MagnatesMedia, and Film Cooper).
+Your mission is to take ANY input from the user (even a rough, messy, or short thought), automatically POLISH and elevate it into a viral, emotionally charged visual concept, and engineer 3 ELITE YouTube Thumbnail Prompt Packages.
+
+CREATIVE THUMBNAIL SPECIFICATIONS:
+- Aesthetic Art Style: {thumbnail_style}
+- YouTube Channel Name: {channel_name or "WP Studio Creator"}
+- Key Emotional Reaction: {facial_emotion}
+- Spatial Framing / Composition: {composition_layout}
+- Color Palette & Lighting Mood: {color_mood}
+{char_clause}
+{notes_clause}
+
+CRITICAL RULES FOR CLICK-GENERATING YOUTUBE THUMBNAILS:
+1. THE 3-SECOND RULE: Viewers decide to click in 0.5s on mobile. Thumbnails must have ONE clear focal point, extreme contrast, high visual hierarchy, and instant emotional punch.
+2. TEXT OVERLAY: Must be ultra-short (2 to 4 words MAX). Never repeat the video title. It must create an irresistible CURIOSITY GAP or dramatic tension (e.g. "HE KNEW!", "$10,000,000 MISTAKE", "DO NOT ENTER", "THEY LIED").
+3. EXPRESSION DYNAMICS: If a human or character is present, their eyes must have intense life and emotion (wide pupils, caught off-guard, raw shock, sinister grin).
+4. MASTER GENERATOR PROMPT: The image prompt must be 100% self-contained and copy-paste ready for Midjourney v6, Flux.1, and Google Flow. It MUST include:
+   - Camera lens (e.g. "Extreme close-up 35mm lens, dynamic low angle")
+   - Exact lighting (e.g. "cinematic volumetric rim lighting, intense warm amber key light contrasting with deep teal shadows")
+   - Biometrics and locked character traits (if character provided)
+   - Background depth, particles, sparks, or subtle depth of field
+   - Strict parameters: "--ar 16:9 --style raw --v 6.1"
+
+Generate 3 DISTINCT high-CTR concepts:
+1. Concept #1: "The Extreme Reaction Hook" (Highest CTR, huge expressive face, shock, foreground focal point)
+2. Concept #2: "The High-Stakes Action / Dilemma" (Tense cinematic climax, high danger or conflict, movie-poster scale)
+3. Concept #3: "The Curiosity Gap / Dark Secret" (Bizarre hidden detail, forbidden door, glowing anomaly, mystery)
+
+Return strictly structured JSON:
+{{
+    "polished_topic": "Cleaned up, emotionally charged premise engineered from user input",
+    "channel_name": "{channel_name or 'WP Studio Creator'}",
+    "concepts": [
+        {{
+            "variation_name": "Variation 1: The Extreme Reaction Hook",
+            "is_top_pick": true,
+            "headline_title": "Irresistible Viral YouTube Title Suggestion",
+            "overlay_text": "2-4 PUNCHY WORDS",
+            "overlay_style": "Style & typography recommendation (e.g. Slanted bold Bebas Neue yellow font with heavy black stroke and red drop shadow)",
+            "overlay_placement": "Placement coordinates (e.g. Upper Left corner, angled at 7 degrees)",
+            "master_image_prompt": "Complete, exhaustive Midjourney/Flux prompt with camera, subject, biometrics, lighting, atmosphere, and --ar 16:9 --style raw --v 6.1",
+            "visual_composition": {{
+                "foreground": "What is closest to camera",
+                "midground_subject": "Main character pose, expression, and action",
+                "background": "Setting, lighting fixtures, environmental atmosphere",
+                "color_palette": "Dominant colors and contrast pairing (e.g. Vibrant Golden Yellow against Midnight Navy)"
+            }},
+            "psychological_trigger": "Why viewers are psychologically compelled to click (e.g. Curiosity gap + extreme shock reaction trigger)"
+        }}
+    ]
+}}
+"""
+
+    prompt = f"""USER INPUT STORY PREMISE / ROUGH IDEA:
+"{story_summary}"
+
+Polish this idea into 3 master-level YouTube thumbnail concepts with exhaustive Midjourney prompts according to the creative specifications above."""
+
     response = generate_with_fallback(
         client=client,
         preferred_model=model,
         contents=prompt,
-        config={"response_mime_type": "application/json"},
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json",
+            "temperature": 0.7
+        },
         user_api_key=user_api_key
     )
     return clean_json_loads(response.text)
@@ -625,7 +725,7 @@ async def render_visual_frame(prompt: str, width: int = 1024, height: int = 576,
     clean_p = clean_p.strip()
 
     encoded = urllib.parse.quote(clean_p[:800])
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&model=flux&nologo=true"
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&model=turbo&nologo=true"
     if seed:
         url += f"&seed={seed}"
 

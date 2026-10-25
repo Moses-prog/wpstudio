@@ -1389,6 +1389,11 @@
                 <div class="form-label">Story Source or Premise</div>
                 <div class="form-hint">Paste a public YouTube link or enter an original premise, life experience, or story topic.</div>
                 <textarea id="story-input-source" class="form-input" placeholder="e.g. https://www.youtube.com/watch?v=... or 'My journey dropping out of college to build an agency' or an original dramatic premise"></textarea>
+                
+                <div style="margin-top:10px;">
+                    <div class="form-label" style="font-size:10px;">YouTube Channel Name (Optional)</div>
+                    <input type="text" id="story-channel-name" class="form-input" placeholder="e.g. @MyStoryChannel or DarkTales AI" style="font-size:12px;">
+                </div>
             </div>
 
             <!-- Step 2: Creative Configuration -->
@@ -1464,8 +1469,22 @@
 
             <!-- Step 4: Production Result & Downloads -->
             <div id="story-result-section" style="display:none;" class="form-card">
-                <div class="form-label" style="color:var(--success);">Production Complete & Delivered</div>
-                <div class="form-hint" id="story-result-title" style="font-weight:600; color:var(--text-main); margin-bottom:10px;">PDFs Delivered to Your Telegram Chat</div>
+                <div class="form-label" style="color:var(--success);">Production Complete & Ready</div>
+                <div class="form-hint" id="story-result-title" style="font-weight:700; color:var(--text-main); font-size:14px; margin-bottom:2px;">Story Title</div>
+                <div id="story-result-channel" style="font-size:11px; color:#94a3b8; margin-bottom:12px;">Channel: WP Studio Production</div>
+
+                <!-- Ready to copy YouTube Video Description -->
+                <div id="story-result-desc-wrap" style="background:#080d1a; border:1px solid #1e293b; border-radius:8px; padding:10px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase;">📝 Ready-to-Copy YouTube Description:</span>
+                        <button type="button" class="btn-secondary" style="font-size:10px; padding:3px 8px; cursor:pointer;" onclick="copyStoryDescription()">
+                            <svg viewBox="0 0 24 24" style="width:10px; height:10px; margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy
+                        </button>
+                    </div>
+                    <div id="story-result-desc-text" style="font-size:11.5px; color:#cbd5e1; line-height:1.45; max-height:120px; overflow-y:auto; word-break:break-word; white-space:pre-wrap;"></div>
+                </div>
+
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <button type="button" id="btn-download-bible" onclick="sendPdfToChat(activeJobId, 'bible')" class="btn-submit" style="background:#2c2c2e; border:1px solid var(--border); width:100%; justify-content:center;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -1703,16 +1722,88 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Generate 3 high-CTR viral visual composition concepts</div>
+            <div class="modal-subtitle">AI-polished viral prompts, character IP continuity & click triggers</div>
         </div>
         <div class="modal-body">
             <div class="form-card">
-                <div class="form-label">Video Topic or Story Premise</div>
-                <div class="form-hint">Enter your video title or storyline summary to craft click-generating concepts.</div>
-                <input id="thumb-topic" type="text" class="form-input" placeholder="e.g. He Stole From The Cartel And Woke Up On An Island">
-                <button id="btn-submit-thumb" class="btn-submit" onclick="submitThumbnailGenerate()">
+                <!-- Topic Input with Auto-Polish Notice -->
+                <div class="form-label">Story Premise / Video Idea</div>
+                <div class="form-hint">Type any rough idea or title. Gemini will automatically polish and elevate it into viral concepts!</div>
+                <textarea id="thumb-topic" class="form-input" rows="2" placeholder="e.g. He stole $5M from the cartel and escaped on a jet ski at night..."></textarea>
+
+                <!-- Channel Name -->
+                <div style="margin-top:10px;">
+                    <div class="form-label" style="font-size:10px;">YouTube Channel Name (Optional)</div>
+                    <input id="thumb-channel" type="text" class="form-input" placeholder="e.g. @StoryVaultAI" style="font-size:12px;">
+                </div>
+
+                <!-- Grid Options: Style & Character -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Visual Style</div>
+                        <select id="thumb-style" class="form-input">
+                            <option value="Hyper-Realistic Cinematic 3D">Hyper-Realistic 3D</option>
+                            <option value="MrBeast High-Saturation Punchy">Punchy & High-Saturation</option>
+                            <option value="Dark Crime & Gritty Mystery">Dark Crime & Mystery</option>
+                            <option value="Epic Anime / Webtoon Keyframe">Epic Anime / Webtoon</option>
+                            <option value="Stylised 3D Animation (Pixar/Disney)">Stylised 3D (Pixar Style)</option>
+                            <option value="Cyberpunk Neon Tech">Cyberpunk Neon</option>
+                            <option value="True Crime Documentary">Documentary & Realism</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">CastLock Character</div>
+                        <select id="thumb-character" class="form-input">
+                            <option value="">No Character / Scene Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid Options: Facial Emotion & Framing -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Facial Reaction (High CTR)</div>
+                        <select id="thumb-emotion" class="form-input">
+                            <option value="Shock & Disbelief (Jaw Dropped / Wide Eyes)">Shock & Wide Eyes (Top CTR)</option>
+                            <option value="Intense Menacing Glare">Intense Menacing Glare</option>
+                            <option value="Terrified & Screaming in Panic">Terrified / Panic</option>
+                            <option value="Smirking Mastermind / Mystery">Smirking Mastermind</option>
+                            <option value="Tearful & Emotional Heartbreak">Tearful / Emotional</option>
+                            <option value="Focused Determination">Fierce & Determined</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Framing & Composition</div>
+                        <select id="thumb-composition" class="form-input">
+                            <option value="Extreme Face Close-Up on Left with Threat/Object on Right">Close-Up Face Left + Threat Right</option>
+                            <option value="Split-Screen Before & After / Dilemma">Split-Screen Before & After</option>
+                            <option value="Low-Angle Hero Stance with Glowing Artifact">Low-Angle Hero Stance</option>
+                            <option value="Silhouette in Mystery Doorway with Volumetric Rim Light">Mystery Silhouette in Doorway</option>
+                            <option value="Dynamic 3D Object Bursting Through Screen">3D Object Bursting Forward</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Lighting & Contrast Theme -->
+                <div style="margin-top:10px;">
+                    <div class="form-label" style="font-size:10px;">Lighting & Color Mood</div>
+                    <select id="thumb-color" class="form-input">
+                        <option value="High-Contrast YouTube Punch (Vibrant Yellow & Cyan)">Vibrant High-Contrast (Yellow & Cyan Pop)</option>
+                        <option value="Dark Moody Cinematic (Deep Navy with Golden Amber Rim)">Dark Cinematic (Deep Navy & Golden Rim)</option>
+                        <option value="Neon Dual-Tone (Hot Magenta & Electric Blue)">Neon Dual-Tone (Magenta & Blue)</option>
+                        <option value="Eerie Tension (Foggy Charcoal & Toxic Emerald)">Eerie Tension (Charcoal & Toxic Green)</option>
+                    </select>
+                </div>
+
+                <!-- Custom Element Focus -->
+                <div style="margin-top:10px;">
+                    <div class="form-label" style="font-size:10px;">Special Focus / Props to Include (Optional)</div>
+                    <input id="thumb-custom-notes" type="text" class="form-input" placeholder="e.g. Glowing golden key, police caution tape, stacks of money" style="font-size:12px;">
+                </div>
+
+                <button id="btn-submit-thumb" class="btn-submit" onclick="submitThumbnailGenerate()" style="margin-top:14px;">
                     <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                    Generate 3 Thumbnail Concepts (3 Credits)
+                    ⚡ Polish & Generate 3 Master Thumbnail Prompts (3 Credits)
                 </button>
             </div>
 
@@ -1763,10 +1854,16 @@
                 <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-color); margin-bottom:10px;">
                     <img id="render-img-preview" src="" alt="Render" style="width:100%; height:auto; display:block;">
                 </div>
-                <a id="btn-render-download" href="#" download="wp_studio_frame.jpg" class="btn-secondary" style="width:100%; justify-content:center;">
-                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Save Image to Device
-                </a>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button type="button" id="btn-render-send-chat" onclick="sendRenderedFrameToTelegram()" class="btn-submit" style="background:#2563eb; width:100%; justify-content:center;">
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send Photo to My Telegram Chat
+                    </button>
+                    <a id="btn-render-download" href="#" download="wp_studio_frame.jpg" class="btn-secondary" style="width:100%; justify-content:center;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Save Image to Device
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -2645,15 +2742,24 @@
             }
         }
 
-        // Populate Character Dropdown in StoryCraft
+        // Populate Character Dropdown in StoryCraft & Thumbnail Lab
         function renderCharacterSelect() {
             const sel = document.getElementById('story-sel-character');
-            if (!sel) return;
-            let html = '<option value="">Auto-Invent AI Protagonist</option>';
-            savedCharacters.forEach(c => {
-                html += `<option value="${c.id}">${c.name} (${c.gender}, ${c.art_style})</option>`;
-            });
-            sel.innerHTML = html;
+            if (sel) {
+                let html = '<option value="">Auto-Invent AI Protagonist</option>';
+                savedCharacters.forEach(c => {
+                    html += `<option value="${c.id}">${c.name} (${c.gender}, ${c.art_style})</option>`;
+                });
+                sel.innerHTML = html;
+            }
+            const thumbSel = document.getElementById('thumb-character');
+            if (thumbSel) {
+                let thumbHtml = '<option value="">No Character / Scene Only</option>';
+                savedCharacters.forEach(c => {
+                    thumbHtml += `<option value="${c.id}">${c.name} (${c.gender}, ${c.art_style})</option>`;
+                });
+                thumbSel.innerHTML = thumbHtml;
+            }
         }
 
         // Render Character Roster
@@ -2756,10 +2862,14 @@
 
             activeJobId = job.job_id || job.id;
 
-            // 1. Populate Input Premise
+            // 1. Populate Input Premise & Channel
             const inputSrc = document.getElementById('story-input-source');
             if (inputSrc) {
                 inputSrc.value = job.source_input || job.source_title || "";
+            }
+            const inputChannel = document.getElementById('story-channel-name');
+            if (inputChannel && job.channel_name) {
+                inputChannel.value = job.channel_name;
             }
 
             // 2. Populate Culture
@@ -2846,6 +2956,31 @@
                 if (resultTitle) {
                     resultTitle.innerText = `${job.source_title || 'Screenplay'} — Ready`;
                 }
+                const channelEl = document.getElementById('story-result-channel');
+                let channelName = job.channel_name || '';
+                let descText = "";
+                if (job.full_story_json) {
+                    try {
+                        const parsedStory = typeof job.full_story_json === 'string' ? JSON.parse(job.full_story_json) : job.full_story_json;
+                        descText = parsedStory.youtube_description || parsedStory.description || parsedStory.synopsis || "";
+                        if (!channelName && parsedStory.channel_name) {
+                            channelName = parsedStory.channel_name;
+                        }
+                    } catch(e) {}
+                }
+                if (channelEl) {
+                    channelEl.innerText = channelName ? `Channel: ${channelName}` : '';
+                }
+                const descBox = document.getElementById('story-result-desc-box');
+                const descTextEl = document.getElementById('story-result-desc-text');
+                if (descBox && descTextEl) {
+                    if (descText) {
+                        descTextEl.innerText = descText;
+                        descBox.style.display = 'block';
+                    } else {
+                        descBox.style.display = 'none';
+                    }
+                }
                 if (bibleBtn) {
                     bibleBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
                     bibleBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'bible');
@@ -2915,7 +3050,8 @@
                 genre: genre,
                 custom_genre: customGenre,
                 length_tier: tier,
-                locked_lead_id: document.getElementById('story-sel-character').value || null
+                locked_lead_id: document.getElementById('story-sel-character').value || null,
+                channel_name: document.getElementById('story-channel-name')?.value?.trim() || ""
             };
 
             try {
@@ -3088,7 +3224,8 @@
             const payload = {
                 job_id: activeJobId,
                 selected_concept_idx: selectedConceptIndex,
-                locked_lead_id: document.getElementById('story-sel-character').value || null
+                locked_lead_id: document.getElementById('story-sel-character').value || null,
+                channel_name: document.getElementById('story-channel-name')?.value?.trim() || ""
             };
 
             try {
@@ -3103,6 +3240,28 @@
                     showTelegramAlert("Your PDFs have been sent directly to your Telegram chat! Check your bot messages.");
                     const resSection = document.getElementById('story-result-section');
                     if (resSection) resSection.style.display = 'block';
+
+                    const resTitle = document.getElementById('story-result-title');
+                    if (resTitle) {
+                        resTitle.innerText = `${(d.story && d.story.title) || conceptTitle} — Ready`;
+                    }
+                    const resChannel = document.getElementById('story-result-channel');
+                    const chName = document.getElementById('story-channel-name')?.value?.trim() || (d.story && d.story.channel_name) || "";
+                    if (resChannel) {
+                        resChannel.innerText = chName ? `Channel: ${chName}` : '';
+                    }
+
+                    const descBox = document.getElementById('story-result-desc-box');
+                    const descTextEl = document.getElementById('story-result-desc-text');
+                    const descText = (d.story && (d.story.youtube_description || d.story.description || d.story.synopsis)) || "";
+                    if (descBox && descTextEl) {
+                        if (descText) {
+                            descTextEl.innerText = descText;
+                            descBox.style.display = 'block';
+                        } else {
+                            descBox.style.display = 'none';
+                        }
+                    }
 
                     const newJobId = d.job_id || activeJobId;
                     const btnBible = document.getElementById('btn-download-bible');
@@ -3134,6 +3293,33 @@
                 btn.disabled = false;
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & Dual PDFs';
             }
+        }
+
+        function copyStoryDescription() {
+            const text = document.getElementById('story-result-desc-text')?.innerText || '';
+            if (!text) {
+                showToast('No description to copy', false);
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('YouTube Description copied!', true);
+                }).catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('YouTube Description copied!', true);
         }
 
         async function loadHistory() {
@@ -3269,53 +3455,83 @@
         }
 
         // =====================================================================
-        // YOUTUBE THUMBNAIL LAB ACTIONS
+        // YOUTUBE THUMBNAIL LAB ACTIONS (GEMINI CTR & PACKAGING ENGINE)
         // =====================================================================
+        let currentThumbnailConcepts = [];
+        let currentThumbnailTopic = "";
+        let currentThumbnailChannel = "";
+
         async function submitThumbnailGenerate() {
             const topic = document.getElementById('thumb-topic').value.trim();
             if (!topic) {
-                showToast('Please enter video title or topic', false);
+                showToast('Please enter a video title or story premise', false);
                 return;
             }
+
+            const channel = document.getElementById('thumb-channel')?.value?.trim() || "";
+            const style = document.getElementById('thumb-style')?.value || "Hyper-Realistic Cinematic 3D";
+            const charId = document.getElementById('thumb-character')?.value || null;
+            const emotion = document.getElementById('thumb-emotion')?.value || "Shock & Disbelief (Jaw Dropped / Wide Eyes)";
+            const composition = document.getElementById('thumb-composition')?.value || "Extreme Face Close-Up on Left with Threat/Object on Right";
+            const colorMood = document.getElementById('thumb-color')?.value || "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)";
+            const customNotes = document.getElementById('thumb-custom-notes')?.value?.trim() || "";
 
             const btn = document.getElementById('btn-submit-thumb');
             btn.disabled = true;
 
             AIProgressTracker.start(
                 "Engineering High-CTR Thumbnails",
-                12,
+                14,
                 [
-                    { at: 5, text: `Deconstructing video hooks & psychology for "${topic.slice(0, 30)}..."` },
-                    { at: 28, text: "Formulating 3 viral visual angles (curiosity, shock & contrast)..." },
-                    { at: 60, text: "Calculating bold text overlay placement & rule-of-thirds focal anchors..." },
-                    { at: 85, text: "Generating Midjourney & Flux generative visual prompts..." }
+                    { at: 3, text: "Polishing your idea with Gemini..." },
+                    { at: 25, text: `Applying ${style} styling & face reactions...` },
+                    { at: 55, text: "Designing high-contrast rule-of-thirds composition..." },
+                    { at: 78, text: "Crafting bold text overlay stickers & click triggers..." },
+                    { at: 92, text: "Writing master Midjourney & Flux prompts..." }
                 ]
             );
+
+            const payload = {
+                topic: topic,
+                channel_name: channel,
+                style: style,
+                character_id: charId,
+                emotion: emotion,
+                composition: composition,
+                color_mood: colorMood,
+                custom_notes: customNotes
+            };
 
             try {
                 const res = await fetch('/api/thumbnail_generate', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ topic: topic })
+                    body: JSON.stringify(payload)
                 });
                 const d = await res.json();
                 if (d.success) {
-                    await AIProgressTracker.complete("3 High-CTR Thumbnail Concepts Generated!");
+                    await AIProgressTracker.complete("3 Master Thumbnail Prompts Ready!");
                     const rawThumbs = d.thumbnails;
                     let concepts = [];
                     if (Array.isArray(rawThumbs)) {
                         concepts = rawThumbs;
-                    } else if (rawThumbs && Array.isArray(rawThumbs.thumbnail_concepts)) {
-                        concepts = rawThumbs.thumbnail_concepts;
                     } else if (rawThumbs && Array.isArray(rawThumbs.concepts)) {
                         concepts = rawThumbs.concepts;
+                    } else if (rawThumbs && Array.isArray(rawThumbs.thumbnail_concepts)) {
+                        concepts = rawThumbs.thumbnail_concepts;
                     }
-                    renderThumbnails(concepts);
+
+                    currentThumbnailConcepts = concepts;
+                    currentThumbnailTopic = (rawThumbs && rawThumbs.polished_topic) || topic;
+                    currentThumbnailChannel = channel;
+
+                    renderThumbnails(rawThumbs, topic, channel);
+
                     if (currentUser && d.credits !== undefined) {
                         currentUser.credits = d.credits;
                         renderDashboard();
                     }
-                    showToast('3 Thumbnail Concepts generated!');
+                    showToast('3 Master Thumbnail Prompts Generated!');
                 } else {
                     AIProgressTracker.stop();
                     showToast(d.error || 'Failed to generate thumbnails', false);
@@ -3326,47 +3542,192 @@
                 showToast(err.message || 'Error generating thumbnails', false);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Generate 3 Thumbnail Concepts (3 Credits)';
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ⚡ Polish & Generate 3 Master Thumbnail Prompts (3 Credits)';
             }
         }
 
-        function renderThumbnails(concepts) {
+        function renderThumbnails(data, originalTopic, channelName) {
             const container = document.getElementById('thumb-results-container');
             if (!container) return;
             container.style.display = 'block';
 
-            if (!Array.isArray(concepts) || concepts.length === 0) {
+            let polishedTopic = "";
+            let concepts = [];
+            if (Array.isArray(data)) {
+                concepts = data;
+            } else if (data && typeof data === 'object') {
+                polishedTopic = data.polished_topic || "";
+                if (Array.isArray(data.concepts)) concepts = data.concepts;
+                else if (Array.isArray(data.thumbnail_concepts)) concepts = data.thumbnail_concepts;
+            }
+
+            if (!concepts || concepts.length === 0) {
                 container.innerHTML = '<div class="form-hint" style="text-align:center; padding:15px;">No thumbnail concepts returned.</div>';
                 return;
             }
 
-            let html = '<div class="section-label" style="padding-left:0; display:flex; justify-content:space-between; align-items:center;"><span>High-CTR Composition Concepts</span><span style="font-size:11px; color:var(--accent); font-weight:700;">TOP PICK HIGHLIGHTED</span></div>';
+            let html = '';
+
+            // AI Polished Topic Banner
+            if (polishedTopic) {
+                html += `
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;">
+                        <div style="font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                            <svg viewBox="0 0 24 24" style="width:12px; height:12px; fill:#10b981;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            Gemini Polished Premise
+                        </div>
+                        <div style="font-size: 12px; color: #f1f5f9; font-weight: 600; line-height: 1.4;">${escapeHtml(polishedTopic)}</div>
+                    </div>
+                `;
+            }
+
+            html += '<div class="section-label" style="padding-left:0; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><span>High-CTR Visual Concepts</span><span style="font-size:11px; color:#ffd700; font-weight:700;">3 COPY-READY PROMPTS</span></div>';
 
             concepts.forEach((c, idx) => {
-                const isTopPick = (idx === 0);
-                const cardStyle = isTopPick 
-                    ? 'margin-bottom:12px; border: 1.5px solid rgba(10, 132, 255, 0.45); background: linear-gradient(145deg, rgba(10, 132, 255, 0.05), rgba(255, 255, 255, 0.02)); box-shadow: 0 4px 18px rgba(10, 132, 255, 0.08);' 
-                    : 'margin-bottom:10px;';
+                const isTopPick = (idx === 0 || c.is_top_pick);
+                const vName = c.variation_name || `Concept #${idx + 1}`;
+                const titleSug = c.headline_title || "";
+                const overlayText = c.overlay_text || "";
+                const overlayStyle = c.overlay_style || "";
+                const overlayPlacement = c.overlay_placement || "";
+                const prompt = c.master_image_prompt || c.midjourney_prompt || "";
+                const trigger = c.psychological_trigger || "";
+
+                // Visual composition breakdown
+                let compHtml = '';
+                if (c.visual_composition && typeof c.visual_composition === 'object') {
+                    const vc = c.visual_composition;
+                    compHtml = `
+                        <div style="font-size:11px; color:#94a3b8; line-height:1.45; margin-top:6px; background:rgba(0,0,0,0.25); padding:8px 10px; border-radius:6px;">
+                            ${vc.foreground ? `<div><strong>Foreground:</strong> ${escapeHtml(vc.foreground)}</div>` : ''}
+                            ${vc.midground_subject ? `<div><strong>Subject & Pose:</strong> ${escapeHtml(vc.midground_subject)}</div>` : ''}
+                            ${vc.background ? `<div><strong>Background:</strong> ${escapeHtml(vc.background)}</div>` : ''}
+                            ${vc.color_palette ? `<div><strong>Color Palette:</strong> ${escapeHtml(vc.color_palette)}</div>` : ''}
+                        </div>
+                    `;
+                } else if (c.visual_composition) {
+                    compHtml = `<div class="form-hint" style="margin-top:4px;"><strong>Composition:</strong> ${escapeHtml(c.visual_composition)}</div>`;
+                }
 
                 html += `
-                    <div class="form-card" style="${cardStyle}">
-                        <div class="concept-header">
-                            <span class="concept-num">THUMBNAIL #${idx + 1} &bull; ${c.angle || 'Visual Hook'}</span>
-                            ${isTopPick ? '<span class="concept-rec-chip" style="margin-left:auto;">TOP CTR PICK</span>' : ''}
+                    <div class="form-card" style="margin-bottom:12px; border:${isTopPick ? '1.5px solid rgba(255, 215, 0, 0.45)' : '1px solid var(--border)'}; background:${isTopPick ? 'linear-gradient(145deg, rgba(255, 215, 0, 0.04), rgba(255, 255, 255, 0.02))' : 'var(--card-bg)'};">
+                        <div class="concept-header" style="margin-bottom:6px;">
+                            <span class="concept-num" style="font-weight:700; color:${isTopPick ? '#ffd700' : 'var(--text)'};">${escapeHtml(vName)}</span>
+                            ${isTopPick ? '<span class="concept-rec-chip" style="margin-left:auto; background:rgba(255,215,0,0.15); color:#ffd700; border:1px solid rgba(255,215,0,0.4);">TOP CTR PICK</span>' : ''}
                         </div>
-                        <div class="item-row-title" style="margin-bottom:4px; ${isTopPick ? 'color:#ffd700;' : ''}">${c.overlay_text || c.text_overlay || 'Bold Text Hook'}</div>
-                        <div class="form-hint" style="margin-bottom:6px;"><strong>Visual Composition:</strong> ${c.visual_composition || c.concept || ''}</div>
-                        <div class="form-hint" style="margin-bottom:6px;"><strong>Focal Subject:</strong> ${c.focal_element || ''}</div>
-                        <div class="form-hint" style="margin-bottom:0;"><strong>Lighting & Color:</strong> ${c.color_scheme || c.midjourney_prompt || ''}</div>
+
+                        ${titleSug ? `<div style="font-size:12px; margin-bottom:8px; color:#e2e8f0;"><strong>Suggested Title:</strong> <span style="color:#60a5fa;">${escapeHtml(titleSug)}</span></div>` : ''}
+
+                        <!-- Text Overlay Sticker Preview -->
+                        ${overlayText ? `
+                            <div style="margin: 8px 0; padding: 8px 10px; background: #000; border: 1px solid #334155; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <div>
+                                    <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Text Overlay Sticker:</div>
+                                    <div style="font-size: 15px; font-weight: 900; color: #ffd700; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 1.5px 1.5px 0px #000;">
+                                        "${escapeHtml(overlayText)}"
+                                    </div>
+                                </div>
+                                <div style="font-size: 9.5px; color: #cbd5e1; text-align: right; max-width: 140px;">
+                                    ${escapeHtml(overlayPlacement || overlayStyle || 'Upper Left')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Visual Composition Details -->
+                        ${compHtml}
+
+                        <!-- Psychological Trigger -->
+                        ${trigger ? `<div style="font-size:10.5px; color:#f59e0b; margin-top:6px;"><strong>Click Trigger:</strong> ${escapeHtml(trigger)}</div>` : ''}
+
+                        <!-- Master Image Generation Prompt -->
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">Master Image Prompt:</span>
+                                <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 10.5px; height: 24px;" onclick="copyThumbnailPrompt(${idx})">
+                                    <svg viewBox="0 0 24 24" style="width:10px; height:10px; margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    Copy Prompt
+                                </button>
+                            </div>
+                            <div id="thumb-prompt-${idx}" style="font-family: monospace; font-size: 10.5px; background: #0b1120; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; color: #cbd5e1; line-height: 1.45; word-break: break-word; user-select: all;">${escapeHtml(prompt)}</div>
+                        </div>
                     </div>
                 `;
             });
+
+            // Delivery to Telegram Chat Button
+            html += `
+                <div style="margin-top: 14px;">
+                    <button type="button" id="btn-send-thumbs-tg" onclick="sendThumbnailPromptsToTelegram()" class="btn-submit" style="background:#2563eb; width:100%; justify-content:center;">
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send All 3 Master Prompts to My Telegram Chat
+                    </button>
+                </div>
+            `;
+
             container.innerHTML = html;
         }
 
+        function copyThumbnailPrompt(idx) {
+            const el = document.getElementById(`thumb-prompt-${idx}`);
+            const text = el ? el.innerText : '';
+            if (!text) {
+                showToast('No prompt found to copy', false);
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Master Prompt copied!', true);
+                }).catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        async function sendThumbnailPromptsToTelegram() {
+            if (!currentThumbnailConcepts || currentThumbnailConcepts.length === 0) {
+                showToast('No thumbnail concepts to send', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-send-thumbs-tg');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Delivering to Telegram...';
+            }
+
+            try {
+                const res = await fetch('/api/send_thumbnail_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        topic: currentThumbnailTopic,
+                        channel_name: currentThumbnailChannel,
+                        concepts: currentThumbnailConcepts
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showTelegramAlert('All 3 Master Thumbnail Prompts have been delivered straight to your Telegram chat!');
+                } else {
+                    showToast(d.error || 'Failed to send to Telegram', false);
+                }
+            } catch (err) {
+                console.error("Send thumbnails error:", err);
+                showToast(err.message || 'Error sending to Telegram', false);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send All 3 Master Prompts to My Telegram Chat';
+                }
+            }
+        }
+
         // =====================================================================
-        // VISUAL FRAME RENDERER ACTIONS
+        // VISUAL FRAME RENDERER ACTIONS (WITH DIRECT TELEGRAM PHOTO DELIVERY)
         // =====================================================================
+        let lastRenderedImageData = null;
+        let lastRenderedPrompt = "";
+
         async function submitRenderFrame() {
             const prompt = document.getElementById('render-prompt').value.trim();
             if (!prompt) {
@@ -3384,7 +3745,7 @@
                     { at: 5, text: "Connecting to AI image model..." },
                     { at: 25, text: "Drawing scene lighting and background..." },
                     { at: 60, text: "Adding fine details, colors, and depth..." },
-                    { at: 85, text: "Finalizing and preparing image download..." }
+                    { at: 85, text: "Finalizing image..." }
                 ]
             );
 
@@ -3402,6 +3763,9 @@
                 const d = await res.json();
                 if (d.success && d.image_data) {
                     await AIProgressTracker.complete("Frame Rendered Successfully!");
+                    lastRenderedImageData = d.image_data;
+                    lastRenderedPrompt = prompt;
+
                     const container = document.getElementById('render-result-container');
                     const img = document.getElementById('render-img-preview');
                     const dl = document.getElementById('btn-render-download');
@@ -3423,6 +3787,44 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Render Frame';
+            }
+        }
+
+        async function sendRenderedFrameToTelegram() {
+            if (!lastRenderedImageData) {
+                showToast('No rendered frame to send', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-render-send-chat');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Sending to Telegram...';
+            }
+
+            try {
+                const res = await fetch('/api/send_image_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        image_data: lastRenderedImageData,
+                        caption: `🖼️ <b>Rendered Visual Frame</b>\n\n📝 <i>${escapeHtml((lastRenderedPrompt || '').slice(0, 300))}</i>`
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showTelegramAlert('Photo sent to your Telegram chat! Tap it in Telegram to save directly to your phone gallery.');
+                } else {
+                    showToast(d.error || 'Failed to send photo to chat', false);
+                }
+            } catch (err) {
+                console.error("Send image error:", err);
+                showToast(err.message || 'Error sending image', false);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Photo to My Telegram Chat';
+                }
             }
         }
 

@@ -175,6 +175,11 @@ def generate_image_prompts_pdf(story_data: dict, culture="Universal", style="Sty
     }
     est_runtime = story_data.get("runtime_detail") or story_data.get("estimated_runtime") or runtime_lookup.get(length_tier, "~2 to 4 Mins")
 
+    channel_name = story_data.get("channel_name") or "WP Studio Production"
+    youtube_desc = story_data.get("youtube_description") or story_data.get("video_description") or ""
+    if not youtube_desc:
+        youtube_desc = f"{logline}\n\n{synopsis}\n\n🔔 Subscribe to {channel_name} for more cinematic stories!\n\n{format_hashtags(hashtags)}"
+
     md = f"""# WP STUDIO | AI STORY STUDIO
 ### STORY PACKAGE  |  IMAGE PRODUCTION PROMPTS
 # 🎬 {title}
@@ -195,6 +200,15 @@ def generate_image_prompts_pdf(story_data: dict, culture="Universal", style="Sty
 ---
 
 # 📖 CREATIVE BRIEF
+### 📺 YouTube Channel
+**{channel_name}**
+
+### 🎬 Story Title
+**{title}**
+
+### 📝 Ready-to-Copy YouTube Video Description
+{youtube_desc}
+
 ### Story Delivery & Audio Format
 **{delivery}**
 {lead_section}
@@ -342,6 +356,11 @@ def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Sty
     }
     est_runtime = story_data.get("runtime_detail") or story_data.get("estimated_runtime") or runtime_lookup.get(length_tier, "~2 to 4 Mins")
 
+    channel_name = story_data.get("channel_name") or "WP Studio Production"
+    youtube_desc = story_data.get("youtube_description") or story_data.get("video_description") or ""
+    if not youtube_desc:
+        youtube_desc = f"{logline}\n\n{synopsis}\n\n🔔 Subscribe to {channel_name} for more cinematic stories!\n\n{format_hashtags(hashtags)}"
+
     md = f"""# WP STUDIO | AI STORY STUDIO
 ### STORY PACKAGE  |  VIDEO PRODUCTION PROMPTS
 # 🎬 {title}
@@ -362,6 +381,15 @@ def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Sty
 ---
 
 # 📖 CREATIVE BRIEF
+### 📺 YouTube Channel
+**{channel_name}**
+
+### 🎬 Story Title
+**{title}**
+
+### 📝 Ready-to-Copy YouTube Video Description
+{youtube_desc}
+
 ### Story Delivery & Audio Format
 **{delivery}**
 {lead_section}

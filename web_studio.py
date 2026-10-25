@@ -59,6 +59,48 @@ def send_telegram_document(user_id: int, file_path: str, caption: str = "") -> b
         print(f"[TELEGRAM DOC] Exception sending {file_path} to {user_id}: {e}")
         return False
 
+def send_telegram_photo(user_id: int, photo_bytes: bytes, caption: str = "") -> bool:
+    """Delivers an image directly into the user's private Telegram chat with zero link exposure."""
+    bot_token = os.getenv("BOT_TOKEN", "").strip() or BOT_TOKEN
+    if not bot_token or not photo_bytes:
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+        files = {"photo": ("wp_studio_image.jpg", photo_bytes, "image/jpeg")}
+        data = {"chat_id": str(user_id)}
+        if caption:
+            data["caption"] = caption[:1024]
+            data["parse_mode"] = "HTML"
+        r = requests.post(url, data=data, files=files, timeout=40)
+        if r.status_code == 200:
+            print(f"[TELEGRAM PHOTO] Successfully delivered photo to chat {user_id}")
+            return True
+        else:
+            print(f"[TELEGRAM PHOTO] Delivery failed for {user_id} (status {r.status_code}): {r.text}")
+            return False
+    except Exception as e:
+        print(f"[TELEGRAM PHOTO] Exception sending photo to {user_id}: {e}")
+        return False
+
+def send_telegram_message(user_id: int, text: str) -> bool:
+    """Sends an HTML formatted message directly into the user's private Telegram chat."""
+    bot_token = os.getenv("BOT_TOKEN", "").strip() or BOT_TOKEN
+    if not bot_token or not text:
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        data = {
+            "chat_id": str(user_id),
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+        r = requests.post(url, data=data, timeout=30)
+        return r.status_code == 200
+    except Exception as e:
+        print(f"[TELEGRAM MSG] Exception sending message to {user_id}: {e}")
+        return False
+
 PRICING_TIERS = {
     "Short": {
         "label": "Short (~2-4 Mins | ≤ 40 scenes)",
@@ -912,6 +954,8 @@ def api_story_generate():
     if char_id:
         lead_char = database.get_character_by_id(int(char_id), user_id)
 
+    channel_name = str(data.get("channel_name", "")).strip() or job.get("channel_name", "")
+
     database.update_job_selection(int(job_id), selected_concept_idx)
 
     try:
@@ -925,7 +969,8 @@ def api_story_generate():
             length_tier=length_tier,
             timezone="Africa/Lagos",
             user_api_key=custom_key,
-            model_name=model_name
+            model_name=model_name,
+            channel_name=channel_name
         ))
     except Exception as e:
         return jsonify({"success": False, "error": f"Script production error: {str(e)}"}), 500
@@ -1105,6 +1150,21 @@ def api_thumbnail_generate():
     if not topic:
         return jsonify({"success": False, "error": "Please provide a video title or topic"}), 400
 
+    channel_name = str(data.get("channel_name", "")).strip()
+    style = str(data.get("style", "Hyper-Realistic Cinematic 3D")).strip()
+    char_id = data.get("character_id")
+    emotion = str(data.get("emotion", "Shock & Disbelief (Jaw Dropped / Wide Eyes)")).strip()
+    composition = str(data.get("composition", "Extreme Face Close-Up on Left with Threat/Object on Right")).strip()
+    color_mood = str(data.get("color_mood", "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)")).strip()
+    custom_notes = str(data.get("custom_notes", "")).strip()
+
+    lead_char = None
+    if char_id:
+        try:
+            lead_char = database.get_character_by_id(int(char_id), user_id)
+        except Exception:
+            lead_char = None
+
     custom_key = user.get("custom_gemini_key")
     model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
 
@@ -1119,17 +1179,90 @@ def api_thumbnail_generate():
     try:
         thumb_data = run_async(ai_engine.generate_thumbnail_prompts(
             story_summary=topic,
+            channel_name=channel_name,
+            thumbnail_style=style,
+            lead_character=lead_char,
+            facial_emotion=emotion,
+            composition_layout=composition,
+            color_mood=color_mood,
+            custom_notes=custom_notes,
             user_api_key=custom_key,
             model_name=model_name
         ))
         if cost > 0:
             database.deduct_credits(user_id, cost)
         refreshed_user = database.get_user(user_id)
+        gc.collect()
         return jsonify({
             "success": True,
             "thumbnails": thumb_data,
             "credits": refreshed_user.get("credits", 0)
         })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/send_thumbnail_to_telegram', methods=['POST'])
+def api_send_thumbnail_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    concepts = data.get("concepts", [])
+    if not concepts:
+        return jsonify({"success": False, "error": "No thumbnail concepts to send"}), 400
+
+    msg = "🖼️ <b>WP Studio — YouTube Thumbnail Master Prompts</b>\n"
+    if data.get("topic"):
+        msg += f"<i>Project: {data.get('topic')}</i>\n"
+    if data.get("channel_name"):
+        msg += f"<i>Channel: {data.get('channel_name')}</i>\n"
+
+    for i, c in enumerate(concepts[:3], 1):
+        v_name = c.get("variation_name", f"Variation #{i}")
+        headline = c.get("headline_title", "")
+        overlay = c.get("overlay_text", "")
+        prompt = c.get("master_image_prompt", "")
+        trigger = c.get("psychological_trigger", "")
+
+        msg += "\n<b>━━━━━━━━━━━━━━━━━━━━</b>\n"
+        msg += f"<b>📌 {v_name.upper()}</b>\n"
+        if headline:
+            msg += f"🎬 <b>Recommended Title:</b> {headline}\n"
+        if overlay:
+            msg += f"🏷️ <b>Overlay Sticker:</b> <code>{overlay}</code>\n"
+        if trigger:
+            msg += f"🎯 <b>Click Trigger:</b> {trigger}\n"
+        if prompt:
+            msg += f"📋 <b>Midjourney / Flux / Google Flow Prompt:</b>\n<code>{prompt}</code>\n"
+
+    success = send_telegram_message(user_id, msg)
+    if success:
+        return jsonify({"success": True, "message": "Thumbnail prompts sent directly to your Telegram chat!"})
+    else:
+        return jsonify({"success": False, "error": "Could not send prompts to Telegram chat."}), 500
+
+@app.route('/api/send_image_to_telegram', methods=['POST'])
+def api_send_image_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    image_data = data.get("image_data", "")
+    caption = data.get("caption", "🎬 <b>WP Studio Production Image</b>")
+
+    if not image_data or not image_data.startswith("data:image"):
+        return jsonify({"success": False, "error": "Invalid image data"}), 400
+
+    try:
+        header, b64_str = image_data.split(",", 1)
+        raw_bytes = base64.b64decode(b64_str)
+        delivered = send_telegram_photo(user_id, raw_bytes, caption)
+        if delivered:
+            return jsonify({"success": True, "message": "Photo sent directly to your Telegram chat! Save it to your gallery."})
+        else:
+            return jsonify({"success": False, "error": "Could not send photo to Telegram chat."}), 500
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

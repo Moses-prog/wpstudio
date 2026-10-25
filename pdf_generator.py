@@ -10,6 +10,8 @@ from markdown_pdf import MarkdownPdf, Section
 
 DARK_THEME_CSS = """
 body {
+    margin: 0;
+    padding: 0;
     background-color: #0b0f19;
     color: #e2e8f0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -309,7 +311,7 @@ Reflecting: *{c_expr}*.
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
     del pdf
@@ -451,7 +453,7 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
     del pdf
@@ -542,7 +544,7 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
     del pdf

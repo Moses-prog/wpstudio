@@ -1,5 +1,6 @@
 import os
 import re
+import gc
 from datetime import datetime
 try:
     import pymupdf as fitz
@@ -111,6 +112,8 @@ def apply_dark_theme(pdf_path: str):
         os.replace(temp_path, pdf_path)
     except Exception as e:
         print(f"Warning: Failed to apply full bleed dark theme background: {e}")
+    finally:
+        gc.collect()
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "generated_pdfs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -295,6 +298,8 @@ Reflecting: *{c_expr}*.
     pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
     return pdf_path
 
 def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> str:
@@ -421,6 +426,8 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
     pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
     return pdf_path
 
 def generate_dual_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
@@ -510,4 +517,6 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
     pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
     return pdf_path

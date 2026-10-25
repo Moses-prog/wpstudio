@@ -346,21 +346,41 @@ def log_story(user_id: int, title: str, topic: str, style: str, genre: str, dura
     conn.close()
 
 def create_story_job(user_id: int, source_input: str, source_title: str, transcript: str, culture: str, style: str, genre: str, timezone: str, length_tier: str) -> int:
+    now = datetime.utcnow().isoformat()
+    highest_id = 0
+
+    # 1. Fetch highest job_id from Supabase to prevent duplicate primary key errors across container restarts
+    if supabase_client:
+        try:
+            res = supabase_client.table("wp_studio_jobs").select("job_id").order("job_id", desc=True).limit(1).execute()
+            if res.data and len(res.data) > 0 and res.data[0].get("job_id"):
+                highest_id = max(highest_id, int(res.data[0]["job_id"]))
+        except Exception as e:
+            logger.warning(f"Supabase max job_id lookup error: {e}")
+
+    # 2. Check highest job_id in local SQLite
     conn = get_connection()
     cursor = conn.cursor()
-    now = datetime.utcnow().isoformat()
+    cursor.execute("SELECT MAX(job_id) FROM story_jobs")
+    row = cursor.fetchone()
+    if row and row[0]:
+        highest_id = max(highest_id, int(row[0]))
+
+    new_job_id = highest_id + 1
+
+    # 3. Insert into SQLite
     cursor.execute("""
-        INSERT INTO story_jobs (user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
-    """, (user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, now, now))
-    job_id = cursor.lastrowid
+        INSERT INTO story_jobs (job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
+    """, (new_job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, now, now))
     conn.commit()
     conn.close()
 
+    # 4. Insert into Supabase Master Database
     if supabase_client:
         try:
             supabase_client.table("wp_studio_jobs").insert({
-                "job_id": job_id,
+                "job_id": new_job_id,
                 "user_id": user_id,
                 "source_input": source_input,
                 "source_title": source_title,
@@ -374,28 +394,31 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
                 "created_at": now,
                 "updated_at": now
             }).execute()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Supabase insert job notice: {e}")
 
-    return job_id
+    return new_job_id
 
-def update_job_concepts(job_id: int, concepts_json: str):
+def update_job_concepts(job_id: int, concepts_json):
     now = datetime.utcnow().isoformat()
+    c_str = json.dumps(concepts_json) if not isinstance(concepts_json, str) else concepts_json
+    c_parsed = json.loads(concepts_json) if isinstance(concepts_json, str) else concepts_json
+
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE story_jobs SET concepts_json = ?, status = 'concepts_ready', updated_at = ? WHERE job_id = ?", (concepts_json, now, job_id))
+    cursor.execute("UPDATE story_jobs SET concepts_json = ?, status = 'concepts_ready', updated_at = ? WHERE job_id = ?", (c_str, now, job_id))
     conn.commit()
     conn.close()
 
     if supabase_client:
         try:
             supabase_client.table("wp_studio_jobs").update({
-                "concepts_json": json.loads(concepts_json),
+                "concepts_json": c_parsed,
                 "status": "concepts_ready",
                 "updated_at": now
             }).eq("job_id", job_id).execute()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Supabase update concepts notice: {e}")
 
 def update_job_selection(job_id: int, selected_idx: int):
     now = datetime.utcnow().isoformat()
@@ -412,28 +435,31 @@ def update_job_selection(job_id: int, selected_idx: int):
                 "status": "concept_selected",
                 "updated_at": now
             }).eq("job_id", job_id).execute()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Supabase update selection notice: {e}")
 
-def update_job_completion(job_id: int, full_story_json: str, bible_pdf: str, scene_pdf: str):
+def update_job_completion(job_id: int, full_story_json, bible_pdf: str, scene_pdf: str):
     now = datetime.utcnow().isoformat()
+    s_str = json.dumps(full_story_json) if not isinstance(full_story_json, str) else full_story_json
+    s_parsed = json.loads(full_story_json) if isinstance(full_story_json, str) else full_story_json
+
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE story_jobs SET full_story_json = ?, story_bible_pdf = ?, scene_prompts_pdf = ?, status = 'completed', updated_at = ? WHERE job_id = ?", (full_story_json, bible_pdf, scene_pdf, now, job_id))
+    cursor.execute("UPDATE story_jobs SET full_story_json = ?, story_bible_pdf = ?, scene_prompts_pdf = ?, status = 'completed', updated_at = ? WHERE job_id = ?", (s_str, bible_pdf, scene_pdf, now, job_id))
     conn.commit()
     conn.close()
 
     if supabase_client:
         try:
             supabase_client.table("wp_studio_jobs").update({
-                "full_story_json": json.loads(full_story_json),
+                "full_story_json": s_parsed,
                 "story_bible_pdf": bible_pdf,
                 "scene_prompts_pdf": scene_pdf,
                 "status": "completed",
                 "updated_at": now
             }).eq("job_id", job_id).execute()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Supabase update completion notice: {e}")
 
 def get_job(job_id: int) -> dict:
     conn = get_connection()
@@ -441,18 +467,156 @@ def get_job(job_id: int) -> dict:
     cursor.execute("SELECT * FROM story_jobs WHERE job_id = ?", (job_id,))
     row = cursor.fetchone()
     conn.close()
+
+    # If already found locally with full story, return immediately
+    if row and row["full_story_json"]:
+        return dict(row)
+
+    # If missing locally or after container restart, fetch from Supabase Master DB
+    if supabase_client:
+        try:
+            res = supabase_client.table("wp_studio_jobs").select("*").eq("job_id", job_id).execute()
+            if res.data and len(res.data) > 0:
+                s_job = res.data[0]
+                c_json = s_job.get("concepts_json")
+                if isinstance(c_json, (list, dict)):
+                    c_json = json.dumps(c_json)
+                f_json = s_job.get("full_story_json")
+                if isinstance(f_json, (list, dict)):
+                    f_json = json.dumps(f_json)
+
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO story_jobs (
+                        job_id, user_id, source_input, source_title, transcript,
+                        culture, style, genre, timezone, length_tier,
+                        concepts_json, selected_concept_idx, full_story_json,
+                        story_bible_pdf, scene_prompts_pdf, status, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(job_id) DO UPDATE SET
+                        source_input = excluded.source_input,
+                        source_title = excluded.source_title,
+                        transcript = excluded.transcript,
+                        culture = excluded.culture,
+                        style = excluded.style,
+                        genre = excluded.genre,
+                        timezone = excluded.timezone,
+                        length_tier = excluded.length_tier,
+                        concepts_json = excluded.concepts_json,
+                        selected_concept_idx = excluded.selected_concept_idx,
+                        full_story_json = excluded.full_story_json,
+                        story_bible_pdf = excluded.story_bible_pdf,
+                        scene_prompts_pdf = excluded.scene_prompts_pdf,
+                        status = excluded.status,
+                        updated_at = excluded.updated_at
+                """, (
+                    s_job.get("job_id"),
+                    s_job.get("user_id"),
+                    s_job.get("source_input"),
+                    s_job.get("source_title"),
+                    s_job.get("transcript"),
+                    s_job.get("culture", "Universal"),
+                    s_job.get("style", "Stylised 3D"),
+                    s_job.get("genre", "Action Thriller"),
+                    s_job.get("timezone", "Africa/Lagos"),
+                    s_job.get("length_tier", "Short"),
+                    c_json,
+                    s_job.get("selected_concept_idx"),
+                    f_json,
+                    s_job.get("story_bible_pdf"),
+                    s_job.get("scene_prompts_pdf"),
+                    s_job.get("status", "draft"),
+                    s_job.get("created_at"),
+                    s_job.get("updated_at")
+                ))
+                conn.commit()
+                conn.close()
+
+                s_job["concepts_json"] = c_json
+                s_job["full_story_json"] = f_json
+                return s_job
+        except Exception as e:
+            logger.warning(f"Supabase get_job notice: {e}")
+
     return dict(row) if row else None
 
 def get_user_story_history(user_id: int) -> list:
+    now = datetime.utcnow().isoformat()
+
+    # 1. Fetch from Supabase Cloud first (Master Authority across container restarts)
+    if supabase_client:
+        try:
+            res = supabase_client.table("wp_studio_jobs").select("*").eq("user_id", user_id).order("job_id", desc=True).limit(50).execute()
+            if res.data:
+                conn = get_connection()
+                cursor = conn.cursor()
+                for row in res.data:
+                    c_json = row.get("concepts_json")
+                    if isinstance(c_json, (list, dict)):
+                        c_json = json.dumps(c_json)
+                    f_json = row.get("full_story_json")
+                    if isinstance(f_json, (list, dict)):
+                        f_json = json.dumps(f_json)
+
+                    cursor.execute("""
+                        INSERT INTO story_jobs (
+                            job_id, user_id, source_input, source_title, transcript,
+                            culture, style, genre, timezone, length_tier,
+                            concepts_json, selected_concept_idx, full_story_json,
+                            story_bible_pdf, scene_prompts_pdf, status, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(job_id) DO UPDATE SET
+                            source_input = excluded.source_input,
+                            source_title = excluded.source_title,
+                            transcript = excluded.transcript,
+                            culture = excluded.culture,
+                            style = excluded.style,
+                            genre = excluded.genre,
+                            timezone = excluded.timezone,
+                            length_tier = excluded.length_tier,
+                            concepts_json = excluded.concepts_json,
+                            selected_concept_idx = excluded.selected_concept_idx,
+                            full_story_json = excluded.full_story_json,
+                            story_bible_pdf = excluded.story_bible_pdf,
+                            scene_prompts_pdf = excluded.scene_prompts_pdf,
+                            status = excluded.status,
+                            updated_at = excluded.updated_at
+                    """, (
+                        row.get("job_id"),
+                        row.get("user_id"),
+                        row.get("source_input"),
+                        row.get("source_title"),
+                        row.get("transcript"),
+                        row.get("culture", "Universal"),
+                        row.get("style", "Stylised 3D"),
+                        row.get("genre", "Action Thriller"),
+                        row.get("timezone", "Africa/Lagos"),
+                        row.get("length_tier", "Short"),
+                        c_json,
+                        row.get("selected_concept_idx"),
+                        f_json,
+                        row.get("story_bible_pdf"),
+                        row.get("scene_prompts_pdf"),
+                        row.get("status", "draft"),
+                        row.get("created_at") or now,
+                        row.get("updated_at") or now
+                    ))
+                conn.commit()
+                conn.close()
+        except Exception as e:
+            logger.warning(f"Supabase fetch story history notice: {e}")
+
+    # 2. Return all screenplays from local synced cache
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT job_id, user_id, source_input, source_title, culture, style, genre, length_tier,
-               concepts_json, selected_concept_idx, story_bible_pdf, scene_prompts_pdf, status, created_at
+               concepts_json, selected_concept_idx, full_story_json, story_bible_pdf, scene_prompts_pdf, status, created_at
         FROM story_jobs
         WHERE user_id = ?
         ORDER BY job_id DESC
-        LIMIT 35
+        LIMIT 50
     """, (user_id,))
     rows = cursor.fetchall()
     conn.close()

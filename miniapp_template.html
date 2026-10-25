@@ -2701,9 +2701,9 @@
                 const jId = h.job_id || h.id;
                 const title = h.source_title || 'Untitled Screenplay';
                 const date = h.created_at ? h.created_at.slice(0, 10) : '';
-                const isCompleted = (h.status === 'completed' || h.story_bible_pdf || h.scene_prompts_pdf);
-                const hasBible = !!h.story_bible_pdf;
-                const hasScene = !!h.scene_prompts_pdf;
+                const isCompleted = (h.status === 'completed' || h.story_bible_pdf || h.scene_prompts_pdf || !!h.full_story_json);
+                const hasBible = !!h.story_bible_pdf || h.status === 'completed' || !!h.full_story_json;
+                const hasScene = !!h.scene_prompts_pdf || h.status === 'completed' || !!h.full_story_json;
 
                 html += `
                     <div class="form-card" style="margin-bottom:10px; cursor:pointer; transition:border-color 0.18s, transform 0.18s;" onclick="resumeProductionJob(${jId})">
@@ -2847,11 +2847,11 @@
                     resultTitle.innerText = `${job.source_title || 'Screenplay'} — Ready`;
                 }
                 if (bibleBtn) {
-                    bibleBtn.style.display = job.story_bible_pdf ? 'flex' : 'none';
+                    bibleBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
                     bibleBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'bible');
                 }
                 if (sceneBtn) {
-                    sceneBtn.style.display = job.scene_prompts_pdf ? 'flex' : 'none';
+                    sceneBtn.style.display = (job.scene_prompts_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
                     sceneBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'scene');
                 }
             } else if (resultSec) {

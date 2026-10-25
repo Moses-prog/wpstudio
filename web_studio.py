@@ -1,5 +1,6 @@
 import os
 import sys
+import gc
 import json
 import base64
 import time
@@ -996,6 +997,7 @@ def api_story_generate():
         )
 
     refreshed_user = database.get_user(user_id)
+    gc.collect()
     return jsonify({
         "success": True,
         "story": full_story,
@@ -1026,24 +1028,63 @@ def api_send_pdf_to_telegram():
     story_title = job.get("source_title", "WP Studio Story")
     files_to_send = []
 
-    if pdf_type in ["bible", "both"]:
-        bible_path = job.get("story_bible_pdf")
-        if bible_path and os.path.exists(bible_path):
-            files_to_send.append((bible_path, f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"))
+    bible_path = job.get("story_bible_pdf")
+    scene_path = job.get("scene_prompts_pdf")
 
-    if pdf_type in ["scene", "both"]:
-        scene_path = job.get("scene_prompts_pdf")
-        if scene_path and os.path.exists(scene_path):
-            files_to_send.append((scene_path, f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"))
+    need_bible = (pdf_type in ["bible", "both"])
+    need_scene = (pdf_type in ["scene", "both"])
+
+    bible_missing = need_bible and (not bible_path or not os.path.exists(bible_path))
+    scene_missing = need_scene and (not scene_path or not os.path.exists(scene_path))
+
+    # If container restarted and PDF files are not on disk, reconstruct them on the fly from full_story_json!
+    if (bible_missing or scene_missing) and job.get("full_story_json"):
+        try:
+            raw_story = job.get("full_story_json")
+            full_story = json.loads(raw_story) if isinstance(raw_story, str) else raw_story
+            if isinstance(full_story, dict):
+                story_title = full_story.get("title", story_title)
+                if bible_missing:
+                    bible_path = pdf_generator.generate_image_prompts_pdf(
+                        story_data=full_story,
+                        culture=job.get("culture", "Universal"),
+                        style=job.get("style", "Stylised 3D"),
+                        genre=job.get("genre", "Action Thriller"),
+                        delivery_format="Dialogue / Narrative",
+                        length_tier=job.get("length_tier", "Short"),
+                        timezone="Africa/Lagos"
+                    )
+                if scene_missing:
+                    scene_path = pdf_generator.generate_video_prompts_pdf(
+                        story_data=full_story,
+                        culture=job.get("culture", "Universal"),
+                        style=job.get("style", "Stylised 3D"),
+                        genre=job.get("genre", "Action Thriller"),
+                        delivery_format="Dialogue / Narrative",
+                        length_tier=job.get("length_tier", "Short"),
+                        timezone="Africa/Lagos"
+                    )
+                database.update_job_completion(int(job_id), full_story, bible_path or job.get("story_bible_pdf", ""), scene_path or job.get("scene_prompts_pdf", ""))
+        except Exception as regen_err:
+            print(f"[SEND PDF] Re-building missing PDF notice: {regen_err}")
+        finally:
+            gc.collect()
+
+    if need_bible and bible_path and os.path.exists(bible_path):
+        files_to_send.append((bible_path, f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"))
+
+    if need_scene and scene_path and os.path.exists(scene_path):
+        files_to_send.append((scene_path, f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"))
 
     if not files_to_send:
-        return jsonify({"success": False, "error": "PDF files not found for this screenplay."}), 404
+        return jsonify({"success": False, "error": "PDF files could not be found or built for this screenplay."}), 404
 
     delivered = False
     for fpath, caption in files_to_send:
         if send_telegram_document(user_id, fpath, caption):
             delivered = True
 
+    gc.collect()
     if delivered:
         return jsonify({"success": True, "message": "PDF sent directly to your Telegram chat!"})
     else:

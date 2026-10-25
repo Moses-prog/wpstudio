@@ -1816,6 +1816,21 @@
                     <input id="thumb-custom-notes" type="text" class="form-input" placeholder="e.g. Glowing golden key, police caution tape, stacks of money" style="font-size:12px;">
                 </div>
 
+                <!-- Writeup Text & YouTube Logo Options -->
+                <div class="form-grid-2" style="margin-top:10px;">
+                    <div>
+                        <div class="form-label" style="font-size:11px;">Writeup Text on Image</div>
+                        <input id="thumb-writeup" type="text" class="form-input" placeholder="e.g. HACKED!, $10M MISTAKE" style="font-size:12px; font-weight:600;">
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:11px;">YouTube Logo Badge</div>
+                        <select id="thumb-yt-logo" class="form-input">
+                            <option value="yes">Yes - 3D Red YouTube Play Badge</option>
+                            <option value="no">No Logo</option>
+                        </select>
+                    </div>
+                </div>
+
                 <button id="btn-submit-thumb" class="btn-submit" onclick="submitThumbnailGenerate()" style="margin-top:14px;">
                     <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     ⚡ Polish & Generate 3 Master Thumbnail Prompts (3 Credits)
@@ -1823,6 +1838,90 @@
             </div>
 
             <div id="thumb-results-container" style="display:none;"></div>
+
+            <!-- 1-TAP THUMBNAIL STAMPING STUDIO -->
+            <div id="thumb-stamper-card" class="form-card" style="margin-top: 16px; border: 1.5px solid rgba(239, 68, 68, 0.45); background: linear-gradient(145deg, rgba(239, 68, 68, 0.05), rgba(15, 23, 42, 0.95)); border-radius: 14px; padding: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="background: #ef4444; color: #fff; border-radius: 6px; padding: 4px 6px; display: flex; align-items: center; justify-content: center;">
+                            <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Instant 1-Tap Thumbnail Stamper</div>
+                            <div style="font-size: 10.5px; color: #94a3b8;">Stamp bold writeup text & 3D red YouTube badge onto any image</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #ef4444; background: rgba(239,68,68,0.15); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3);">1-TAP</span>
+                </div>
+
+                <!-- Canvas Preview -->
+                <div style="position: relative; width: 100%; border-radius: 10px; overflow: hidden; background: #000; border: 1px solid #334155; margin-bottom: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                    <canvas id="thumb-canvas" width="1280" height="720" style="display: block; width: 100%; height: auto; aspect-ratio: 16/9;"></canvas>
+                </div>
+
+                <!-- Controls -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Upload Your Generated Image -->
+                    <div>
+                        <div class="form-label" style="font-size: 11px;">1. Select Image (your Midjourney/Flux render)</div>
+                        <input type="file" id="stamper-image-file" accept="image/*" class="form-input" style="font-size: 11.5px; padding: 7px 10px;" onchange="onStamperImageSelected(event)">
+                    </div>
+
+                    <!-- Writeup Text -->
+                    <div class="form-grid-2">
+                        <div>
+                            <div class="form-label" style="font-size: 11px;">2. Bold Writeup Text</div>
+                            <input id="stamper-text" type="text" class="form-input" placeholder="e.g. HACKED!" value="HACKED!" style="font-size: 12px; font-weight: 700; text-transform: uppercase;" oninput="redrawThumbnailCanvas()">
+                        </div>
+                        <div>
+                            <div class="form-label" style="font-size: 11px;">Text Color</div>
+                            <select id="stamper-color" class="form-input" onchange="redrawThumbnailCanvas()">
+                                <option value="#ffd700">Vibrant Gold / Yellow (Most Viral)</option>
+                                <option value="#ffffff">Pure White Punch</option>
+                                <option value="#22c55e">Electric Neon Green</option>
+                                <option value="#ef4444">Alert Warning Red</option>
+                                <option value="#38bdf8">Cyan Blue Pop</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Position & Logo -->
+                    <div class="form-grid-2">
+                        <div>
+                            <div class="form-label" style="font-size: 11px;">Text Position</div>
+                            <select id="stamper-pos" class="form-input" onchange="redrawThumbnailCanvas()">
+                                <option value="top-left">Top Left Corner</option>
+                                <option value="top-center">Top Center</option>
+                                <option value="bottom-left">Bottom Left Corner</option>
+                                <option value="bottom-center">Bottom Center</option>
+                                <option value="center">Center Punch</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="form-label" style="font-size: 11px;">3D YouTube Logo Badge</div>
+                            <select id="stamper-logo" class="form-input" onchange="redrawThumbnailCanvas()">
+                                <option value="top-right">Top Right Corner</option>
+                                <option value="top-left">Top Left Corner</option>
+                                <option value="bottom-right">Bottom Right Corner</option>
+                                <option value="bottom-left">Bottom Left Corner</option>
+                                <option value="none">None (No Logo)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <button type="button" class="btn-secondary" style="flex: 1; justify-content: center; height: 38px; font-size: 12px;" onclick="downloadStampedThumbnail()">
+                            <svg viewBox="0 0 24 24" style="width:14px; height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Save to Phone
+                        </button>
+                        <button type="button" id="btn-stamper-tg" class="btn-submit" style="flex: 1.2; justify-content: center; height: 38px; font-size: 12px; background: #2563eb;" onclick="sendStampedThumbnailToTelegram()">
+                            <svg viewBox="0 0 24 24" style="width:14px; height:14px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            Send to Telegram Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2536,6 +2635,7 @@
                 const mBody = target.querySelector('.modal-body');
                 if (mBody) mBody.scrollTop = 0;
                 try { tg?.BackButton?.show(); } catch(e){}
+                if (id === 'thumbnail') setTimeout(redrawThumbnailCanvas, 60);
             }
         }
 
@@ -3503,6 +3603,8 @@
             const composition = document.getElementById('thumb-composition')?.value || "Extreme Face Close-Up on Left with Threat/Object on Right";
             const colorMood = document.getElementById('thumb-color')?.value || "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)";
             const customNotes = document.getElementById('thumb-custom-notes')?.value?.trim() || "";
+            const writeupText = document.getElementById('thumb-writeup')?.value?.trim() || "";
+            const includeYtLogo = (document.getElementById('thumb-yt-logo')?.value !== 'no');
 
             const btn = document.getElementById('btn-submit-thumb');
             btn.disabled = true;
@@ -3527,7 +3629,9 @@
                 emotion: emotion,
                 composition: composition,
                 color_mood: colorMood,
-                custom_notes: customNotes
+                custom_notes: customNotes,
+                writeup_text: writeupText,
+                include_youtube_logo: includeYtLogo
             };
 
             try {
@@ -3554,6 +3658,16 @@
                     currentThumbnailChannel = channel;
 
                     renderThumbnails(rawThumbs, topic, channel);
+
+                    // Sync into Stamper
+                    if (writeupText) {
+                        const stamperInp = document.getElementById('stamper-text');
+                        if (stamperInp) stamperInp.value = writeupText;
+                    } else if (concepts && concepts.length > 0 && concepts[0].overlay_text) {
+                        const stamperInp = document.getElementById('stamper-text');
+                        if (stamperInp) stamperInp.value = concepts[0].overlay_text;
+                    }
+                    redrawThumbnailCanvas();
 
                     if (currentUser && d.credits !== undefined) {
                         currentUser.credits = d.credits;
@@ -3618,6 +3732,7 @@
                 const overlayText = c.overlay_text || "";
                 const overlayStyle = c.overlay_style || "";
                 const overlayPlacement = c.overlay_placement || "";
+                const ytPlacement = c.youtube_logo_placement || 'Upper Right corner floating 3D badge';
                 const prompt = c.master_image_prompt || c.midjourney_prompt || "";
                 const trigger = c.psychological_trigger || "";
 
@@ -3661,6 +3776,12 @@
                             </div>
                         ` : ''}
 
+                        <!-- 3D YouTube Logo Placement -->
+                        <div style="font-size: 10px; color: #ef4444; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+                            <svg viewBox="0 0 24 24" style="width:12px; height:12px; fill:#ef4444;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            <strong>3D YouTube Badge:</strong> <span style="color:#fca5a5;">${escapeHtml(ytPlacement)}</span>
+                        </div>
+
                         <!-- Visual Composition Details -->
                         ${compHtml}
 
@@ -3678,6 +3799,11 @@
                             </div>
                             <div id="thumb-prompt-${idx}" style="font-family: monospace; font-size: 10.5px; background: #0b1120; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; color: #cbd5e1; line-height: 1.45; word-break: break-word; user-select: all;">${escapeHtml(prompt)}</div>
                         </div>
+
+                        <!-- 1-Tap Load into Stamper Button -->
+                        <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px; height: 30px; border-color: rgba(239,68,68,0.45); color: #fca5a5; margin-top: 8px; width: 100%; justify-content: center;" onclick="loadConceptIntoStamper(${idx})">
+                            ⚡ Stamp "${escapeHtml(overlayText || 'VIRAL')}" onto My Image Below
+                        </button>
                     </div>
                 `;
             });
@@ -3746,6 +3872,292 @@
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send All 3 Master Prompts to My Telegram Chat';
+                }
+            }
+        }
+
+        // =====================================================================
+        // 1-TAP CANVAS THUMBNAIL STAMPER
+        // =====================================================================
+        let uploadedStamperImg = null;
+
+        function loadConceptIntoStamper(idx) {
+            if (!currentThumbnailConcepts || !currentThumbnailConcepts[idx]) return;
+            const c = currentThumbnailConcepts[idx];
+            const text = c.overlay_text || "";
+            const input = document.getElementById('stamper-text');
+            if (input && text) {
+                input.value = text;
+                redrawThumbnailCanvas();
+            }
+            const stamperCard = document.getElementById('thumb-stamper-card');
+            if (stamperCard) {
+                stamperCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            showToast(`Loaded "${text}" into Stamper!`, true);
+        }
+
+        function onStamperImageSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    uploadedStamperImg = img;
+                    redrawThumbnailCanvas();
+                    showToast('Background image loaded! Ready to stamp.', true);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawYouTube3DBadge(ctx, x, y, width, height) {
+            ctx.save();
+            // Drop shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 24;
+            ctx.shadowOffsetX = 4;
+            ctx.shadowOffsetY = 8;
+
+            const radius = 34;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, width, height, radius);
+            } else {
+                ctx.rect(x, y, width, height);
+            }
+
+            // Red metallic 3D gradient
+            const bgGrad = ctx.createLinearGradient(x, y, x, y + height);
+            bgGrad.addColorStop(0, '#ff1a1a');
+            bgGrad.addColorStop(0.5, '#e60000');
+            bgGrad.addColorStop(1, '#990000');
+            ctx.fillStyle = bgGrad;
+            ctx.fill();
+
+            // Specular gloss highlight on top half
+            ctx.save();
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x + 3, y + 3, width - 6, (height - 6) * 0.44, [radius - 3, radius - 3, 4, 4]);
+            } else {
+                ctx.rect(x + 3, y + 3, width - 6, (height - 6) * 0.44);
+            }
+            const glossGrad = ctx.createLinearGradient(x, y, x, y + height * 0.44);
+            glossGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+            glossGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+            ctx.fillStyle = glossGrad;
+            ctx.fill();
+            ctx.restore();
+
+            // Subtle rim stroke
+            ctx.lineWidth = 3.5;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.stroke();
+
+            // White play triangle in center
+            const triW = 46;
+            const triH = 50;
+            const cx = x + width / 2;
+            const cy = y + height / 2;
+
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(cx - triW * 0.38, cy - triH / 2);
+            ctx.lineTo(cx + triW * 0.62, cy);
+            ctx.lineTo(cx - triW * 0.38, cy + triH / 2);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function redrawThumbnailCanvas() {
+            const canvas = document.getElementById('thumb-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cw = 1280;
+            const ch = 720;
+
+            ctx.clearRect(0, 0, cw, ch);
+
+            // 1. Draw Background Image or Placeholder
+            if (uploadedStamperImg) {
+                const iw = uploadedStamperImg.width;
+                const ih = uploadedStamperImg.height;
+                const hRatio = cw / iw;
+                const vRatio = ch / ih;
+                const ratio = Math.max(hRatio, vRatio);
+                const centerShiftX = (cw - iw * ratio) / 2;
+                const centerShiftY = (ch - ih * ratio) / 2;
+                ctx.drawImage(uploadedStamperImg, 0, 0, iw, ih, centerShiftX, centerShiftY, iw * ratio, ih * ratio);
+            } else {
+                const grad = ctx.createLinearGradient(0, 0, cw, ch);
+                grad.addColorStop(0, '#0a0e17');
+                grad.addColorStop(0.5, '#1e1b4b');
+                grad.addColorStop(1, '#090d16');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cw, ch);
+
+                // Subtle grid lines
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
+                for (let x = 80; x < cw; x += 160) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+                }
+                for (let y = 80; y < ch; y += 120) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
+                }
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.font = '600 24px -apple-system, BlinkMacSystemFont, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Tap "Select Image" below to upload your scene (e.g. your Midjourney render)', cw / 2, ch / 2);
+            }
+
+            // 2. Draw 3D YouTube Logo Badge
+            const logoPos = document.getElementById('stamper-logo')?.value || 'top-right';
+            if (logoPos !== 'none') {
+                const bw = 175;
+                const bh = 120;
+                let bx = cw - bw - 45;
+                let by = 45;
+                if (logoPos === 'top-left') { bx = 45; by = 45; }
+                else if (logoPos === 'bottom-right') { bx = cw - bw - 45; by = ch - bh - 45; }
+                else if (logoPos === 'bottom-left') { bx = 45; by = ch - bh - 45; }
+                drawYouTube3DBadge(ctx, bx, by, bw, bh);
+            }
+
+            // 3. Draw Bold Writeup Text
+            const rawText = document.getElementById('stamper-text')?.value?.trim() || "";
+            if (rawText) {
+                const textColor = document.getElementById('stamper-color')?.value || '#ffd700';
+                const textPos = document.getElementById('stamper-pos')?.value || 'top-left';
+
+                ctx.save();
+
+                // Compute anchor position & alignment
+                let tx = 60;
+                let ty = 140;
+                let align = 'left';
+
+                if (textPos === 'top-left') {
+                    tx = 65; ty = 145; align = 'left';
+                } else if (textPos === 'top-center') {
+                    tx = cw / 2; ty = 145; align = 'center';
+                } else if (textPos === 'bottom-left') {
+                    tx = 65; ty = 570; align = 'left';
+                } else if (textPos === 'bottom-center') {
+                    tx = cw / 2; ty = 570; align = 'center';
+                } else if (textPos === 'center') {
+                    tx = cw / 2; ty = 370; align = 'center';
+                }
+
+                // Slight dynamic slant angle for viral CTR
+                ctx.translate(tx, ty);
+                ctx.rotate(-4 * Math.PI / 180);
+
+                const lines = rawText.split('\n');
+                const fontSize = 84;
+                ctx.font = `900 ${fontSize}px "Impact", "Arial Black", -apple-system, sans-serif`;
+                ctx.textAlign = align;
+                ctx.textBaseline = 'middle';
+
+                lines.forEach((line, lIdx) => {
+                    const ly = lIdx * (fontSize * 1.05);
+
+                    // Drop shadow pass
+                    ctx.save();
+                    ctx.shadowColor = '#000000';
+                    ctx.shadowBlur = 18;
+                    ctx.shadowOffsetX = 8;
+                    ctx.shadowOffsetY = 10;
+                    ctx.lineWidth = 22;
+                    ctx.strokeStyle = '#000000';
+                    ctx.strokeText(line, 0, ly);
+                    ctx.restore();
+
+                    // Crisp black outline stroke
+                    ctx.lineWidth = 20;
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineJoin = 'miter';
+                    ctx.miterLimit = 2;
+                    ctx.strokeText(line, 0, ly);
+
+                    // Bold Color Fill
+                    ctx.fillStyle = textColor;
+                    ctx.fillText(line, 0, ly);
+                });
+
+                ctx.restore();
+            }
+        }
+
+        function downloadStampedThumbnail() {
+            const canvas = document.getElementById('thumb-canvas');
+            if (!canvas) return;
+            try {
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `youtube_thumbnail_${Date.now()}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast('Thumbnail downloaded to your device!', true);
+            } catch (err) {
+                console.error('Download thumbnail error:', err);
+                showToast('Could not save to device directly. Try "Send to Telegram Chat".', false);
+            }
+        }
+
+        async function sendStampedThumbnailToTelegram() {
+            const canvas = document.getElementById('thumb-canvas');
+            if (!canvas) return;
+
+            const btn = document.getElementById('btn-stamper-tg');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" class="skeleton"><circle cx="12" cy="12" r="10"></circle></svg> Delivering...';
+            }
+
+            try {
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                const text = document.getElementById('stamper-text')?.value?.trim() || "";
+                const caption = `🎬 <b>Finished YouTube Thumbnail</b>\n` +
+                                (text ? `Writeup: <b>${escapeHtml(text)}</b>\n` : '') +
+                                `<i>Ready to upload to YouTube Studio!</i>`;
+
+                const res = await fetch('/api/send_image_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        image_data: dataUrl,
+                        caption: caption
+                    })
+                });
+
+                const d = await res.json();
+                if (d.success) {
+                    showTelegramAlert('Your finished YouTube Thumbnail has been delivered straight to your Telegram chat!\n\nSave it directly to your camera roll.');
+                } else {
+                    showToast(d.error || 'Failed to send thumbnail to Telegram', false);
+                }
+            } catch (err) {
+                console.error('Send stamped thumbnail error:', err);
+                showToast(err.message || 'Error delivering thumbnail', false);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px; height:14px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send to Telegram Chat';
                 }
             }
         }

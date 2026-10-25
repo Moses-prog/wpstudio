@@ -1157,6 +1157,8 @@ def api_thumbnail_generate():
     composition = str(data.get("composition", "Extreme Face Close-Up on Left with Threat/Object on Right")).strip()
     color_mood = str(data.get("color_mood", "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)")).strip()
     custom_notes = str(data.get("custom_notes", "")).strip()
+    writeup_text = str(data.get("writeup_text", "")).strip()
+    include_yt_logo = bool(data.get("include_youtube_logo", True))
 
     lead_char = None
     if char_id:
@@ -1186,6 +1188,8 @@ def api_thumbnail_generate():
             composition_layout=composition,
             color_mood=color_mood,
             custom_notes=custom_notes,
+            writeup_text=writeup_text,
+            include_youtube_logo=include_yt_logo,
             user_api_key=custom_key,
             model_name=model_name
         ))

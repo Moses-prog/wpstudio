@@ -604,6 +604,8 @@ async def generate_thumbnail_prompts(
     composition_layout: str = "Extreme Face Close-Up on Left with Threat/Object on Right",
     color_mood: str = "High-Contrast YouTube Punch (Vibrant Yellow & Cyan)",
     custom_notes: str = "",
+    writeup_text: str = "",
+    include_youtube_logo: bool = True,
     user_api_key: str = None,
     model_name: str = None
 ):
@@ -611,6 +613,7 @@ async def generate_thumbnail_prompts(
     Master YouTube Packaging & CTR Engine:
     Intelligently polishes user's rough input, anchors character continuity,
     and engineers 3 elite YouTube thumbnail prompt packages copy-ready for Midjourney/Flux/Google Flow.
+    Guarantees embedded bold writeup typography and official 3D YouTube logo badging directly in the prompts.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
     client = get_client(user_api_key)
@@ -632,6 +635,8 @@ The thumbnail MUST feature the following recurring character as the central visu
 """
 
     notes_clause = f"\nCUSTOM ELEMENTS TO EMPHASIZE: {custom_notes}\n" if custom_notes else ""
+    writeup_clause = f"\nUSER PREFERRED WRITEUP TEXT: Incorporate \"{writeup_text}\" (or its sharpest viral variation) as the text writeup.\n" if writeup_text else ""
+    logo_instruction = "- YouTube Logo Badge: MANDATORY. Include a glossy 3D red YouTube play button logo badge emblem floating in the upper or lower corner." if include_youtube_logo else "- YouTube Logo Badge: None."
 
     system_instruction = f"""
 You are the World's #1 YouTube Packaging & Click-Through-Rate (CTR) Specialist at WP Studio (producing thumbnails on par with MrBeast, Vox, MagnatesMedia, and Film Cooper).
@@ -643,19 +648,25 @@ CREATIVE THUMBNAIL SPECIFICATIONS:
 - Key Emotional Reaction: {facial_emotion}
 - Spatial Framing / Composition: {composition_layout}
 - Color Palette & Lighting Mood: {color_mood}
+{logo_instruction}
 {char_clause}
 {notes_clause}
+{writeup_clause}
 
 CRITICAL RULES FOR CLICK-GENERATING YOUTUBE THUMBNAILS:
 1. THE 3-SECOND RULE: Viewers decide to click in 0.5s on mobile. Thumbnails must have ONE clear focal point, extreme contrast, high visual hierarchy, and instant emotional punch.
-2. TEXT OVERLAY: Must be ultra-short (2 to 4 words MAX). Never repeat the video title. It must create an irresistible CURIOSITY GAP or dramatic tension (e.g. "HE KNEW!", "$10,000,000 MISTAKE", "DO NOT ENTER", "THEY LIED").
-3. EXPRESSION DYNAMICS: If a human or character is present, their eyes must have intense life and emotion (wide pupils, caught off-guard, raw shock, sinister grin).
-4. MASTER GENERATOR PROMPT: The image prompt must be 100% self-contained and copy-paste ready for Midjourney v6, Flux.1, and Google Flow. It MUST include:
-   - Camera lens (e.g. "Extreme close-up 35mm lens, dynamic low angle")
-   - Exact lighting (e.g. "cinematic volumetric rim lighting, intense warm amber key light contrasting with deep teal shadows")
-   - Biometrics and locked character traits (if character provided)
-   - Background depth, particles, sparks, or subtle depth of field
-   - Strict parameters: "--ar 16:9 --style raw --v 6.1"
+2. BOLD TEXT OVERLAY WRITEUP: Top viral YouTube thumbnails ALWAYS have large, punchy 2-4 word writeups (e.g. "I QUIT!", "$10,000,000 MISTAKE", "DO NOT CLICK", "THEY LIED", "IT'S OVER", "HACKED!"). Never repeat the video title.
+3. 3D YOUTUBE LOGO BADGE: Viral thumbnails feature an iconic, glossy 3D red YouTube play button logo emblem with specular reflections to trigger instant platform recognition.
+4. MANDATORY MASTER IMAGE PROMPT REQUIREMENTS:
+   The master_image_prompt MUST be 100% self-contained and copy-paste ready for Midjourney v6.1, Flux.1, and Google Flow.
+   CRITICAL: The prompt MUST explicitly instruct the AI image generator to physically paint and render:
+   a) The EXACT bold writeup text in double quotation marks with typography style (e.g. 'incorporating prominent bold 3D typography that reads "HACKED!" in oversized vibrant yellow block letters with thick black outline and red drop shadow in the upper left corner')
+   {"b) The glossy 3D red YouTube play button logo badge emblem floating in the opposite corner with neon rim reflections" if include_youtube_logo else ""}
+   c) Camera lens (e.g. "Extreme close-up 35mm lens, dynamic low angle")
+   d) Exact lighting (e.g. "cinematic volumetric rim lighting, intense warm amber key light contrasting with deep teal shadows")
+   e) Biometrics and locked character traits (if character provided)
+   f) Background depth, glowing particles, sparks, or subtle depth of field
+   g) Strict parameters: "--ar 16:9 --style raw --v 6.1"
 
 Generate 3 DISTINCT high-CTR concepts:
 1. Concept #1: "The Extreme Reaction Hook" (Highest CTR, huge expressive face, shock, foreground focal point)
@@ -671,10 +682,11 @@ Return strictly structured JSON:
             "variation_name": "Variation 1: The Extreme Reaction Hook",
             "is_top_pick": true,
             "headline_title": "Irresistible Viral YouTube Title Suggestion",
-            "overlay_text": "2-4 PUNCHY WORDS",
+            "overlay_text": "2-4 PUNCHY WORDS (e.g. HACKED!)",
             "overlay_style": "Style & typography recommendation (e.g. Slanted bold Bebas Neue yellow font with heavy black stroke and red drop shadow)",
             "overlay_placement": "Placement coordinates (e.g. Upper Left corner, angled at 7 degrees)",
-            "master_image_prompt": "Complete, exhaustive Midjourney/Flux prompt with camera, subject, biometrics, lighting, atmosphere, and --ar 16:9 --style raw --v 6.1",
+            "youtube_logo_placement": "Upper Right corner floating 3D badge",
+            "master_image_prompt": "Complete Midjourney/Flux prompt with explicit instructions painting the writeup text in quotes, the 3D red YouTube logo badge, subject, camera, lighting, and --ar 16:9 --style raw --v 6.1",
             "visual_composition": {{
                 "foreground": "What is closest to camera",
                 "midground_subject": "Main character pose, expression, and action",

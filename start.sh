@@ -36,8 +36,13 @@ fi
     echo "[BOT SUPERVISOR] Launching bot.py..."
     python bot.py
     BOT_EXIT=$?
-    echo "[BOT SUPERVISOR] bot.py stopped (exit code $BOT_EXIT). Restarting in 3 seconds..."
-    sleep 3
+    if [ "$BOT_EXIT" -eq 42 ]; then
+      echo "[BOT SUPERVISOR] bot.py stopped due to invalid token/credentials (exit code 42). Waiting 30s before retry..."
+      sleep 30
+    else
+      echo "[BOT SUPERVISOR] bot.py stopped (exit code $BOT_EXIT). Restarting in 10 seconds..."
+      sleep 10
+    fi
   done
 ) &
 BOT_SUPERVISOR_PID=$!

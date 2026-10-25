@@ -873,7 +873,28 @@ async def main():
         return
 
     client = TelegramClient(MemorySession(), API_ID, API_HASH)
-    await client.start(bot_token=BOT_TOKEN)
+    try:
+        await client.start(bot_token=BOT_TOKEN)
+    except Exception as e:
+        err_name = type(e).__name__
+        err_msg = str(e)
+        if "AccessTokenExpiredError" in err_name or "expired" in err_msg.lower():
+            logger.error("============================================================")
+            logger.error("❌ TELEGRAM BOT TOKEN HAS EXPIRED OR BEEN REVOKED!")
+            logger.error("Telegram refused connection because BOT_TOKEN is expired.")
+            logger.error("To fix:")
+            logger.error("1. Open @BotFather on Telegram to get a fresh bot token.")
+            logger.error("2. Go to Render Dashboard -> Environment -> update BOT_TOKEN.")
+            logger.error("============================================================")
+            await asyncio.sleep(30)
+            sys.exit(42)
+        elif "ApiIdInvalidError" in err_name:
+            logger.error("❌ Telegram API_ID or API_HASH is invalid! Check credentials from my.telegram.org.")
+            await asyncio.sleep(30)
+            sys.exit(42)
+        else:
+            raise e
+
     me = await client.get_me()
     logger.info(f"WP Studio Bot started as @{me.username} ({me.id})")
 

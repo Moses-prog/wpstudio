@@ -776,3 +776,121 @@ async def render_visual_frame(prompt: str, width: int = 1024, height: int = 576,
                 raise RenderCooldownError(20)
         else:
             raise RuntimeError(f"Visual rendering service returned HTTP {resp.status_code}")
+
+async def adapt_story_to_scenes(
+    story_text: str,
+    genre: str = "Drama",
+    cinematic_filter: str = "Default",
+    art_style: str = "Realistic",
+    voice_accent: str = "African / Nigerian",
+    user_api_key: str = None,
+    model_name: str = None
+) -> dict:
+    """
+    Story Adapter (Script to Scenes):
+    Faithfully adapts a user's original written story or screenplay (500–5,000 words) into 
+    exact, shot-by-shot cinematic scene prompts (1–80 scenes).
+    
+    STRICT GOVERNING RULES:
+    1. ZERO PLOT/CHARACTER ALTERATIONS: Retains all original character names, relationships,
+       locations, chronology, narrative pacing, dialogue, and ending 100% faithful to the source.
+    2. SCENE SEGMENTATION: Natural pacing into 1-80 coherent scenes without padding.
+    3. CINEMATIC VISUAL FILTER: Locks consistent color grading, lighting, and camera treatment.
+    4. ART STYLE: Realistic 8K photorealism or 3D Animated Pixar/Disney.
+    5. VOICE FLAVOR: Infuses dialogue tags / narration pacing with the chosen accent flavor.
+    """
+    model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+    client = get_client(user_api_key)
+
+    # Filter definitions
+    filter_map = {
+        "Default": "35mm anamorphic film lens, realistic studio lighting, cinematic dynamic range, true-to-life colors.",
+        "Horror": "Prestige dread grade, deep gloomy shadows, desaturated cool tones, eerie chiaroscuro lighting, volumetric atmospheric mist.",
+        "Romance": "Warm honey-rose golden hour glow, soft mist diffusion filter, creamy bokeh, intimate warm amber rim lighting.",
+        "Action": "High-contrast dynamic punch, saturated primaries, vivid motion blur, dramatic specular highlights, high shutter angle.",
+        "Drama": "Naturalistic prestige cinematic lighting, subtle earthy tones, gentle directional window light, deep emotional contrast.",
+        "Thriller": "Cold steel tension grade, cyan-tinted low-key lighting, harsh sharp shadows, claustrophobic framing, high tension.",
+        "Sci-Fi": "Cyber-teal and vivid neon specular backlight, atmospheric damp fog reflections, anamorphic blue horizontal lens flares."
+    }
+    filter_treatment = filter_map.get(cinematic_filter, filter_map["Default"])
+
+    # Art style definitions
+    if "3D" in art_style or "Animated" in art_style:
+        art_treatment = "Pixar / Disney 3D high-end animation style, expressive stylized 3D character design, soft subsurface scattering (SSS), vibrant animated feature color palette, Octane 3D render."
+    else:
+        art_treatment = "8K hyper-detailed cinematic movie still, shot on ARRI Alexa 35mm, real human skin pores, photorealistic textures, photorealistic studio lighting."
+
+    # Voice flavor
+    if "African" in voice_accent or "Nigerian" in voice_accent:
+        voice_treatment = "Authentic Nigerian English / Nollywood dramatic cadence, culturally rich emotional phrasing in dialogue and narration."
+    elif "British" in voice_accent:
+        voice_treatment = "Refined British English cadence, measured storytelling delivery and polished dramatic tone."
+    else:
+        voice_treatment = "Modern cinematic American pacing, conversational natural flow in voiceover and dialogue."
+
+    system_instruction = f"""
+You are the Master Storyboard Director & Visual Prompt Engineer at WP Studio.
+Your mission is to adapt the creator's original written story into a complete, shot-by-shot cinematic production breakdown.
+
+CRITICAL NON-NEGOTIABLE LAWS:
+1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
+2. NATURAL SCENE LOAD: Break the story down into a natural sequence of 1 to 80 scenes. Shorter stories naturally produce 10–30 scenes; longer stories produce 30–80 scenes. NEVER artificially pad or stretch scenes with empty fluff.
+3. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
+4. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
+5. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
+
+CONFIGURATION:
+- Tone / Genre: {genre} (Pacing and intensity only)
+- Cinematic Filter: {cinematic_filter} ({filter_treatment})
+- Art Style: {art_style} ({art_treatment})
+- Voice / Accent Flavor: {voice_accent} ({voice_treatment})
+
+OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
+{{
+    "title": "Title of the Story",
+    "logline": "Compelling 1-sentence logline summarizing the source story",
+    "total_scenes": 24,
+    "genre": "{genre}",
+    "cinematic_filter": "{cinematic_filter}",
+    "art_style": "{art_style}",
+    "voice_accent": "{voice_accent}",
+    "characters": [
+        {{
+            "name": "Character Name",
+            "role": "Role (e.g. Protagonist / Antagonist / Mentor)",
+            "visual_description": "Precise facial features, skin tone, hair, signature wardrobe for prompt consistency"
+        }}
+    ],
+    "scenes": [
+        {{
+            "scene_number": 1,
+            "scene_title": "Descriptive Scene Heading",
+            "setting": "Interior/Exterior location and time of day",
+            "dialogue_or_narration": "Exact spoken line or narration excerpt for this shot",
+            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera angle, lighting, character details, action, style. No captions, no text, no split screens.",
+            "video_prompt": "Cinematic camera movement and character action prompt for Runway/Luma/Pika."
+        }}
+    ]
+}}
+"""
+
+    prompt = f"""CREATOR'S SOURCE STORY:
+{story_text}
+
+Adapt this exact story into chronological scene-by-scene prompts following all the rules above."""
+
+    response = generate_with_fallback(
+        client=client,
+        preferred_model=model,
+        contents=prompt,
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json",
+            "temperature": 0.6
+        },
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(response.text)
+    return data
+

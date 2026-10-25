@@ -83,6 +83,14 @@ def init_db():
         cursor.execute("ALTER TABLE story_jobs ADD COLUMN delivery_format TEXT DEFAULT 'Dialogue / Narrative'")
     except Exception:
         pass
+    try:
+        cursor.execute("ALTER TABLE story_jobs ADD COLUMN job_type TEXT DEFAULT 'storycraft'")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE story_jobs ADD COLUMN story_text TEXT")
+    except Exception:
+        pass
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS cast_characters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -170,6 +178,51 @@ def init_db():
         pass
     conn.commit()
     conn.close()
+    # Always sync all creators from Supabase into local SQLite so admin is never wiped on restart
+    sync_users_from_supabase()
+
+def sync_users_from_supabase():
+    """
+    Syncs all creators from Supabase cloud into the local SQLite database.
+    Prevents creators from ever disappearing when Render restarts or container redeploys.
+    """
+    if not supabase_client:
+        return
+    try:
+        res = supabase_client.table("wp_studio_users").select("*").execute()
+        if res.data:
+            conn = get_connection()
+            cursor = conn.cursor()
+            for u in res.data:
+                uid = u.get("user_id")
+                if not uid:
+                    continue
+                username = u.get("username") or "Creator"
+                credits = int(u.get("credits", 20))
+                tier = u.get("tier", "Builder")
+                custom_key = u.get("custom_gemini_key")
+                selected_model = u.get("selected_model", "gemini-3.8-flash")
+                stories_created = int(u.get("stories_created", 0))
+                created_at = u.get("created_at") or datetime.utcnow().isoformat()
+                updated_at = u.get("updated_at") or datetime.utcnow().isoformat()
+                cursor.execute("""
+                    INSERT INTO users (user_id, username, credits, tier, custom_gemini_key, selected_model, stories_created, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                        username=excluded.username,
+                        credits=excluded.credits,
+                        tier=excluded.tier,
+                        custom_gemini_key=COALESCE(excluded.custom_gemini_key, users.custom_gemini_key),
+                        selected_model=excluded.selected_model,
+                        stories_created=excluded.stories_created,
+                        updated_at=excluded.updated_at
+                """, (uid, username, credits, tier, custom_key, selected_model, stories_created, created_at, updated_at))
+            conn.commit()
+            conn.close()
+            logger.info(f"[DB SYNC] Successfully loaded {len(res.data)} creators from Supabase Cloud.")
+    except Exception as e:
+        logger.warning(f"[DB SYNC] Notice during Supabase user sync: {e}")
+
 
 def get_user(user_id: int, username: str = None) -> dict:
     """
@@ -356,7 +409,7 @@ def log_story(user_id: int, title: str, topic: str, style: str, genre: str, dura
     conn.commit()
     conn.close()
 
-def create_story_job(user_id: int, source_input: str, source_title: str, transcript: str, culture: str, style: str, genre: str, timezone: str, length_tier: str, delivery_format: str = "Dialogue / Narrative") -> int:
+def create_story_job(user_id: int, source_input: str, source_title: str, transcript: str, culture: str, style: str, genre: str, timezone: str, length_tier: str, delivery_format: str = "Dialogue / Narrative", job_type: str = "storycraft", story_text: str = "") -> int:
     now = datetime.utcnow().isoformat()
     highest_id = 0
 
@@ -381,9 +434,9 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
 
     # 3. Insert into SQLite
     cursor.execute("""
-        INSERT INTO story_jobs (job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
-    """, (new_job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, now, now))
+        INSERT INTO story_jobs (job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, job_type, story_text, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
+    """, (new_job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, job_type, story_text, now, now))
     conn.commit()
     conn.close()
 
@@ -770,6 +823,8 @@ def update_system_settings(new_settings: dict) -> dict:
     return get_system_settings()
 
 def get_all_users(search: str = None, limit: int = 50) -> list:
+    # Ensure fresh sync from Supabase cloud
+    sync_users_from_supabase()
     conn = get_connection()
     cursor = conn.cursor()
     if search:
@@ -914,6 +969,7 @@ def get_credit_transactions(limit: int = 30) -> list:
     return [dict(r) for r in rows]
 
 def get_system_stats() -> dict:
+    sync_users_from_supabase()
     conn = get_connection()
     cursor = conn.cursor()
 

@@ -1273,6 +1273,175 @@ def api_send_image_to_telegram():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ============================================================================
+# STORY ADAPTER (SCRIPT TO SCENES) API
+# ============================================================================
+
+@app.route('/api/story_adapter/estimate', methods=['POST'])
+def api_story_adapter_estimate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    text = str(data.get("story_text", "")).strip()
+    words = len(text.split()) if text else 0
+
+    # Pacing formula: approximately 50-65 words per visual shot
+    est_scenes = max(1, min(80, max(5, round(words / 60)))) if words > 0 else 0
+    extra_scenes = max(0, est_scenes - 40)
+    base_cost = 15
+    cost = base_cost + extra_scenes
+    
+    is_vip = int(user.get("credits", 0)) >= 999999
+    if is_vip:
+        cost = 0
+
+    return jsonify({
+        "success": True,
+        "word_count": words,
+        "estimated_scenes": est_scenes,
+        "cost": cost,
+        "user_balance": user.get("credits", 0),
+        "is_vip": is_vip,
+        "can_afford": (is_vip or user.get("credits", 0) >= cost)
+    })
+
+@app.route('/api/story_adapter/generate', methods=['POST'])
+def api_story_adapter_generate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    
+    text = str(data.get("story_text", "")).strip()
+    words = len(text.split()) if text else 0
+    if words < 100:
+        return jsonify({"success": False, "error": f"Story text is too short ({words} words). Please enter a story or script with at least 500 words (or minimum 100 words)."}), 400
+    if words > 5500:
+        return jsonify({"success": False, "error": f"Story text exceeds limit ({words} words). Maximum is 5,000 words per adaptation."}), 400
+
+    genre = str(data.get("genre", "Drama")).strip()
+    cinematic_filter = str(data.get("cinematic_filter", "Default")).strip()
+    art_style = str(data.get("art_style", "Realistic")).strip()
+    voice_accent = str(data.get("voice_accent", "African / Nigerian")).strip()
+
+    # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP)
+    is_vip = int(user.get("credits", 0)) >= 999999
+    cost = 15 if not is_vip else 0
+
+    if cost > 0 and user.get("credits", 0) < cost:
+        return jsonify({"success": False, "error": f"Insufficient credits! Story Adapter requires {cost} credits."}), 402
+
+    custom_key = user.get("custom_gemini_key")
+    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+
+    try:
+        adapted_data = run_async(ai_engine.adapt_story_to_scenes(
+            story_text=text,
+            genre=genre,
+            cinematic_filter=cinematic_filter,
+            art_style=art_style,
+            voice_accent=voice_accent,
+            user_api_key=custom_key,
+            model_name=model_name
+        ))
+
+        # Check total scenes produced
+        total_scenes = len(adapted_data.get("scenes", []))
+        if total_scenes > 40 and not is_vip:
+            extra = total_scenes - 40
+            cost += extra
+
+        # Deduct credits
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        # Save job into database
+        job_id = database.create_story_job(
+            user_id=user_id,
+            source_input="Story Adapter",
+            source_title=adapted_data.get("title", "Adapted Story"),
+            transcript=text[:2000],
+            culture=voice_accent,
+            style=art_style,
+            genre=genre,
+            timezone="Africa/Lagos",
+            length_tier=f"{total_scenes} Scenes",
+            delivery_format="Scene Prompts",
+            job_type="story_adapter",
+            story_text=text
+        )
+
+        refreshed_user = database.get_user(user_id)
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "data": adapted_data,
+            "cost_charged": cost,
+            "user_balance": refreshed_user.get("credits", 0)
+        })
+    except Exception as e:
+        print(f"[STORY ADAPTER ERROR] {e}")
+        return jsonify({"success": False, "error": f"Story adaptation failed: {str(e)}"}), 500
+
+@app.route('/api/story_adapter/send_to_telegram', methods=['POST'])
+def api_story_adapter_send_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    scenes = data.get("scenes", [])
+    title = data.get("title", "Story Adapter Breakdown")
+    logline = data.get("logline", "")
+
+    if not scenes:
+        return jsonify({"success": False, "error": "No scenes found to send"}), 400
+
+    # Header message
+    header_msg = f"🎬 <b>WP Studio — Story Adapter Breakdown</b>\n"
+    header_msg += f"<b>Title:</b> {title}\n"
+    if logline:
+        header_msg += f"<i>{logline}</i>\n"
+    header_msg += f"<b>Total Scenes:</b> {len(scenes)}\n"
+    header_msg += f"<b>Art Style:</b> {data.get('art_style', 'Realistic')} | <b>Visual Filter:</b> {data.get('cinematic_filter', 'Default')}\n"
+    header_msg += f"<b>Voice Accent:</b> {data.get('voice_accent', 'African / Nigerian')}\n"
+    header_msg += "\n<b>━━━━━━━━━━━━━━━━━━━━</b>"
+    send_telegram_message(user_id, header_msg)
+
+    # Deliver scenes in safe chunks to respect Telegram's message character limits
+    current_chunk = ""
+    for s in scenes:
+        s_num = s.get("scene_number", "")
+        s_title = s.get("scene_title", f"Scene {s_num}")
+        setting = s.get("setting", "")
+        narration = s.get("dialogue_or_narration", "")
+        img_prompt = s.get("image_prompt", "")
+        vid_prompt = s.get("video_prompt", "")
+
+        scene_text = f"\n\n<b>📍 SCENE {s_num}: {s_title}</b>"
+        if setting:
+            scene_text += f"\n<i>Setting: {setting}</i>"
+        if narration:
+            scene_text += f"\n🎙️ <i>\"{narration}\"</i>"
+        if img_prompt:
+            scene_text += f"\n📷 <b>Visual Image Prompt:</b>\n<code>{img_prompt}</code>"
+        if vid_prompt:
+            scene_text += f"\n🎥 <b>Camera Motion:</b>\n<code>{vid_prompt}</code>"
+
+        if len(current_chunk) + len(scene_text) > 3600:
+            send_telegram_message(user_id, current_chunk)
+            current_chunk = scene_text
+        else:
+            current_chunk += scene_text
+
+    if current_chunk:
+        send_telegram_message(user_id, current_chunk)
+
+    return jsonify({"success": True, "message": f"All {len(scenes)} scenes sent directly to your Telegram chat!"})
+
 @app.route('/api/render_frame', methods=['POST'])
 def api_render_frame():
     user = get_current_user()

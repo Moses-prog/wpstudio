@@ -4009,7 +4009,10 @@
                         <div class="form-label" style="font-size:11px; margin-bottom:4px;">Message Text</div>
                         <textarea id="admin-broadcast-text" class="form-input" style="height:90px; resize:vertical; margin-bottom:14px;" placeholder="Write message to send to creators...">${bcText}</textarea>
 
-                        <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Top Banner</button>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Top Banner</button>
+                            <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="background:var(--accent-blue, #0a84ff);">📢 Send Message to Users Who Sent /start</button>
+                        </div>
                     </div>
                 `;
             }
@@ -4367,6 +4370,59 @@
             } catch (err) {
                 showTelegramAlert("Network error saving top banner");
             }
+        }
+
+        async function adminBroadcastToTelegram() {
+            const textEl = document.getElementById('admin-broadcast-text');
+            const typeEl = document.getElementById('admin-broadcast-type');
+            const msg = textEl ? textEl.value.trim() : '';
+
+            if (!msg) {
+                showTelegramAlert("Please write a message to send first.");
+                return;
+            }
+
+            showTelegramConfirm("Send this message to all users who sent /start to the bot?", async () => {
+                const btn = document.getElementById('btn-admin-broadcast-telegram');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerText = "Sending broadcast...";
+                }
+                try {
+                    const res = await fetch('/api/admin/broadcast_telegram', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            message: msg,
+                            banner_type: typeEl ? typeEl.value : 'info',
+                            update_banner: true
+                        })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                        if (studioMeta) {
+                            studioMeta.announcement = {
+                                active: 1,
+                                type: typeEl ? typeEl.value : 'info',
+                                text: msg
+                            };
+                        }
+                        renderAnnouncementBanner();
+                        showTelegramAlert(`Broadcast complete!\n\nSent: ${d.sent} users\nBlocked: ${d.blocked || 0} users\nFailed: ${d.failed || 0} users`);
+                        await loadAdminOverview();
+                    } else {
+                        showTelegramAlert(d.error || 'Failed to send broadcast');
+                    }
+                } catch (err) {
+                    showTelegramAlert("Network error sending broadcast");
+                } finally {
+                    const btn = document.getElementById('btn-admin-broadcast-telegram');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = "📢 Send Message to Users Who Sent /start";
+                    }
+                }
+            });
         }
 
         // Multi-stage resilient bootstrap for mobile WebViews

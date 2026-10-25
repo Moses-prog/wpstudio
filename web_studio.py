@@ -1256,6 +1256,69 @@ def api_admin_update_settings():
     saved = database.update_system_settings(updates)
     return jsonify({"success": True, "settings": saved})
 
+@app.route('/api/admin/broadcast_telegram', methods=['POST'])
+def api_admin_broadcast_telegram():
+    user = get_current_user()
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
+
+    data = request.get_json(silent=True, force=True) or {}
+    message = str(data.get("message", "")).strip()
+    if not message:
+        return jsonify({"success": False, "error": "Please enter a message to broadcast."}), 400
+
+    update_banner = data.get("update_banner", True)
+    banner_type = str(data.get("banner_type", "info")).strip()
+
+    if update_banner:
+        database.update_system_settings({
+            "announcement_banner_active": "1",
+            "announcement_banner_type": banner_type,
+            "announcement_banner_text": message,
+            "announcement_active": "1",
+            "announcement_type": banner_type,
+            "announcement_text": message
+        })
+
+    bot_token = os.getenv("BOT_TOKEN", "").strip()
+    user_ids = database.get_all_user_ids()
+
+    if not bot_token:
+        return jsonify({"success": False, "error": "Bot token not configured on server."}), 500
+
+    sent = 0
+    blocked = 0
+    failed = 0
+    import requests
+    import time
+    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload_text = f"📢 <b>Announcement from WP Studio</b>\n\n{message}"
+
+    for uid in user_ids:
+        try:
+            r = requests.post(telegram_url, json={
+                "chat_id": uid,
+                "text": payload_text,
+                "parse_mode": "HTML"
+            }, timeout=6)
+            if r.status_code == 200:
+                sent += 1
+            elif r.status_code == 403:
+                blocked += 1
+            else:
+                failed += 1
+            time.sleep(0.1)
+        except Exception:
+            failed += 1
+
+    return jsonify({
+        "success": True,
+        "total": len(user_ids),
+        "sent": sent,
+        "blocked": blocked,
+        "failed": failed
+    })
+
 @app.route('/api/admin/jobs', methods=['GET'])
 def api_admin_jobs():
     user = get_current_user()

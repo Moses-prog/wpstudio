@@ -11,7 +11,7 @@ if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
-from telethon import TelegramClient, events, Button
+from telethon import TelegramClient, events, Button, errors as telethon_errors
 from telethon.sessions import MemorySession
 
 import database
@@ -2790,7 +2790,7 @@ async def main():
         database.update_system_settings({setting_key: val})
         await event.respond(f"🔓 **Unlocked:** {desc}")
 
-    @client.on(events.NewMessage(pattern=r"^/(?:broadcast|banner)(?:\s+(.+))?"))
+    @client.on(events.NewMessage(pattern=r"^/broadcast(?:\s+(.+))?"))
     async def broadcast_command_handler(event):
         user_id = event.sender_id
         if not database.is_admin(user_id):
@@ -2800,10 +2800,12 @@ async def main():
         msg = event.pattern_match.group(1)
         if not msg or not msg.strip():
             await event.respond(
-                "📢 **App Top Banner**\n\n"
-                "• Set announcement banner for all creators in the app:\n"
+                "📢 **Broadcast Command**\n\n"
+                "• Send message to all users who sent /start:\n"
                 "`/broadcast <your message>`\n\n"
-                "• Turn off top banner:\n"
+                "• Set app top banner only (no message):\n"
+                "`/banner <your message>`\n\n"
+                "• Turn off app top banner:\n"
                 "`/broadcast off`"
             )
             return
@@ -2819,7 +2821,7 @@ async def main():
             await event.respond("🔕 **Top banner turned off.**")
             return
 
-        # Update mini app banner safely with matching keys
+        # 1. Update mini app banner safely
         database.update_system_settings({
             "announcement_banner_active": "1",
             "announcement_banner_type": "info",
@@ -2829,12 +2831,81 @@ async def main():
             "announcement_text": msg
         })
 
-        await event.respond(
-            f"📢 **Top banner published!**\n\n"
-            f"_{msg}_\n\n"
-            f"All creators opening the mini app will now see this banner at the top.\n"
-            f"To turn it off: `/broadcast off`"
+        # 2. Get real users who previously sent /start
+        user_ids = database.get_all_user_ids()
+        if not user_ids:
+            await event.respond("⚠️ **No users found.** App banner is active.")
+            return
+
+        status_msg = await event.respond(f"📢 **Sending message to {len(user_ids)} users...**")
+        sent_count = 0
+        blocked_count = 0
+        failed_count = 0
+        broadcast_text = f"📢 **Announcement from WP Studio**\n\n{msg}"
+
+        for uid in user_ids:
+            try:
+                await client.send_message(uid, broadcast_text)
+                sent_count += 1
+            except telethon_errors.FloodWaitError as fwe:
+                logger.warning(f"Flood wait {fwe.seconds}s during broadcast")
+                await asyncio.sleep(fwe.seconds + 1)
+                try:
+                    await client.send_message(uid, broadcast_text)
+                    sent_count += 1
+                except Exception:
+                    failed_count += 1
+            except (telethon_errors.UserIsBlockedError, telethon_errors.InputUserDeactivatedError):
+                blocked_count += 1
+            except telethon_errors.PeerIdInvalidError:
+                failed_count += 1
+            except Exception as ex:
+                failed_count += 1
+                logger.warning(f"Broadcast failed for user {uid}: {ex}")
+
+            # Safe spacing: 0.1s pause between sends
+            await asyncio.sleep(0.1)
+
+        await status_msg.edit(
+            f"✅ **Broadcast complete!**\n\n"
+            f"• **Sent:** {sent_count} users\n"
+            f"• **Blocked:** {blocked_count} users\n"
+            f"• **Failed:** {failed_count} users\n"
+            f"• **App Banner:** Active\n\n"
+            f"To turn off top banner: `/broadcast off`"
         )
+
+    @client.on(events.NewMessage(pattern=r"^/banner(?:\s+(.+))?"))
+    async def banner_command_handler(event):
+        user_id = event.sender_id
+        if not database.is_admin(user_id):
+            await event.respond("⛔ **Access Denied.**")
+            return
+
+        msg = event.pattern_match.group(1)
+        if not msg or not msg.strip():
+            await event.respond("⚠️ **Usage:** `/banner <message>`\nTo turn off: `/banner off`")
+            return
+
+        msg = msg.strip()
+        if msg.lower() == "off":
+            database.update_system_settings({
+                "announcement_banner_active": "0",
+                "announcement_banner_text": "",
+                "announcement_active": "0",
+                "announcement_text": ""
+            })
+            await event.respond("🔕 **Top banner turned off.**")
+        else:
+            database.update_system_settings({
+                "announcement_banner_active": "1",
+                "announcement_banner_type": "info",
+                "announcement_banner_text": msg,
+                "announcement_active": "1",
+                "announcement_type": "info",
+                "announcement_text": msg
+            })
+            await event.respond(f"📢 **Top banner updated!**\n_{msg}_")
 
     @client.on(events.NewMessage)
     async def text_input_handler(event):

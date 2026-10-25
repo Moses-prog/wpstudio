@@ -1,5 +1,6 @@
 import os
 import sys
+import gc
 import asyncio
 import logging
 import json
@@ -16,7 +17,6 @@ from telethon.sessions import MemorySession
 
 import database
 import ai_engine
-import pdf_generator
 import source_extractor
 
 load_dotenv()
@@ -1378,6 +1378,7 @@ async def main():
                 )
 
                 # 3. Generate Dual PDFs
+                import pdf_generator
                 bible_path, scene_path = pdf_generator.generate_dual_pdfs(
                     story_data=story_data,
                     culture=state["culture"],
@@ -1388,6 +1389,7 @@ async def main():
                     length_tier=tier,
                     timezone=state["timezone"]
                 )
+                gc.collect()
 
                 # 4. Save to Database
                 if "job_id" in state:
@@ -2472,7 +2474,9 @@ async def main():
                 }
 
             database.deduct_credits(user_id, CASTLOCK_COST)
+            import pdf_generator
             pdf_path = pdf_generator.generate_character_forge_pdf(char_data)
+            gc.collect()
 
             char_name = char_data.get("character_name", name)
             turnaround = char_data.get("master_9panel_sheet_prompt", "")

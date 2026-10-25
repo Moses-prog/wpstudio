@@ -2,6 +2,8 @@
 # WP Studio Production Orchestration Runner
 export PYTHONUNBUFFERED=1
 export MALLOC_ARENA_MAX=2
+export MALLOC_TRIM_THRESHOLD_=65536
+export PYTHONMALLOC=malloc
 
 cleanup() {
   echo "[WP STUDIO] SIGTERM/SIGINT received. Terminating all processes cleanly..."
@@ -22,7 +24,7 @@ echo "=========================================================="
 # 1. Start Web Studio & Mini App FIRST (Binds port immediately for Render health checks)
 if command -v gunicorn >/dev/null 2>&1; then
   echo "[1/2] Starting Web Studio with Gunicorn WSGI on port $PORT..."
-  gunicorn -w 1 --threads 4 --max-requests 50 --max-requests-jitter 10 -b "0.0.0.0:$PORT" --timeout 360 web_studio:app &
+  gunicorn -w 1 --threads 2 --max-requests 30 --max-requests-jitter 5 -b "0.0.0.0:$PORT" --timeout 360 web_studio:app &
   WEB_PID=$!
 else
   echo "[1/2] Starting Web Studio with Python standard server on port $PORT..."

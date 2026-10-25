@@ -79,6 +79,10 @@ def init_db():
         updated_at TEXT
     )
     """)
+    try:
+        cursor.execute("ALTER TABLE story_jobs ADD COLUMN delivery_format TEXT DEFAULT 'Dialogue / Narrative'")
+    except Exception:
+        pass
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS cast_characters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -234,7 +238,14 @@ def get_user(user_id: int, username: str = None) -> dict:
 
 def deduct_credits(user_id: int, cost: int) -> bool:
     user = get_user(user_id)
-    if not user or user["credits"] < cost:
+    if not user:
+        return False
+
+    # VIP / Admin Unlimited Credits: Never deplete balance
+    if int(user.get("credits", 0)) >= 999999:
+        return True
+
+    if user["credits"] < cost:
         return False
 
     new_credits = user["credits"] - cost
@@ -345,7 +356,7 @@ def log_story(user_id: int, title: str, topic: str, style: str, genre: str, dura
     conn.commit()
     conn.close()
 
-def create_story_job(user_id: int, source_input: str, source_title: str, transcript: str, culture: str, style: str, genre: str, timezone: str, length_tier: str) -> int:
+def create_story_job(user_id: int, source_input: str, source_title: str, transcript: str, culture: str, style: str, genre: str, timezone: str, length_tier: str, delivery_format: str = "Dialogue / Narrative") -> int:
     now = datetime.utcnow().isoformat()
     highest_id = 0
 
@@ -370,9 +381,9 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
 
     # 3. Insert into SQLite
     cursor.execute("""
-        INSERT INTO story_jobs (job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
-    """, (new_job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, now, now))
+        INSERT INTO story_jobs (job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
+    """, (new_job_id, user_id, source_input, source_title, transcript, culture, style, genre, timezone, length_tier, delivery_format, now, now))
     conn.commit()
     conn.close()
 
@@ -390,6 +401,7 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
                 "genre": genre,
                 "timezone": timezone,
                 "length_tier": length_tier,
+                "delivery_format": delivery_format,
                 "status": "draft",
                 "created_at": now,
                 "updated_at": now
@@ -827,14 +839,17 @@ def admin_modify_user_credits(admin_id: int, target_user_id: int, action: str, a
 
     prev_balance = int(target_user.get("credits", 0))
 
-    if action == "add":
+    if action == "unlimited":
+        new_balance = 999999999
+        amount = 999999999
+    elif action == "add":
         new_balance = prev_balance + amount
     elif action == "deduct":
         new_balance = max(0, prev_balance - amount)
     elif action == "set":
         new_balance = max(0, amount)
     else:
-        return {"success": False, "error": "Invalid action. Use 'add', 'deduct', or 'set'."}
+        return {"success": False, "error": "Invalid action. Use 'add', 'deduct', 'set', or 'unlimited'."}
 
     now_ts = datetime.utcnow().isoformat()
 

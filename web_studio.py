@@ -807,6 +807,7 @@ def api_story_concepts():
     elif genre.startswith("Custom"):
         genre = "Personal Story & Real Life Memoir"
     length_tier = str(data.get("length_tier", "Short"))
+    delivery_format = str(data.get("delivery_format", "Dialogue / Narrative")).strip()
     locked_lead_id = data.get("locked_lead_id")
     check_err = check_maintenance_and_feature("storycraft")
     if check_err: return check_err
@@ -872,7 +873,8 @@ def api_story_concepts():
         style=style,
         genre=genre,
         timezone="Africa/Lagos",
-        length_tier=length_tier
+        length_tier=length_tier,
+        delivery_format=delivery_format
     )
     database.update_job_concepts(job_id, json.dumps(concepts_list))
 
@@ -957,6 +959,7 @@ def api_story_generate():
     channel_name = str(data.get("channel_name", "")).strip() or job.get("channel_name", "")
 
     database.update_job_selection(int(job_id), selected_concept_idx)
+    delivery_fmt = str(data.get("delivery_format") or job.get("delivery_format") or "Dialogue / Narrative").strip()
 
     try:
         full_story = run_async(ai_engine.generate_full_story_package(
@@ -964,7 +967,7 @@ def api_story_generate():
             culture=job.get("culture", "Universal"),
             visual_style=job.get("style", "Stylised 3D"),
             genre=job.get("genre", "Action Thriller"),
-            delivery_format="Dialogue / Narrative",
+            delivery_format=delivery_fmt,
             lead_character=lead_char,
             length_tier=length_tier,
             timezone="Africa/Lagos",
@@ -984,7 +987,7 @@ def api_story_generate():
             culture=job.get("culture", "Universal"),
             style=job.get("style", "Stylised 3D"),
             genre=job.get("genre", "Action Thriller"),
-            delivery_format="Dialogue / Narrative",
+            delivery_format=delivery_fmt,
             lead_character=lead_char,
             length_tier=length_tier,
             timezone="Africa/Lagos"
@@ -994,7 +997,7 @@ def api_story_generate():
             culture=job.get("culture", "Universal"),
             style=job.get("style", "Stylised 3D"),
             genre=job.get("genre", "Action Thriller"),
-            delivery_format="Dialogue / Narrative",
+            delivery_format=delivery_fmt,
             lead_character=lead_char,
             length_tier=length_tier,
             timezone="Africa/Lagos"
@@ -1415,12 +1418,17 @@ def api_admin_modify_credits():
     amount = data.get("amount", 0)
     reason = str(data.get("reason", "")).strip()
 
-    if not target_id or amount is None:
-        return jsonify({"success": False, "error": "Missing target_user_id or amount."}), 400
+    if not target_id:
+        return jsonify({"success": False, "error": "Missing target_user_id."}), 400
 
     try:
         t_id = int(target_id)
-        amt = int(amount)
+        if action == "unlimited":
+            amt = 999999999
+        else:
+            if amount is None:
+                return jsonify({"success": False, "error": "Missing amount."}), 400
+            amt = int(amount)
     except (ValueError, TypeError):
         return jsonify({"success": False, "error": "Invalid target_user_id or amount format."}), 400
 

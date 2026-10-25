@@ -1444,13 +1444,23 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom: 8px;">
-                    <div class="form-label" style="font-size:10px;">Video Runtime & Ceiling</div>
-                    <select id="story-sel-tier" class="form-input">
-                        <option value="Short">Short (~2-4 Mins | Up to 40 scenes | 10+40 credits)</option>
-                        <option value="Medium">Medium (~8-15 Mins | Up to 120 scenes | 50+250 credits)</option>
-                        <option value="Long">Long (~1-2+ Hours | Up to 250 scenes | 100+300 credits)</option>
-                    </select>
+                <div class="form-grid-2" style="margin-bottom: 8px;">
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Story Delivery Format</div>
+                        <select id="story-sel-delivery" class="form-input">
+                            <option value="Dialogue / Narrative">Dialogue & Narrative (Both)</option>
+                            <option value="Dialogue">Dialogue (Drama / Characters Talk)</option>
+                            <option value="Narrative">Narrative (Voiceover / Faceless)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="form-label" style="font-size:10px;">Video Runtime & Ceiling</div>
+                        <select id="story-sel-tier" class="form-input">
+                            <option value="Short">Short (~2-4 Mins | ≤ 40 scenes)</option>
+                            <option value="Medium">Medium (~8-15 Mins | ≤ 120 scenes)</option>
+                            <option value="Long">Long (~1-2+ Hours | ≤ 250 scenes)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -2757,10 +2767,12 @@
                 if (fabAdmin) fabAdmin.style.display = 'none';
             }
 
-            const creditsVal = currentUser.credits ?? 0;
-            document.getElementById('header-credits-count').innerText = `${creditsVal} Credits`;
+            const rawCredits = currentUser.credits ?? 0;
+            const isUnlimited = (rawCredits >= 999999);
+            const creditsVal = isUnlimited ? '∞' : rawCredits;
+            document.getElementById('header-credits-count').innerText = isUnlimited ? '👑 Unlimited VIP' : `${creditsVal} Credits`;
             document.getElementById('stat-credits').innerText = creditsVal;
-            document.getElementById('settings-credits-display').innerText = `${creditsVal} Credits`;
+            document.getElementById('settings-credits-display').innerText = isUnlimited ? 'Unlimited (VIP Access)' : `${creditsVal} Credits`;
 
             const modelName = currentUser.selected_model || 'gemini-3.8-flash';
             document.getElementById('header-model-name').innerText = modelName.replace('gemini-', '');
@@ -3171,12 +3183,15 @@
                 ]
             );
 
+            const deliveryFormat = document.getElementById('story-sel-delivery')?.value || 'Dialogue / Narrative';
+
             const payload = {
                 source_input: source,
                 culture: culture,
                 style: document.getElementById('story-sel-style').value,
                 genre: genre,
                 custom_genre: customGenre,
+                delivery_format: deliveryFormat,
                 length_tier: tier,
                 locked_lead_id: document.getElementById('story-sel-character').value || null,
                 channel_name: document.getElementById('story-channel-name')?.value?.trim() || ""
@@ -3188,7 +3203,13 @@
                     headers: getHeaders(),
                     body: JSON.stringify(payload)
                 });
-                const d = await res.json();
+                const resText = await res.text();
+                let d;
+                try {
+                    d = JSON.parse(resText);
+                } catch(e) {
+                    throw new Error("Server temporarily busy or restarting. Please try again in a few seconds.");
+                }
                 if (d.success) {
                     activeJobId = d.job_id;
                     const rawC = d.concepts;
@@ -3353,7 +3374,8 @@
                 job_id: activeJobId,
                 selected_concept_idx: selectedConceptIndex,
                 locked_lead_id: document.getElementById('story-sel-character').value || null,
-                channel_name: document.getElementById('story-channel-name')?.value?.trim() || ""
+                channel_name: document.getElementById('story-channel-name')?.value?.trim() || "",
+                delivery_format: document.getElementById('story-sel-delivery')?.value || "Dialogue / Narrative"
             };
 
             try {
@@ -3362,7 +3384,13 @@
                     headers: getHeaders(),
                     body: JSON.stringify(payload)
                 });
-                const d = await res.json();
+                const resText = await res.text();
+                let d;
+                try {
+                    d = JSON.parse(resText);
+                } catch(e) {
+                    throw new Error("Server temporarily busy or restarting. Please try again in a few seconds.");
+                }
                 if (d.success) {
                     await AIProgressTracker.complete("Screenplay Produced & Sent to Chat!");
                     showTelegramAlert("Your PDFs have been sent directly to your Telegram chat! Check your bot messages.");
@@ -4713,6 +4741,7 @@
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 100)">+100</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 500)">+500</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 1000)">+1k</button>
+                                <button class="btn-sm-action" style="padding:6px 4px; font-size:11px; font-weight:800; color:#ffd700; background:rgba(255,215,0,0.15); border:1px solid rgba(255,215,0,0.4); text-align:center;" onclick="adminGrantUnlimitedCredits()">👑 ∞ UNLIMITED</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 50)">-50</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 100)">-100</button>
                             </div>
@@ -4721,10 +4750,11 @@
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
                                 <div>
                                     <div class="form-label" style="font-size:10px; margin-bottom:4px;">Action</div>
-                                    <select id="admin-user-action" class="form-input" style="font-size:12px; padding:7px 8px;">
+                                    <select id="admin-user-action" class="form-input" style="font-size:12px; padding:7px 8px;" onchange="onAdminCreditActionChange()">
                                         <option value="add">Add (+)</option>
                                         <option value="deduct">Deduct (-)</option>
                                         <option value="set">Set Balance (=)</option>
+                                        <option value="unlimited">👑 Grant Unlimited (∞)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -4733,7 +4763,10 @@
                                 </div>
                             </div>
                             <input type="text" id="admin-user-reason" class="form-input" placeholder="Audit note (e.g. Contest winner reward)" style="font-size:12px; margin-bottom:8px;">
-                            <button class="btn-submit" style="margin-top:0; padding:8px; font-size:12px;" onclick="adminApplyCreditAction()">Apply Credit Modification</button>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn-submit" style="margin-top:0; padding:8px; font-size:12px; flex:1;" onclick="adminApplyCreditAction()">Apply Modification</button>
+                                <button type="button" class="btn-secondary" style="padding:8px 10px; font-size:11px; font-weight:700; border-color:rgba(255,215,0,0.4); color:#ffd700; white-space:nowrap;" onclick="adminGrantUnlimitedCredits()">👑 1-Tap Unlimited</button>
+                            </div>
 
                             <!-- TIER SELECTOR -->
                             <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; gap:8px; align-items:center;">
@@ -5057,6 +5090,30 @@
             await adminExecuteCreditModification(action, amount, reason);
         }
 
+        function onAdminCreditActionChange() {
+            const act = document.getElementById('admin-user-action')?.value;
+            const amtEl = document.getElementById('admin-user-amount');
+            if (!amtEl) return;
+            if (act === 'unlimited') {
+                amtEl.value = '999999999';
+                amtEl.disabled = true;
+            } else {
+                amtEl.disabled = false;
+                if (amtEl.value === '999999999') amtEl.value = '250';
+            }
+        }
+
+        async function adminGrantUnlimitedCredits() {
+            if (!adminSelectedUser) {
+                showToast("Please select a creator from the list first.", false);
+                return;
+            }
+            const actionEl = document.getElementById('admin-user-action');
+            if (actionEl) actionEl.value = 'unlimited';
+            onAdminCreditActionChange();
+            await adminExecuteCreditModification('unlimited', 999999999, 'Admin granted Unlimited VIP Credits');
+        }
+
         async function adminApplyCreditAction() {
             if (!adminSelectedUser) {
                 showToast("Please select a creator from the list first.", false);
@@ -5068,13 +5125,13 @@
 
             const action = actionEl ? actionEl.value : 'add';
             const amount = amountEl ? parseInt(amountEl.value, 10) : 0;
-            const reason = reasonEl && reasonEl.value.trim() ? reasonEl.value.trim() : 'Admin manual modification';
+            const reason = reasonEl && reasonEl.value.trim() ? reasonEl.value.trim() : (action === 'unlimited' ? 'Admin granted Unlimited VIP Credits' : 'Admin manual modification');
 
-            if (isNaN(amount) || amount < 0) {
+            if (action !== 'unlimited' && (isNaN(amount) || amount < 0)) {
                 showToast("Enter a valid positive credit amount.", false);
                 return;
             }
-            await adminExecuteCreditModification(action, amount, reason);
+            await adminExecuteCreditModification(action, action === 'unlimited' ? 999999999 : amount, reason);
         }
 
         async function adminExecuteCreditModification(action, amount, reason) {

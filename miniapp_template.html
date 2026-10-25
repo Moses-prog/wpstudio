@@ -1464,17 +1464,17 @@
 
             <!-- Step 4: Production Result & Downloads -->
             <div id="story-result-section" style="display:none;" class="form-card">
-                <div class="form-label" style="color:var(--success);">Production Complete</div>
-                <div class="form-hint" id="story-result-title" style="font-weight:600; color:var(--text-main); margin-bottom:10px;">Full Screenplay & Bibles Ready</div>
+                <div class="form-label" style="color:var(--success);">Production Complete & Delivered</div>
+                <div class="form-hint" id="story-result-title" style="font-weight:600; color:var(--text-main); margin-bottom:10px;">PDFs Delivered to Your Telegram Chat</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <a id="btn-download-bible" href="#" onclick="event.preventDefault(); downloadPdfFile(this.getAttribute('data-url') || this.href);" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                    <button type="button" id="btn-download-bible" onclick="sendPdfToChat(activeJobId, 'bible')" class="btn-submit" style="background:#2c2c2e; border:1px solid var(--border); width:100%; justify-content:center;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Download Image Prompts Bible PDF
-                    </a>
-                    <a id="btn-download-scenes" href="#" onclick="event.preventDefault(); downloadPdfFile(this.getAttribute('data-url') || this.href);" class="btn-submit" style="background:#2c2c2e; text-decoration:none;">
+                        Send Image Prompts PDF to Telegram Chat
+                    </button>
+                    <button type="button" id="btn-download-scenes" onclick="sendPdfToChat(activeJobId, 'scene')" class="btn-submit" style="background:#2c2c2e; border:1px solid var(--border); width:100%; justify-content:center;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Download Video Scene Prompts PDF
-                    </a>
+                        Send Video Scene Prompts PDF to Telegram Chat
+                    </button>
                 </div>
             </div>
         </div>
@@ -2370,16 +2370,34 @@
 
         window.alert = function(msg) { showTelegramAlert(msg); };
 
-        function downloadPdfFile(url) {
-            if (!url) return;
-            const fullUrl = url.startsWith('http') ? url : (window.location.origin + url);
+        async function sendPdfToChat(jobId, type) {
+            const jId = jobId || activeJobId;
+            if (!jId) {
+                showTelegramAlert("No screenplay job selected.");
+                return;
+            }
             try {
-                if (window.Telegram?.WebApp?.openLink) {
-                    window.Telegram.WebApp.openLink(fullUrl);
-                    return;
+                if (window.Telegram?.WebApp?.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
                 }
-            } catch(e) {}
-            window.open(fullUrl, '_blank');
+                showToast("Sending PDF to your Telegram chat...", true);
+                const res = await fetch('/api/send_pdf_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ job_id: jId, type: type || 'both' })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    if (window.Telegram?.WebApp?.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+                    showTelegramAlert("PDF sent directly to your Telegram chat! Check your bot messages.");
+                } else {
+                    showTelegramAlert(d.error || "Could not send PDF to chat.");
+                }
+            } catch(e) {
+                showTelegramAlert("Network error sending PDF to chat.");
+            }
         }
 
 
@@ -2684,8 +2702,8 @@
                 const title = h.source_title || 'Untitled Screenplay';
                 const date = h.created_at ? h.created_at.slice(0, 10) : '';
                 const isCompleted = (h.status === 'completed' || h.story_bible_pdf || h.scene_prompts_pdf);
-                const bibleUrl = h.story_bible_pdf ? `/download_pdf/${h.story_bible_pdf.split(/[\/\\]/).pop()}` : null;
-                const sceneUrl = h.scene_prompts_pdf ? `/download_pdf/${h.scene_prompts_pdf.split(/[\/\\]/).pop()}` : null;
+                const hasBible = !!h.story_bible_pdf;
+                const hasScene = !!h.scene_prompts_pdf;
 
                 html += `
                     <div class="form-card" style="margin-bottom:10px; cursor:pointer; transition:border-color 0.18s, transform 0.18s;" onclick="resumeProductionJob(${jId})">
@@ -2703,8 +2721,8 @@
                             </button>
 
                             <div style="display:flex; gap:6px;">
-                                ${bibleUrl ? `<a href="${bibleUrl}" onclick="event.stopPropagation(); event.preventDefault(); downloadPdfFile('${bibleUrl}');" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Bible</a>` : ''}
-                                ${sceneUrl ? `<a href="${sceneUrl}" onclick="event.stopPropagation(); event.preventDefault(); downloadPdfFile('${sceneUrl}');" class="btn-secondary" style="font-size:11px; padding:6px 10px; text-decoration:none;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Prompts</a>` : ''}
+                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Image PDF</button>` : ''}
+                                ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Video PDF</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -2828,17 +2846,13 @@
                 if (resultTitle) {
                     resultTitle.innerText = `${job.source_title || 'Screenplay'} — Ready`;
                 }
-                if (bibleBtn && job.story_bible_pdf) {
-                    const safeBible = job.story_bible_pdf.split(/[\/\\]/).pop();
-                    bibleBtn.href = `/download_pdf/${safeBible}`;
-                    bibleBtn.setAttribute('data-url', `/download_pdf/${safeBible}`);
-                    bibleBtn.style.display = 'inline-flex';
+                if (bibleBtn) {
+                    bibleBtn.style.display = job.story_bible_pdf ? 'flex' : 'none';
+                    bibleBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'bible');
                 }
-                if (sceneBtn && job.scene_prompts_pdf) {
-                    const safeScenes = job.scene_prompts_pdf.split(/[\/\\]/).pop();
-                    sceneBtn.href = `/download_pdf/${safeScenes}`;
-                    sceneBtn.setAttribute('data-url', `/download_pdf/${safeScenes}`);
-                    sceneBtn.style.display = 'inline-flex';
+                if (sceneBtn) {
+                    sceneBtn.style.display = job.scene_prompts_pdf ? 'flex' : 'none';
+                    sceneBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'scene');
                 }
             } else if (resultSec) {
                 resultSec.style.display = 'none';
@@ -3085,22 +3099,21 @@
                 });
                 const d = await res.json();
                 if (d.success) {
-                    await AIProgressTracker.complete("Screenplay & Dual PDFs Produced!");
-                    showToast('Screenplay & Dual PDFs Produced!');
+                    await AIProgressTracker.complete("Screenplay Produced & Sent to Chat!");
+                    showTelegramAlert("Your PDFs have been sent directly to your Telegram chat! Check your bot messages.");
                     const resSection = document.getElementById('story-result-section');
-                    resSection.style.display = 'block';
+                    if (resSection) resSection.style.display = 'block';
 
-                    if (d.bible_pdf_url) {
-                        const btnBible = document.getElementById('btn-download-bible');
-                        btnBible.href = d.bible_pdf_url;
-                        btnBible.setAttribute('data-url', d.bible_pdf_url);
+                    const newJobId = d.job_id || activeJobId;
+                    const btnBible = document.getElementById('btn-download-bible');
+                    if (btnBible) {
                         btnBible.style.display = 'flex';
+                        btnBible.onclick = () => sendPdfToChat(newJobId, 'bible');
                     }
-                    if (d.scene_pdf_url) {
-                        const btnScenes = document.getElementById('btn-download-scenes');
-                        btnScenes.href = d.scene_pdf_url;
-                        btnScenes.setAttribute('data-url', d.scene_pdf_url);
+                    const btnScenes = document.getElementById('btn-download-scenes');
+                    if (btnScenes) {
                         btnScenes.style.display = 'flex';
+                        btnScenes.onclick = () => sendPdfToChat(newJobId, 'scene');
                     }
 
                     if (currentUser && d.credits !== undefined) {
@@ -3200,7 +3213,7 @@
                 const d = await res.json();
                 if (d.success) {
                     await AIProgressTracker.complete(`CastLock Anchor '${name}' Forged!`);
-                    showToast(`CastLock Anchor '${name}' forged successfully!`);
+                    showTelegramAlert(`CastLock Anchor '${name}' forged! Continuity sheet PDF sent directly to your Telegram chat.`);
                     if (currentUser && d.credits !== undefined) {
                         currentUser.credits = d.credits;
                     }

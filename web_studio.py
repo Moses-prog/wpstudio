@@ -29,7 +29,34 @@ app.secret_key = os.getenv("FLASK_SECRET", "wp_studio_secret_key_2026")
 PDF_DIR = os.path.join(os.path.dirname(__file__), "generated_pdfs")
 os.makedirs(PDF_DIR, exist_ok=True)
 
+import requests
+
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+
+def send_telegram_document(user_id: int, file_path: str, caption: str = "") -> bool:
+    """Delivers a PDF document directly into the user's private Telegram chat with zero link exposure."""
+    bot_token = os.getenv("BOT_TOKEN", "").strip() or BOT_TOKEN
+    if not bot_token or not file_path or not os.path.exists(file_path):
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+        filename = os.path.basename(file_path)
+        with open(file_path, "rb") as f:
+            files = {"document": (filename, f, "application/pdf")}
+            data = {"chat_id": str(user_id)}
+            if caption:
+                data["caption"] = caption
+                data["parse_mode"] = "HTML"
+            r = requests.post(url, data=data, files=files, timeout=40)
+            if r.status_code == 200:
+                print(f"[TELEGRAM DOC] Successfully delivered {filename} to chat {user_id}")
+                return True
+            else:
+                print(f"[TELEGRAM DOC] Delivery failed for {user_id} (status {r.status_code}): {r.text}")
+                return False
+    except Exception as e:
+        print(f"[TELEGRAM DOC] Exception sending {file_path} to {user_id}: {e}")
+        return False
 
 PRICING_TIERS = {
     "Short": {
@@ -683,6 +710,12 @@ def api_character_forge():
     char_pdf_path = ""
     try:
         char_pdf_path = pdf_generator.generate_character_forge_pdf(turnaround, style=art_style)
+        if char_pdf_path and os.path.exists(char_pdf_path):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=char_pdf_path,
+                caption=f"🎭 <b>CastLock 3D Continuity Sheet</b>\n<i>{name}</i>"
+            )
     except Exception as c_err:
         print(f"[CHARACTER FORGE] PDF generation error: {c_err}")
 
@@ -695,7 +728,7 @@ def api_character_forge():
         "success": True,
         "character_id": char_id,
         "turnaround": turnaround,
-        "pdf_url": f"/download_pdf/{os.path.basename(char_pdf_path)}" if char_pdf_path else None,
+        "has_pdf": bool(char_pdf_path and os.path.exists(char_pdf_path)),
         "credits": refreshed_user.get("credits", 0)
     })
 
@@ -945,14 +978,76 @@ def api_story_generate():
     if actual_cost > 0:
         database.deduct_credits(user_id, actual_cost)
 
+    # Deliver both PDFs directly into the user's Telegram chat (Zero links exposed!)
+    story_title = full_story.get("title", chosen_concept.get("title", "WP Studio Story"))
+    sent_bible = False
+    sent_scene = False
+    if bible_pdf and os.path.exists(bible_pdf):
+        sent_bible = send_telegram_document(
+            user_id=user_id,
+            file_path=bible_pdf,
+            caption=f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"
+        )
+    if scene_pdf and os.path.exists(scene_pdf):
+        sent_scene = send_telegram_document(
+            user_id=user_id,
+            file_path=scene_pdf,
+            caption=f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"
+        )
+
     refreshed_user = database.get_user(user_id)
     return jsonify({
         "success": True,
         "story": full_story,
-        "bible_pdf_url": f"/download_pdf/{os.path.basename(bible_pdf)}" if bible_pdf else None,
-        "scene_pdf_url": f"/download_pdf/{os.path.basename(scene_pdf)}" if scene_pdf else None,
+        "job_id": int(job_id),
+        "has_bible": bool(bible_pdf and os.path.exists(bible_pdf)),
+        "has_scene": bool(scene_pdf and os.path.exists(scene_pdf)),
+        "sent_to_telegram": (sent_bible or sent_scene),
         "credits": refreshed_user.get("credits", 0)
     })
+
+@app.route('/api/send_pdf_to_telegram', methods=['POST'])
+def api_send_pdf_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    job_id = data.get("job_id")
+    pdf_type = data.get("type", "both")
+
+    if not job_id:
+        return jsonify({"success": False, "error": "Missing job id"}), 400
+
+    job = database.get_job(int(job_id))
+    if not job or (job.get("user_id") != user_id and not database.is_admin(user_id)):
+        return jsonify({"success": False, "error": "Screenplay job not found"}), 404
+
+    story_title = job.get("source_title", "WP Studio Story")
+    files_to_send = []
+
+    if pdf_type in ["bible", "both"]:
+        bible_path = job.get("story_bible_pdf")
+        if bible_path and os.path.exists(bible_path):
+            files_to_send.append((bible_path, f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"))
+
+    if pdf_type in ["scene", "both"]:
+        scene_path = job.get("scene_prompts_pdf")
+        if scene_path and os.path.exists(scene_path):
+            files_to_send.append((scene_path, f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"))
+
+    if not files_to_send:
+        return jsonify({"success": False, "error": "PDF files not found for this screenplay."}), 404
+
+    delivered = False
+    for fpath, caption in files_to_send:
+        if send_telegram_document(user_id, fpath, caption):
+            delivered = True
+
+    if delivered:
+        return jsonify({"success": True, "message": "PDF sent directly to your Telegram chat!"})
+    else:
+        return jsonify({"success": False, "error": "Could not send PDF to Telegram chat."}), 500
 
 @app.route('/api/thumbnail_generate', methods=['POST'])
 def api_thumbnail_generate():

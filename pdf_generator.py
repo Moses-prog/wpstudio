@@ -1,7 +1,113 @@
 import os
 import re
 from datetime import datetime
+import fitz
 from markdown_pdf import MarkdownPdf, Section
+
+DARK_THEME_CSS = """
+body {
+    background-color: #0b0f19;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+}
+
+h1 {
+    color: #ffffff;
+    font-size: 18pt;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-top: 16pt;
+    margin-bottom: 8pt;
+    border-bottom: 1.5pt solid #1e293b;
+    padding-bottom: 6pt;
+}
+
+h2 {
+    color: #f1f5f9;
+    font-size: 13pt;
+    font-weight: 700;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+}
+
+h3 {
+    color: #38bdf8;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 12pt;
+    margin-bottom: 4pt;
+}
+
+p {
+    margin-top: 4pt;
+    margin-bottom: 6pt;
+    color: #cbd5e1;
+}
+
+strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+em {
+    color: #94a3b8;
+}
+
+blockquote {
+    background-color: #111827;
+    border-left: 3.5pt solid #0a84ff;
+    color: #f8fafc;
+    padding: 8pt 12pt;
+    margin: 6pt 0 10pt 0;
+    border-radius: 4pt;
+}
+
+code {
+    background-color: #1e293b;
+    color: #38bdf8;
+    border: 0.5pt solid #334155;
+    padding: 1.5pt 4pt;
+    border-radius: 3pt;
+    font-family: 'Courier New', monospace;
+    font-size: 8.5pt;
+}
+
+hr {
+    border: 0;
+    border-top: 0.8pt solid #1e293b;
+    margin: 14pt 0;
+}
+
+ul, ol {
+    margin-top: 4pt;
+    margin-bottom: 8pt;
+    padding-left: 18pt;
+    color: #cbd5e1;
+}
+
+li {
+    margin-bottom: 3pt;
+}
+"""
+
+def apply_dark_theme(pdf_path: str):
+    """Paints a full-bleed dark background (#0b0f19) onto all pages of the generated PDF."""
+    try:
+        doc = fitz.open(pdf_path)
+        bg = (11 / 255, 15 / 255, 25 / 255)  # #0b0f19 dark navy
+        for page in doc:
+            shape = page.new_shape()
+            shape.draw_rect(page.rect)
+            shape.finish(color=None, fill=bg)
+            shape.commit(overlay=False)
+        temp_path = f"{pdf_path}.tmp"
+        doc.save(temp_path)
+        doc.close()
+        os.replace(temp_path, pdf_path)
+    except Exception as e:
+        print(f"Warning: Failed to apply full bleed dark theme background: {e}")
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "generated_pdfs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -78,9 +184,7 @@ def generate_image_prompts_pdf(story_data: dict, culture="Universal", style="Sty
 ### ⏰ Best Time To Post ({timezone})
 {posting_text}
 
-| ESTIMATED RUNTIME | SCENES | CHARACTERS | LOCATIONS | PRODUCTION DATE |
-| :---: | :---: | :---: | :---: | :---: |
-| **{est_runtime}** | **{len(scenes)}** | **{len(characters)}** | **{len(locations)}** | **{datetime.now().strftime('%B %d, %Y')}** |
+> ⏱️ **ESTIMATED RUNTIME:** `{est_runtime}` &nbsp;&bull;&nbsp; 🎬 **SCENES:** `{len(scenes)}` &nbsp;&bull;&nbsp; 👥 **CHARACTERS:** `{len(characters)}` &nbsp;&bull;&nbsp; 📍 **LOCATIONS:** `{len(locations)}` &nbsp;&bull;&nbsp; 📅 **PRODUCTION DATE:** `{datetime.now().strftime('%B %d, %Y')}`
 
 ---
 
@@ -185,8 +289,9 @@ Reflecting: *{c_expr}*.
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md))
+    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
     return pdf_path
 
 def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> str:
@@ -244,9 +349,7 @@ def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Sty
 ### ⏰ Best Time To Post ({timezone})
 {posting_text}
 
-| ESTIMATED RUNTIME | SCENES | CHARACTERS | LOCATIONS | PRODUCTION DATE |
-| :---: | :---: | :---: | :---: | :---: |
-| **{est_runtime}** | **{len(scenes)}** | **{len(characters)}** | **{len(locations)}** | **{datetime.now().strftime('%B %d, %Y')}** |
+> ⏱️ **ESTIMATED RUNTIME:** `{est_runtime}` &nbsp;&bull;&nbsp; 🎬 **SCENES:** `{len(scenes)}` &nbsp;&bull;&nbsp; 👥 **CHARACTERS:** `{len(characters)}` &nbsp;&bull;&nbsp; 📍 **LOCATIONS:** `{len(locations)}` &nbsp;&bull;&nbsp; 📅 **PRODUCTION DATE:** `{datetime.now().strftime('%B %d, %Y')}`
 
 ---
 
@@ -312,8 +415,9 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md))
+    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
     return pdf_path
 
 def generate_dual_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
@@ -400,6 +504,7 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
 """
 
     pdf = MarkdownPdf(toc_level=2)
-    pdf.add_section(Section(md))
+    pdf.add_section(Section(md), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
     return pdf_path

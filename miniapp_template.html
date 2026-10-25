@@ -3984,32 +3984,35 @@
 
             // 6. BROADCAST TAB
             } else if (currentAdminTab === 'broadcast') {
-                const bcActive = (settings.announcement_active === '1' || settings.announcement_active === 1);
-                const bcType = settings.announcement_type || 'info';
-                const bcText = settings.announcement_text || '';
+                const bcActive = (settings.announcement_active === '1' || settings.announcement_active === 1 || settings.announcement_banner_active === '1' || settings.announcement_banner_active === 1);
+                const bcType = settings.announcement_type || settings.announcement_banner_type || 'info';
+                const bcText = settings.announcement_text || settings.announcement_banner_text || '';
 
                 tabHtml = `
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="form-label" style="margin-bottom:0;">Live Announcement Banner</span>
+                            <span class="form-label" style="margin-bottom:0;">Live Top Banner</span>
                             <label class="switch">
                                 <input type="checkbox" id="admin-toggle-broadcast-active" ${bcActive ? 'checked' : ''}>
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="form-hint" style="margin-bottom:12px;">Display a top alert bar to all creators across the Mini App in real time.</div>
+                        <div class="form-hint" style="margin-bottom:12px;">Show a notice bar to all creators at the top of the app in real time.</div>
 
-                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Tone / Theme</div>
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Color</div>
                         <select id="admin-broadcast-type" class="form-input" style="margin-bottom:12px;">
-                            <option value="info" ${bcType==='info'?'selected':''}>Information (Blue)</option>
-                            <option value="warning" ${bcType==='warning'?'selected':''}>Important Warning (Orange)</option>
-                            <option value="success" ${bcType==='success'?'selected':''}>Success / Release (Green)</option>
+                            <option value="info" ${bcType==='info'?'selected':''}>Blue (Information)</option>
+                            <option value="warning" ${bcType==='warning'?'selected':''}>Orange (Important Notice)</option>
+                            <option value="success" ${bcType==='success'?'selected':''}>Green (New Release)</option>
                         </select>
 
                         <div class="form-label" style="font-size:11px; margin-bottom:4px;">Message Text</div>
-                        <textarea id="admin-broadcast-text" class="form-input" style="height:90px; resize:vertical; margin-bottom:14px;" placeholder="Announcement text displayed to all creators...">${bcText}</textarea>
+                        <textarea id="admin-broadcast-text" class="form-input" style="height:90px; resize:vertical; margin-bottom:14px;" placeholder="Write message to send to creators...">${bcText}</textarea>
 
-                        <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Announcement Banner</button>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <button class="btn-submit" onclick="adminSaveAnnouncement()">Save Top Banner</button>
+                            <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="background:var(--accent-blue, #0a84ff);">📢 Send Telegram Message to All Users</button>
+                        </div>
                     </div>
                 `;
             }
@@ -4359,14 +4362,67 @@
                         };
                     }
                     renderAnnouncementBanner();
-                    showToast("Announcement broadcast published!");
+                    showTelegramAlert("Top banner saved!");
                     await loadAdminOverview();
                 } else {
-                    showToast(d.error || 'Failed to publish announcement', false);
+                    showTelegramAlert(d.error || 'Failed to save top banner');
                 }
             } catch (err) {
-                showToast("Network error publishing announcement", false);
+                showTelegramAlert("Network error saving top banner");
             }
+        }
+
+        async function adminBroadcastToTelegram() {
+            const textEl = document.getElementById('admin-broadcast-text');
+            const typeEl = document.getElementById('admin-broadcast-type');
+            const msg = textEl ? textEl.value.trim() : '';
+
+            if (!msg) {
+                showTelegramAlert("Please enter a message to send first.");
+                return;
+            }
+
+            showTelegramConfirm("Send this message to all users on Telegram?", async () => {
+                const btn = document.getElementById('btn-admin-broadcast-telegram');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerText = "Sending broadcast...";
+                }
+                try {
+                    const res = await fetch('/api/admin/broadcast_telegram', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            message: msg,
+                            banner_type: typeEl ? typeEl.value : 'info',
+                            update_banner: true
+                        })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                        if (studioMeta) {
+                            studioMeta.announcement = {
+                                active: 1,
+                                type: typeEl ? typeEl.value : 'info',
+                                text: msg
+                            };
+                        }
+                        renderAnnouncementBanner();
+                        showTelegramAlert(`Broadcast sent!\n\nDelivered: ${d.sent} users\nFailed: ${d.failed} users`);
+                        await loadAdminOverview();
+                    } else {
+                        showTelegramAlert(d.error || 'Failed to send broadcast');
+                    }
+                } catch (err) {
+                    showTelegramAlert("Network error sending broadcast");
+                } finally {
+                    const btn = document.getElementById('btn-admin-broadcast-telegram');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = "📢 Send Telegram Message to All Users";
+                    }
+                }
+            });
         }
 
         // Multi-stage resilient bootstrap for mobile WebViews

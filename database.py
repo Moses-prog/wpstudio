@@ -616,6 +616,39 @@ def get_all_users(search: str = None, limit: int = 50) -> list:
     conn.close()
     return [dict(r) for r in rows]
 
+def get_all_user_ids() -> list:
+    """Returns all unique Telegram user IDs registered in SQLite and Supabase."""
+    user_ids = set()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT user_id FROM users WHERE user_id IS NOT NULL")
+        for r in cursor.fetchall():
+            if r["user_id"]:
+                try:
+                    user_ids.add(int(r["user_id"]))
+                except (ValueError, TypeError):
+                    pass
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error getting SQLite user IDs: {e}")
+
+    if supabase_client:
+        try:
+            res = supabase_client.table("wp_studio_users").select("user_id").execute()
+            if res.data:
+                for row in res.data:
+                    uid = row.get("user_id")
+                    if uid:
+                        try:
+                            user_ids.add(int(uid))
+                        except (ValueError, TypeError):
+                            pass
+        except Exception as e:
+            logger.warning(f"Error getting Supabase user IDs: {e}")
+
+    return list(user_ids)
+
 def admin_modify_user_credits(admin_id: int, target_user_id: int, action: str, amount: int, reason: str = "") -> dict:
     try:
         target_user_id = int(target_user_id)

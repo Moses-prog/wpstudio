@@ -497,9 +497,9 @@ def api_user_info():
             "frame_renderer": sys_settings.get("feature_frame_renderer_enabled") != "0"
         },
         "announcement": {
-            "active": sys_settings.get("announcement_banner_active") == "1" and bool(sys_settings.get("announcement_banner_text")),
-            "type": sys_settings.get("announcement_banner_type", "info"),
-            "text": sys_settings.get("announcement_banner_text", "")
+            "active": (sys_settings.get("announcement_banner_active") == "1" or sys_settings.get("announcement_active") == "1") and bool(sys_settings.get("announcement_banner_text") or sys_settings.get("announcement_text")),
+            "type": sys_settings.get("announcement_banner_type") or sys_settings.get("announcement_type", "info"),
+            "text": sys_settings.get("announcement_banner_text") or sys_settings.get("announcement_text", "")
         }
     })
 
@@ -1081,9 +1081,9 @@ def api_admin_overview():
             "feature_character_forge": settings.get("feature_character_forge_enabled") != "0",
             "feature_thumbnail_lab": settings.get("feature_thumbnail_lab_enabled") != "0",
             "feature_frame_renderer": settings.get("feature_frame_renderer_enabled") != "0",
-            "announcement_text": settings.get("announcement_banner_text", ""),
-            "announcement_type": settings.get("announcement_banner_type", "info"),
-            "announcement_active": settings.get("announcement_banner_active") == "1",
+            "announcement_text": settings.get("announcement_banner_text") or settings.get("announcement_text", ""),
+            "announcement_type": settings.get("announcement_banner_type") or settings.get("announcement_type", "info"),
+            "announcement_active": settings.get("announcement_banner_active") == "1" or settings.get("announcement_active") == "1",
             "cost_character_forge": int(settings.get("pricing_forge_cost", 5)),
             "cost_thumbnail_lab": int(settings.get("pricing_thumb_cost", 3)),
             "cost_frame_renderer": int(settings.get("pricing_renderer_cost", 2))
@@ -1237,23 +1237,83 @@ def api_admin_update_settings():
         updates["pricing_renderer_cost"] = str(int(data["cost_frame_renderer"]))
 
     # Announcement Banner
-    if "announcement_text" in data:
-        updates["announcement_banner_text"] = str(data["announcement_text"]).strip()
-    elif "announcement_banner_text" in data:
-        updates["announcement_banner_text"] = str(data["announcement_banner_text"]).strip()
+    if "announcement_text" in data or "announcement_banner_text" in data:
+        atxt = str(data.get("announcement_text", data.get("announcement_banner_text", ""))).strip()
+        updates["announcement_banner_text"] = atxt
+        updates["announcement_text"] = atxt
 
-    if "announcement_type" in data:
-        updates["announcement_banner_type"] = str(data["announcement_type"]).strip()
-    elif "announcement_banner_type" in data:
-        updates["announcement_banner_type"] = str(data["announcement_banner_type"]).strip()
+    if "announcement_type" in data or "announcement_banner_type" in data:
+        atype = str(data.get("announcement_type", data.get("announcement_banner_type", "info"))).strip()
+        updates["announcement_banner_type"] = atype
+        updates["announcement_type"] = atype
 
-    if "announcement_active" in data:
-        updates["announcement_banner_active"] = "1" if data["announcement_active"] in [True, 1, "1"] else "0"
-    elif "announcement_banner_active" in data:
-        updates["announcement_banner_active"] = "1" if data["announcement_banner_active"] in [True, 1, "1"] else "0"
+    if "announcement_active" in data or "announcement_banner_active" in data:
+        raw_act = data.get("announcement_active", data.get("announcement_banner_active"))
+        act = "1" if raw_act in [True, 1, "1"] else "0"
+        updates["announcement_banner_active"] = act
+        updates["announcement_active"] = act
 
     saved = database.update_system_settings(updates)
     return jsonify({"success": True, "settings": saved})
+
+@app.route('/api/admin/broadcast_telegram', methods=['POST'])
+def api_admin_broadcast_telegram():
+    user = get_current_user()
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
+
+    data = request.get_json(silent=True, force=True) or {}
+    message = str(data.get("message", "")).strip()
+    if not message:
+        return jsonify({"success": False, "error": "Please enter a message to broadcast."}), 400
+
+    update_banner = data.get("update_banner", True)
+    banner_type = str(data.get("banner_type", "info")).strip()
+
+    if update_banner:
+        database.update_system_settings({
+            "announcement_banner_active": "1",
+            "announcement_banner_type": banner_type,
+            "announcement_banner_text": message,
+            "announcement_active": "1",
+            "announcement_type": banner_type,
+            "announcement_text": message
+        })
+
+    bot_token = os.getenv("BOT_TOKEN", "").strip()
+    user_ids = database.get_all_user_ids()
+
+    if not bot_token:
+        return jsonify({"success": False, "error": "Bot token not configured on server."}), 500
+
+    sent = 0
+    failed = 0
+    import requests
+    import time
+    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload_text = f"📢 <b>Announcement from WP Studio</b>\n\n{message}"
+
+    for uid in user_ids:
+        try:
+            r = requests.post(telegram_url, json={
+                "chat_id": uid,
+                "text": payload_text,
+                "parse_mode": "HTML"
+            }, timeout=5)
+            if r.status_code == 200:
+                sent += 1
+            else:
+                failed += 1
+            time.sleep(0.04)
+        except Exception:
+            failed += 1
+
+    return jsonify({
+        "success": True,
+        "total": len(user_ids),
+        "sent": sent,
+        "failed": failed
+    })
 
 @app.route('/api/admin/jobs', methods=['GET'])
 def api_admin_jobs():

@@ -898,3 +898,265 @@ Adapt this exact story into chronological scene-by-scene prompts following all t
     data = clean_json_loads(response.text)
     return data
 
+
+# =====================================================================
+# REMIXCRAFT: COMPETITOR VIDEO REMODELER ENGINE
+# =====================================================================
+
+async def remodel_competitor_analysis(
+    source_type: str,
+    source_content: str,
+    culture: str = "African / Nigerian",
+    target_duration: str = "Standard (8–15 Mins)",
+    lead_character: dict = None,
+    user_api_key: str = None,
+    model_name: str = None
+) -> dict:
+    """
+    Stage 1: Deconstructs a competitor video, raw script, or movie premise into viral DNA,
+    and returns 3 fresh, copyright-safe remodeled angles.
+    """
+    model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+    client = get_client(user_api_key)
+
+    lead_context = ""
+    if lead_character and isinstance(lead_character, dict):
+        lead_context = f"\nLEAD ACTOR (CASTLOCK CONTINUITY): {lead_character.get('name', 'Main Protagonist')} - {lead_character.get('visual_summary', '') or lead_character.get('prompt', '')}"
+
+    system_instruction = f"""
+You are the Chief Viral Strategist at WP Studio.
+Your job is to study a competitor video, script, or movie idea and create 3 fresh, original, copyright-safe story angles for our creator's YouTube channel.
+
+CRITICAL RULES:
+1. USE SIMPLE, EVERYDAY WORDS: Do not use complicated jargon or big words. Write in plain, clear, engaging language.
+2. 100% ORIGINAL & COPYRIGHT-SAFE: Keep the emotional hook and viral engine of the original, but rewrite the characters, setting, and plot twists so it is completely fresh and safe from copyright strikes.
+3. CULTURE TASTE: Infuse the dialogue and tone with the chosen culture: {culture}.
+4. TARGET VIDEO RUNTIME: Tailor the pacing and tension curve for a {target_duration} video.
+5. 3 DISTINCT REMODELED ANGLES:
+   - Angle 1: High Tension / Thriller Angle (High stakes, dangerous secrets, ticking clock)
+   - Angle 2: Emotional Drama / Relatable Conflict Angle (Family loyalty, betrayal, personal struggle, heart)
+   - Angle 3: Fast-Paced Mystery / Plot Twist Angle (Unexpected reveals, hidden identities, shocking turn)
+
+OUTPUT FORMAT: Return ONLY valid JSON with this exact structure:
+{{
+    "source_summary": "Short 2-3 sentence summary of what the competitor story was about in plain words.",
+    "viral_dna": {{
+        "hook_analysis": "Why this video idea hooks viewers in the first 5 seconds.",
+        "psychological_trigger": "The main feeling that makes people watch (curiosity, fear of missing out, revenge, shock, or hope).",
+        "opportunity": "What we can do better than the competitor to get more watch time and comments."
+    }},
+    "concepts": [
+        {{
+            "id": 1,
+            "angle_badge": "High Tension Thriller",
+            "title": "A punchy, click-worthy YouTube title",
+            "logline": "1 clear sentence explaining the remodeled story hook",
+            "hook_line": "The exact opening voiceover line spoken in the first 5 seconds to hook viewers",
+            "twist": "The shocking twist that happens near the climax",
+            "why_it_goes_viral": "Why people will watch to the end and comment"
+        }},
+        {{
+            "id": 2,
+            "angle_badge": "Emotional Drama & Conflict",
+            "title": "A punchy, click-worthy YouTube title",
+            "logline": "1 clear sentence explaining the remodeled story hook",
+            "hook_line": "The exact opening voiceover line spoken in the first 5 seconds to hook viewers",
+            "twist": "The shocking twist that happens near the climax",
+            "why_it_goes_viral": "Why people will watch to the end and comment"
+        }},
+        {{
+            "id": 3,
+            "angle_badge": "Mystery & Sudden Reversal",
+            "title": "A punchy, click-worthy YouTube title",
+            "logline": "1 clear sentence explaining the remodeled story hook",
+            "hook_line": "The exact opening voiceover line spoken in the first 5 seconds to hook viewers",
+            "twist": "The shocking twist that happens near the climax",
+            "why_it_goes_viral": "Why people will watch to the end and comment"
+        }}
+    ]
+}}
+"""
+
+    prompt = f"""SOURCE TYPE: {source_type}
+CULTURE: {culture}
+TARGET RUNTIME: {target_duration}{lead_context}
+
+COMPETITOR CONTENT / PREMISE:
+{source_content[:15000]}
+
+Analyze this source and generate the viral DNA plus 3 distinct remodeled concepts."""
+
+    response = generate_with_fallback(
+        client=client,
+        preferred_model=model,
+        contents=prompt,
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json",
+            "temperature": 0.7
+        },
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(response.text)
+    return data
+
+
+async def generate_remodeled_production_package(
+    selected_concept: dict,
+    source_summary: str = "",
+    culture: str = "African / Nigerian",
+    target_duration: str = "Standard (8–15 Mins)",
+    art_style: str = "Realistic",
+    visual_filter: str = "Default",
+    lead_character: dict = None,
+    user_api_key: str = None,
+    model_name: str = None
+) -> dict:
+    """
+    Stage 2: Takes the selected remodeled angle and builds a complete, production-ready screenplay,
+    shot-by-shot visual scene prompts, video camera motion prompts, and 3 high-CTR thumbnail ideas.
+    """
+    model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+    client = get_client(user_api_key)
+
+    # Filter definitions
+    filter_map = {
+        "Default": "35mm anamorphic film lens, realistic studio lighting, cinematic dynamic range, true-to-life colors.",
+        "Horror": "Prestige dread grade, deep gloomy shadows, desaturated cool tones, eerie chiaroscuro lighting, volumetric atmospheric mist.",
+        "Romance": "Warm honey-rose golden hour glow, soft mist diffusion filter, creamy bokeh, intimate warm amber rim lighting.",
+        "Action": "High-contrast dynamic punch, saturated primaries, vivid motion blur, dramatic specular highlights, high shutter angle.",
+        "Drama": "Naturalistic prestige cinematic lighting, subtle earthy tones, gentle directional window light, deep emotional contrast.",
+        "Thriller": "Cold steel tension grade, cyan-tinted low-key lighting, harsh sharp shadows, claustrophobic framing, high tension.",
+        "Sci-Fi": "Cyber-teal and vivid neon specular backlight, atmospheric damp fog reflections, anamorphic blue horizontal lens flares."
+    }
+    filter_treatment = filter_map.get(visual_filter, filter_map["Default"])
+
+    # Art style definitions
+    if "3D" in art_style or "Animated" in art_style:
+        art_treatment = "Pixar / Disney 3D high-end animation style, expressive stylized 3D character design, soft subsurface scattering (SSS), vibrant animated feature color palette, Octane 3D render."
+    else:
+        art_treatment = "8K hyper-detailed cinematic movie still, shot on ARRI Alexa 35mm, real human skin pores, photorealistic textures, photorealistic studio lighting."
+
+    # Voice flavor
+    if "African" in culture or "Nigerian" in culture:
+        voice_treatment = "Authentic Nigerian English / Nollywood dramatic cadence, culturally rich emotional phrasing in dialogue and narration."
+    elif "Black American" in culture:
+        voice_treatment = "Authentic Black American cultural cadence, soulful urban and African American expressive vernacular and rhythm in dialogue and narration."
+    elif "British" in culture:
+        voice_treatment = "Refined British English cadence, measured storytelling delivery and polished dramatic tone."
+    else:
+        voice_treatment = "Modern cinematic American pacing, conversational natural flow in voiceover and dialogue."
+
+    lead_actor_instructions = ""
+    if lead_character and isinstance(lead_character, dict):
+        lead_name = lead_character.get("name", "Protagonist")
+        lead_desc = lead_character.get("visual_summary", "") or lead_character.get("prompt", "")
+        lead_actor_instructions = f"""
+👑 CASTLOCK LEAD ACTOR MANDATE:
+The lead character MUST be named "{lead_name}".
+Their visual appearance in EVERY scene where they appear must maintain exact continuity:
+{lead_desc}
+"""
+
+    system_instruction = f"""
+You are the Executive Showrunner & Visual Director at WP Studio.
+Your mission is to write a complete, viral YouTube screenplay and production package based on the chosen remodeled story concept.
+
+CRITICAL RULES:
+1. USE SIMPLE, CLEAR WORDS: Write dialog and narration in easy, natural, conversational words. Avoid big, awkward, or dictionary-sounding words.
+2. RETENTION ENGINE: Start with an explosive hook in Scene 1. Maintain high tension, fast pacing, and deliver an unforgettable twist before the finale.
+3. SCENE BREAKDOWN FOR {target_duration}:
+   - For Short (3–5 Mins): 10 to 14 scenes.
+   - For Standard (8–15 Mins): 18 to 26 scenes.
+   - For Deep Dive (30–60 Mins): 28 to 40 scenes.
+   - For Feature Movie (1–2+ Hours): 45 to 60 scenes.
+4. MIDJOURNEY / FLUX IMAGE PROMPTS: Every scene prompt must be completely standalone. Include shot angle (Wide shot, Close-up, Over-the-shoulder), lighting, characters present with clothes and facial expressions, action, and the art style: {art_treatment}. Strictly NO text, captions, logos, or split screens.
+5. VIDEO MOTION PROMPTS: Specify exact camera movements (slow push-in, low-angle track, drone orbit, subtle handheld shake) and subject movement for Runway Gen-3 / Luma Dream Machine.
+6. 3 HIGH-CTR THUMBNAIL CONCEPTS: Provide 3 high-contrast, clickable thumbnail prompts with 3-5 bold punchy overlay words.
+{lead_actor_instructions}
+- Tone & Voice: {culture} ({voice_treatment})
+- Visual Filter: {visual_filter} ({filter_treatment})
+- Art Style: {art_style} ({art_treatment})
+
+OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
+{{
+    "title": "{selected_concept.get('title', 'Remodeled Story')}",
+    "logline": "{selected_concept.get('logline', '')}",
+    "synopsis": "A detailed 2-3 paragraph summary of the entire remodeled screenplay, explaining the full journey and twist.",
+    "culture": "{culture}",
+    "target_duration": "{target_duration}",
+    "art_style": "{art_style}",
+    "visual_filter": "{visual_filter}",
+    "characters": [
+        {{
+            "name": "Character Name",
+            "role": "Role (e.g. Lead Protagonist, Antagonist, Loyal Friend)",
+            "visual_description": "Detailed description of their face, skin tone, hair, and clothing for visual consistency"
+        }}
+    ],
+    "scenes": [
+        {{
+            "scene_number": 1,
+            "scene_title": "Descriptive Scene Heading",
+            "setting": "INT. or EXT. Location - Time of Day",
+            "dialogue_or_narration": "Spoken voiceover or character dialogue for this scene",
+            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera lens, lighting, character details, action, style",
+            "video_prompt": "Cinematic camera movement and character motion for Runway/Luma/Pika"
+        }}
+    ],
+    "thumbnail_concepts": [
+        {{
+            "concept_number": 1,
+            "headline": "Core visual focus (e.g. The Shocking Discovery)",
+            "visual_prompt": "Midjourney prompt for an eye-catching YouTube thumbnail image with high contrast and intense facial expression",
+            "bold_text_overlay": "3-5 BOLD WORDS (e.g. HE LIED TO HER!)",
+            "emotional_trigger": "Why viewers will click this thumbnail immediately"
+        }},
+        {{
+            "concept_number": 2,
+            "headline": "Core visual focus",
+            "visual_prompt": "Midjourney prompt for an eye-catching YouTube thumbnail image",
+            "bold_text_overlay": "3-5 BOLD WORDS",
+            "emotional_trigger": "Why viewers will click this thumbnail immediately"
+        }},
+        {{
+            "concept_number": 3,
+            "headline": "Core visual focus",
+            "visual_prompt": "Midjourney prompt for an eye-catching YouTube thumbnail image",
+            "bold_text_overlay": "3-5 BOLD WORDS",
+            "emotional_trigger": "Why viewers will click this thumbnail immediately"
+        }}
+    ]
+}}
+"""
+
+    prompt = f"""SELECTED REMODELED ANGLE:
+Title: {selected_concept.get('title')}
+Angle: {selected_concept.get('angle_badge')}
+Logline: {selected_concept.get('logline')}
+Hook Line: {selected_concept.get('hook_line')}
+Twist: {selected_concept.get('twist')}
+Why It Goes Viral: {selected_concept.get('why_it_goes_viral')}
+
+ORIGINAL CONTEXT:
+{source_summary}
+
+Write the complete shot-by-shot screenplay, Midjourney visual prompts, video motion prompts, and 3 thumbnail concepts following all instructions above."""
+
+    response = generate_with_fallback(
+        client=client,
+        preferred_model=model,
+        contents=prompt,
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json",
+            "temperature": 0.65
+        },
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(response.text)
+    return data
+
+

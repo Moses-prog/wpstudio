@@ -1444,6 +1444,276 @@ def api_story_adapter_send_to_telegram():
 
     return jsonify({"success": True, "message": f"All {len(scenes)} scenes sent directly to your Telegram chat!"})
 
+
+# =====================================================================
+# REMIXCRAFT API ROUTES (COMPETITOR VIDEO REMODELER)
+# =====================================================================
+
+@app.route('/api/remixcraft/analyze', methods=['POST'])
+def api_remixcraft_analyze():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    source_type = str(data.get("source_type", "youtube")).strip().lower()
+    source_content = str(data.get("source_content", "")).strip()
+    culture = str(data.get("culture", "African / Nigerian")).strip()
+    target_duration = str(data.get("target_duration", "Standard (8–15 Mins)")).strip()
+    lead_character_id = data.get("lead_character_id")
+
+    if not source_content:
+        return jsonify({"success": False, "error": "Please provide a YouTube link, script text, or video title to remodel."}), 400
+
+    source_title = "Competitor Source"
+    source_text = source_content
+
+    # If YouTube, fetch transcript / video info
+    if source_type == "youtube":
+        try:
+            yt_data = run_async(source_extractor.get_youtube_transcript_async(source_content, user.get("custom_gemini_key")))
+            if yt_data.get("success") and yt_data.get("transcript"):
+                source_text = yt_data.get("transcript")
+                source_title = yt_data.get("title", "YouTube Video")
+            else:
+                source_title = yt_data.get("title") or "YouTube Video"
+                source_text = f"YouTube Video Title: {source_title}\nURL: {source_content}"
+        except Exception as yt_err:
+            print(f"[REMIXCRAFT YT ERROR] {yt_err}")
+            source_text = f"YouTube Video: {source_content}"
+
+    elif source_type == "script":
+        source_title = "Raw Script / Text"
+        words = len(source_text.split())
+        if words < 30:
+            return jsonify({"success": False, "error": f"Script text is too short ({words} words). Please enter at least 30 words."}), 400
+        if words > 15000:
+            return jsonify({"success": False, "error": f"Script exceeds word limit ({words} words). Maximum is 15,000 words."}), 400
+
+    else:
+        source_title = source_content
+
+    # Lead actor continuity
+    lead_char = None
+    if lead_character_id:
+        try:
+            chars = database.get_user_characters(user_id)
+            for c in chars:
+                if str(c.get("character_id")) == str(lead_character_id):
+                    lead_char = c
+                    break
+        except Exception:
+            pass
+
+    custom_key = user.get("custom_gemini_key")
+    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+
+    try:
+        analysis = run_async(ai_engine.remodel_competitor_analysis(
+            source_type=source_type,
+            source_content=source_text,
+            culture=culture,
+            target_duration=target_duration,
+            lead_character=lead_char,
+            user_api_key=custom_key,
+            model_name=model_name
+        ))
+
+        return jsonify({
+            "success": True,
+            "source_title": source_title,
+            "analysis": analysis
+        })
+    except Exception as e:
+        print(f"[REMIXCRAFT ANALYZE ERROR] {e}")
+        return jsonify({"success": False, "error": f"Remixcraft analysis failed: {str(e)}"}), 500
+
+
+@app.route('/api/remixcraft/produce', methods=['POST'])
+def api_remixcraft_produce():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    selected_concept = data.get("selected_concept")
+    if not selected_concept or not isinstance(selected_concept, dict):
+        return jsonify({"success": False, "error": "Please select one of the 3 remodeled angles to produce."}), 400
+
+    source_summary = str(data.get("source_summary", "")).strip()
+    culture = str(data.get("culture", "African / Nigerian")).strip()
+    target_duration = str(data.get("target_duration", "Standard (8–15 Mins)")).strip()
+    art_style = str(data.get("art_style", "Realistic")).strip()
+    visual_filter = str(data.get("visual_filter", "Default")).strip()
+    lead_character_id = data.get("lead_character_id")
+
+    # Pricing: 30 credits (0 for VIPs or BYOK)
+    is_vip = int(user.get("credits", 0)) >= 999999
+    custom_key = user.get("custom_gemini_key")
+    byok_allowed = database.get_system_settings().get("byok_enabled", "1") == "1"
+    cost = 0 if (is_vip or (custom_key and byok_allowed)) else 30
+
+    if cost > 0 and int(user.get("credits", 0)) < cost:
+        return jsonify({
+            "success": False,
+            "error": f"Insufficient credits! Remixcraft production requires 30 credits. Your balance is {user.get('credits', 0)} credits."
+        }), 402
+
+    # Lead actor continuity
+    lead_char = None
+    if lead_character_id:
+        try:
+            chars = database.get_user_characters(user_id)
+            for c in chars:
+                if str(c.get("character_id")) == str(lead_character_id):
+                    lead_char = c
+                    break
+        except Exception:
+            pass
+
+    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+
+    try:
+        package = run_async(ai_engine.generate_remodeled_production_package(
+            selected_concept=selected_concept,
+            source_summary=source_summary,
+            culture=culture,
+            target_duration=target_duration,
+            art_style=art_style,
+            visual_filter=visual_filter,
+            lead_character=lead_char,
+            user_api_key=custom_key,
+            model_name=model_name
+        ))
+
+        # Deduct credits
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        # Store job
+        job_id = database.create_story_job(
+            user_id=user_id,
+            source_input=selected_concept.get("title", "Remixcraft Video"),
+            source_title=package.get("title", selected_concept.get("title", "Remixcraft")),
+            transcript=source_summary[:2000],
+            culture=culture,
+            style=art_style,
+            genre=selected_concept.get("angle_badge", "Remixcraft"),
+            timezone="Africa/Lagos",
+            length_tier=target_duration,
+            delivery_format="Remixcraft Story Package",
+            job_type="remixcraft",
+            story_text=json.dumps(package)
+        )
+
+        refreshed_user = database.get_user(user_id)
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "package": package,
+            "cost_charged": cost,
+            "user_balance": refreshed_user.get("credits", 0)
+        })
+    except Exception as e:
+        print(f"[REMIXCRAFT PRODUCE ERROR] {e}")
+        return jsonify({"success": False, "error": f"Production failed: {str(e)}"}), 500
+
+
+@app.route('/api/remixcraft/send_to_telegram', methods=['POST'])
+def api_remixcraft_send_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    pkg = data.get("package", {})
+
+    title = pkg.get("title", "Remixcraft Package")
+    logline = pkg.get("logline", "")
+    synopsis = pkg.get("synopsis", "")
+    scenes = pkg.get("scenes", [])
+    thumbnails = pkg.get("thumbnail_concepts", [])
+
+    if not scenes:
+        return jsonify({"success": False, "error": "No scenes found to send"}), 400
+
+    # Header message with Thumbnails
+    header = f"🔥 <b>WP Studio — Remixcraft Production Package</b>\n\n"
+    header += f"🎬 <b>Title:</b> {title}\n"
+    if logline:
+        header += f"💡 <b>Logline:</b> <i>{logline}</i>\n\n"
+    header += f"⏱️ <b>Target Runtime:</b> {pkg.get('target_duration', 'Standard')} | <b>Art Style:</b> {pkg.get('art_style', 'Realistic')}\n"
+    header += f"🌍 <b>Culture / Voice:</b> {pkg.get('culture', 'African / Nigerian')}\n"
+    header += f"📊 <b>Total Scenes:</b> {len(scenes)}\n"
+
+    if thumbnails:
+        header += f"\n🖼️ <b>HIGH-CTR THUMBNAIL CONCEPTS:</b>\n"
+        for idx, th in enumerate(thumbnails, 1):
+            header += f"\n<b>Concept {idx}:</b> {th.get('headline', '')}\n"
+            header += f"🏷️ <b>Overlay Text:</b> <code>{th.get('bold_text_overlay', '')}</code>\n"
+            header += f"🎨 <b>Prompt:</b> <code>{th.get('visual_prompt', '')}</code>\n"
+
+    header += "\n<b>━━━━━━━━━━━━━━━━━━━━</b>"
+    send_telegram_message(user_id, header)
+
+    # Deliver scenes in safe chunks (under 3600 chars)
+    chunk = ""
+    for s in scenes:
+        s_num = s.get("scene_number", "")
+        s_title = s.get("scene_title", "")
+        setting = s.get("setting", "")
+        dialogue = s.get("dialogue_or_narration", "")
+        img_p = s.get("image_prompt", "")
+        vid_p = s.get("video_prompt", "")
+
+        block = f"\n\n<b>📍 SCENE {s_num}: {s_title}</b>"
+        if setting:
+            block += f"\n<i>Setting: {setting}</i>"
+        if dialogue:
+            block += f"\n🎙️ <i>\"{dialogue}\"</i>"
+        if img_p:
+            block += f"\n📷 <b>Visual Image Prompt:</b>\n<code>{img_p}</code>"
+        if vid_p:
+            block += f"\n🎥 <b>Camera Motion:</b>\n<code>{vid_p}</code>"
+
+        if len(chunk) + len(block) > 3600:
+            send_telegram_message(user_id, chunk)
+            chunk = block
+        else:
+            chunk += block
+
+    if chunk:
+        send_telegram_message(user_id, chunk)
+
+    # Generate and send Dual PDFs
+    try:
+        story_payload = {
+            "title": title,
+            "logline": logline,
+            "synopsis": synopsis,
+            "theme_and_takeaway": logline,
+            "characters": pkg.get("characters", []),
+            "scenes": scenes
+        }
+        b_pdf, s_pdf = pdf_generator.generate_dual_pdfs(
+            story_payload,
+            culture=pkg.get("culture", "Universal"),
+            style=pkg.get("art_style", "Realistic"),
+            genre="Remixcraft",
+            length_tier=pkg.get("target_duration", "Standard")
+        )
+        if b_pdf and os.path.exists(b_pdf):
+            send_telegram_document(user_id, b_pdf, caption=f"🎬 <b>Remixcraft Image Prompts PDF</b>\n<i>{title}</i>")
+        if s_pdf and os.path.exists(s_pdf):
+            send_telegram_document(user_id, s_pdf, caption=f"📹 <b>Remixcraft Video Prompts PDF</b>\n<i>{title}</i>")
+    except Exception as pdf_e:
+        print(f"[REMIXCRAFT PDF ERROR] {pdf_e}")
+
+    return jsonify({"success": True, "message": f"Remixcraft package sent directly to your Telegram chat!"})
+
+
 @app.route('/api/render_frame', methods=['POST'])
 def api_render_frame():
     user = get_current_user()

@@ -1287,9 +1287,94 @@
             background: #e5a93c;
             color: #000;
         }
+
+        /* Remixcraft Competitor Remodeler Styles */
+        .remix-angle-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+        .remix-angle-card:hover, .remix-angle-card.selected {
+            border-color: #ec4899;
+            background: rgba(236, 72, 153, 0.05);
+            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.15);
+        }
+        .remix-angle-card.selected::after {
+            content: "✓ SELECTED";
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #ec4899;
+            background: rgba(236, 72, 153, 0.15);
+            padding: 2px 8px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+        }
+        .remix-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #ec4899;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .remix-thumb-card {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* App Initial Sync Loader Overlay (Eliminates Placeholder Flicker) */
+        #app-init-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-color, #0f1015);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        #app-init-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .init-spinner {
+            width: 44px;
+            height: 44px;
+            border: 3.5px solid rgba(229, 169, 60, 0.2);
+            border-top-color: #e5a93c;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Full-Screen Account Sync Loader -->
+    <div id="app-init-loader">
+        <div class="init-spinner"></div>
+        <div style="font-size:15px; font-weight:700; color:#e5a93c; letter-spacing:0.5px;">Connecting to your account...</div>
+        <div style="font-size:12px; color:var(--text-muted, #94a3b8);">Syncing credits & studio workspace</div>
+    </div>
 
     <!-- Top Announcement Banner -->
     <div id="app-announcement-banner" class="announcement-banner info" style="display:none;">
@@ -1313,7 +1398,7 @@
                 <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>
             </div>
         </div>
-        <div class="user-greeting" id="user-greeting">WP Studio</div>
+        <div class="user-greeting" id="user-greeting">Connecting...</div>
         <div class="user-subtitle" id="user-subtitle">AI Screenplay & CastLock Production</div>
         
         <div class="status-badges">
@@ -1323,7 +1408,7 @@
             </div>
             <div id="badge-credits" class="badge credits" onclick="openModal('settings')" style="cursor:pointer;">
                 <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                <span id="header-credits-count">20 Credits</span>
+                <span id="header-credits-count">-- Credits</span>
             </div>
             <div id="badge-engine" class="badge free" onclick="openModal('settings')" style="cursor:pointer;">
                 <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
@@ -1339,28 +1424,28 @@
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card" onclick="openModal('settings')">
-            <div id="stat-credits" class="stat-value">20</div>
+            <div id="stat-credits" class="stat-value">--</div>
             <div class="stat-label">
                 <span>Credits Balance</span>
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
         <div class="stat-card" onclick="openModal('history')">
-            <div id="stat-stories" class="stat-value">0</div>
+            <div id="stat-stories" class="stat-value">--</div>
             <div class="stat-label">
                 <span>Screenplays</span>
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
         <div class="stat-card" onclick="openModal('characters')">
-            <div id="stat-characters" class="stat-value">0</div>
+            <div id="stat-characters" class="stat-value">--</div>
             <div class="stat-label">
                 <span>CastLock Roster</span>
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
         <div class="stat-card" onclick="openModal('settings')">
-            <div id="stat-engine-mode" class="stat-value" style="font-size:16px;">Standard</div>
+            <div id="stat-engine-mode" class="stat-value" style="font-size:16px;">--</div>
             <div class="stat-label">
                 <span>API Status</span>
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -1395,6 +1480,20 @@
             </div>
             <div class="item-right">
                 <span class="chip active" style="color:#e5a93c; background:rgba(229,169,60,0.15);">ADAPT 15⚡</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+        <div class="list-item" onclick="openModal('remixcraft')">
+            <div class="icon-box" style="color: #ec4899; background: rgba(236, 72, 153, 0.12);">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Remixcraft (Competitor Video Remodeler)</div>
+                <div class="item-subtitle">Remodel competitor YouTube videos, scripts, or movie titles into viral, copyright-safe screenplays</div>
+            </div>
+            <div class="item-right">
+                <span class="chip active" style="color:#ec4899; background:rgba(236,72,153,0.15);">REMIX 30⚡</span>
                 <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
@@ -1882,6 +1981,235 @@
 
                 <!-- Scene Cards Container -->
                 <div id="adapter-scenes-container" style="display:flex; flex-direction:column; gap:12px; margin-top:14px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 1C. MODAL: REMIXCRAFT (COMPETITOR VIDEO REMODELER)                    -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-remixcraft">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title" style="color:#ec4899;">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    Remixcraft (Competitor Remodeler)
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Remodel competitor YouTube videos, raw scripts, or movie titles into viral, copyright-safe YouTube stories.</div>
+        </div>
+        <div class="modal-body">
+            <!-- Step Indicators -->
+            <div class="adapter-step-bar">
+                <div id="remix-tab-1" class="step-tab active" onclick="goToRemixStep(1)">
+                    <span class="step-num">1</span> <span class="step-label">Source & Setup</span>
+                </div>
+                <div id="remix-tab-2" class="step-tab" onclick="goToRemixStep(2)">
+                    <span class="step-num">2</span> <span class="step-label">3 Remodeled Angles</span>
+                </div>
+                <div id="remix-tab-3" class="step-tab" onclick="goToRemixStep(3)">
+                    <span class="step-num">3</span> <span class="step-label">Screenplay Package</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: SOURCE INPUT & SETTINGS -->
+            <div id="remix-step-1" class="remix-step-pane">
+                <!-- Source Type Switcher -->
+                <div class="form-card">
+                    <div class="form-label">1. COMPETITOR SOURCE TYPE</div>
+                    <div class="form-hint" style="margin-bottom:12px;">Choose how you want to feed the competitor story into Remixcraft.</div>
+                    
+                    <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:12px;">
+                        <div class="pill-btn active" data-source="youtube" onclick="setRemixSourceType('youtube', this)">🔴 YouTube Link</div>
+                        <div class="pill-btn" data-source="script" onclick="setRemixSourceType('script', this)">📝 Raw Script</div>
+                        <div class="pill-btn" data-source="title" onclick="setRemixSourceType('title', this)">💡 Movie / Title</div>
+                    </div>
+
+                    <!-- Dynamic Input: YouTube -->
+                    <div id="remix-container-youtube">
+                        <div class="form-label" style="font-size:11px;">YouTube Video or Shorts URL</div>
+                        <input id="remix-input-youtube" class="form-input" type="url" placeholder="https://www.youtube.com/watch?v=... or youtu.be/...">
+                        <div class="form-hint" style="font-size:10px; margin-top:4px;">We extract the narrative, captions, and retention hook automatically.</div>
+                    </div>
+
+                    <!-- Dynamic Input: Raw Script -->
+                    <div id="remix-container-script" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span class="form-label" style="font-size:11px; margin-bottom:0;">Paste Competitor Script / Transcript</span>
+                            <span id="remix-script-count" style="font-size:10px; color:var(--text-muted);">0 / 15,000 words</span>
+                        </div>
+                        <textarea id="remix-input-script" class="form-input" style="height:120px;" placeholder="Paste competitor script, YouTube transcript, or story text here..." oninput="onRemixScriptInput()"></textarea>
+                    </div>
+
+                    <!-- Dynamic Input: Title / Premise -->
+                    <div id="remix-container-title" style="display:none;">
+                        <div class="form-label" style="font-size:11px;">Movie / Video Title or Premise</div>
+                        <input id="remix-input-title" class="form-input" type="text" placeholder="e.g. The Richest Beggar in Lagos, Squid Game, or Money Heist...">
+                        <div class="form-hint" style="font-size:10px; margin-top:4px;">Enter any popular film, viral video title, or dramatic premise.</div>
+                    </div>
+                </div>
+
+                <!-- Voice / Culture Flavor -->
+                <div class="form-card">
+                    <div class="form-label">2. VOICE / ACCENT FLAVOR</div>
+                    <div class="form-hint" style="margin-bottom:12px;">Infuses the dialogue, slang, and cultural emotional pacing into the script.</div>
+                    
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="pill-btn active" data-cult="African / Nigerian" onclick="setRemixCulture('African / Nigerian', this)">🌍 African / Nigerian</div>
+                        <div class="pill-btn" data-cult="Black American" onclick="setRemixCulture('Black American', this)">🇺🇸 Black American</div>
+                        <div class="pill-btn" data-cult="American" onclick="setRemixCulture('American', this)">🇺🇸 American</div>
+                        <div class="pill-btn" data-cult="Universal / Cinematic" onclick="setRemixCulture('Universal / Cinematic', this)">🌐 Universal / Cinematic</div>
+                    </div>
+                </div>
+
+                <!-- Target Video Duration -->
+                <div class="form-card">
+                    <div class="form-label">3. TARGET VIDEO RUNTIME</div>
+                    <div class="form-hint" style="margin-bottom:12px;">Sets the scene pacing, tension curve, and total shot breakdown.</div>
+                    
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="pill-btn" data-dur="Short (3–5 Mins)" onclick="setRemixDuration('Short (3–5 Mins)', this)">⚡ Short (3–5 Mins)</div>
+                        <div class="pill-btn active" data-dur="Standard (8–15 Mins)" onclick="setRemixDuration('Standard (8–15 Mins)', this)">📹 YouTube (8–15 Mins)</div>
+                        <div class="pill-btn" data-dur="Deep Dive (30–60 Mins)" onclick="setRemixDuration('Deep Dive (30–60 Mins)', this)">🍿 Deep Dive (30–60 Mins)</div>
+                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">🎬 Movie (1–2+ Hours)</div>
+                    </div>
+                </div>
+
+                <!-- Visual Look & CastLock Continuity -->
+                <div class="form-card">
+                    <div class="form-label">4. VISUAL LOOK & CASTLOCK ACTOR</div>
+                    
+                    <div style="margin-bottom:12px;">
+                        <div class="form-label" style="font-size:11px;">Art Style</div>
+                        <div class="pills-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="pill-btn active" data-art="Realistic" onclick="setRemixArtStyle('Realistic', this)">📷 Realistic (8K Movie Still)</div>
+                            <div class="pill-btn" data-art="3D Animated" onclick="setRemixArtStyle('3D Animated', this)">🎬 3D Animated (Pixar/Disney)</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <div class="form-label" style="font-size:11px;">Cinematic Filter Grade</div>
+                        <select id="remix-filter" class="form-input">
+                            <option value="Default">Default (Natural Anamorphic 35mm)</option>
+                            <option value="Drama">Drama (Prestige Natural Tones & Window Light)</option>
+                            <option value="Thriller">Thriller (Cold Steel Low-Key Cyan Tension)</option>
+                            <option value="Action">Action (High-Contrast Punch & Specular Blur)</option>
+                            <option value="Horror">Horror (Prestige Dread Grade & Volumetric Fog)</option>
+                            <option value="Romance">Romance (Warm Honey-Rose Golden Hour Glow)</option>
+                            <option value="Sci-Fi">Sci-Fi (Cyber Teal & Anamorphic Lens Flare)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="form-label" style="font-size:11px;">👑 CastLock Lead Protagonist (Optional)</div>
+                        <select id="remix-character" class="form-input">
+                            <option value="">Auto-Cast New Character</option>
+                        </select>
+                    </div>
+
+                    <button id="btn-remix-analyze" class="btn-submit" style="margin-top:16px; background:#ec4899; color:#fff;" onclick="submitRemixAnalyze()">
+                        ⚡ Deconstruct Viral DNA & Remodel 3 Angles (Free)
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: 3 REMODELED ANGLES SELECTION -->
+            <div id="remix-step-2" class="remix-step-pane" style="display:none;">
+                <!-- Viral DNA Card -->
+                <div class="form-card" style="border-left: 3px solid #ec4899;">
+                    <div class="remix-badge">🧬 Viral DNA Breakdown</div>
+                    <div id="remix-source-summary" style="font-size:12px; color:var(--text-main); margin:6px 0 10px; line-height:1.4;">--</div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:11px;">
+                        <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
+                            <strong style="color:#ec4899;">🎯 Retention Hook:</strong>
+                            <span id="remix-dna-hook" style="color:var(--text-muted); margin-left:4px;">--</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
+                            <strong style="color:#e5a93c;">❤️ Emotional Trigger:</strong>
+                            <span id="remix-dna-trigger" style="color:var(--text-muted); margin-left:4px;">--</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
+                            <strong style="color:#30d158;">🚀 How We Win:</strong>
+                            <span id="remix-dna-opp" style="color:var(--text-muted); margin-left:4px;">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Angles Header -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:14px 4px 8px;">
+                    <span style="font-size:13px; font-weight:700; color:var(--text-main);">Choose Your Remodeled Angle</span>
+                    <span class="chip" style="font-size:10px; color:#ec4899;">3 CONCEPTS READY</span>
+                </div>
+
+                <!-- 3 Selectable Concept Cards -->
+                <div id="remix-angles-container" style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;"></div>
+
+                <!-- Price Box & Action Buttons -->
+                <div class="form-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:12px; color:var(--text-muted);">Package Generation Fee:</span>
+                        <span id="remix-plan-price" style="font-size:13px; font-weight:700; color:#ec4899;">30 Credits</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-muted);">Your Credit Balance:</span>
+                        <span id="remix-user-balance" style="font-size:12px; font-weight:600; color:var(--text-main);">--</span>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button class="btn-cancel" style="flex:1;" onclick="goToRemixStep(1)">&larr; Back</button>
+                        <button id="btn-remix-produce" class="btn-submit" style="flex:2; margin-top:0; background:#ec4899; color:#fff;" onclick="submitRemixProduce()">
+                            ⚡ Produce Screenplay (30⚡)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: PRODUCTION PACKAGE RESULTS -->
+            <div id="remix-step-3" class="remix-step-pane" style="display:none;">
+                <!-- Header Card -->
+                <div class="form-card" style="border-top:3px solid #ec4899;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div id="remix-res-title" style="font-size:16px; font-weight:700; color:var(--text-main);">Remodeled Screenplay</div>
+                            <div id="remix-res-meta" style="font-size:11px; color:var(--text-muted); margin-top:3px;">--</div>
+                        </div>
+                        <span class="chip active" style="background:#ec4899; color:#fff;">READY</span>
+                    </div>
+
+                    <div id="remix-res-logline" style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:10px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:8px;"></div>
+                    <div id="remix-res-synopsis" style="font-size:12px; color:var(--text-main); margin-top:8px; line-height:1.45; max-height:110px; overflow-y:auto; padding:8px 10px; background:rgba(255,255,255,0.02); border-radius:8px;"></div>
+
+                    <!-- Action Bar -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px;">
+                        <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px;" onclick="copyRemixAllPrompts()">
+                            📋 Copy All Prompts
+                        </button>
+                        <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px; background:#229ED9; color:#fff;" onclick="sendRemixToTelegram()">
+                            📱 Send to Telegram
+                        </button>
+                    </div>
+
+                    <button class="btn-cancel" style="width:100%; margin-top:8px; font-size:12px; padding:8px;" onclick="resetRemixcraft()">
+                        &larr; Remodel Another Video
+                    </button>
+                </div>
+
+                <!-- 3 High-CTR Thumbnail Concepts -->
+                <div style="margin-top:14px;">
+                    <div class="section-label" style="margin-bottom:8px; color:#ec4899;">🖼️ 3 High-CTR YouTube Thumbnail Concepts</div>
+                    <div id="remix-thumbs-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Shot-by-Shot Scene Cards -->
+                <div style="margin-top:18px;">
+                    <div class="section-label" style="margin-bottom:8px;">🎬 Shot-by-Shot Storyboard & Prompts</div>
+                    <div id="remix-scenes-container" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -2769,8 +3097,19 @@
         }
 
 
+        function hideInitLoader() {
+            const ldr = document.getElementById('app-init-loader');
+            if (ldr) {
+                ldr.classList.add('hidden');
+                setTimeout(() => {
+                    try { ldr.remove(); } catch(e){}
+                }, 350);
+            }
+        }
+
         // Lock Screen & Auth Controller (WP Relay Vault Pattern)
         function showLockScreen() {
+            hideInitLoader();
             const lockEl = document.getElementById('lock-screen');
             if (lockEl) {
                 lockEl.style.display = 'flex';
@@ -3009,6 +3348,7 @@
                 try { tg?.BackButton?.show(); } catch(e){}
                 if (id === 'thumbnail') setTimeout(redrawThumbnailCanvas, 60);
                 if (id === 'story-adapter') { goToAdapterStep(1); onAdapterStoryInput(); }
+                if (id === 'remixcraft') { goToRemixStep(1); populateRemixCastDropdown(); }
             }
         }
 
@@ -3054,6 +3394,7 @@
                 });
                 const d = await res.json();
                 if (res.status === 401 || !d.success) {
+                    hideInitLoader();
                     showLockScreen();
                     return;
                 }
@@ -3070,8 +3411,10 @@
                 renderHistoryVault();
                 initGenreOptions();
                 renderAnnouncementBanner();
+                hideInitLoader();
             } catch (err) {
                 console.error("Init Error:", err);
+                hideInitLoader();
                 showLockScreen();
             }
         }
@@ -3262,6 +3605,15 @@
                     thumbHtml += `<option value="${c.id}">${c.name} (${c.gender}, ${c.art_style})</option>`;
                 });
                 thumbSel.innerHTML = thumbHtml;
+            }
+            const remixSel = document.getElementById('remix-character');
+            if (remixSel) {
+                let remixHtml = '<option value="">Auto-Cast New Character</option>';
+                savedCharacters.forEach(c => {
+                    const cid = c.id || c.character_id;
+                    remixHtml += `<option value="${cid}">${c.name} (${c.gender || 'CastLock'}, ${c.art_style || 'Realistic'})</option>`;
+                });
+                remixSel.innerHTML = remixHtml;
             }
         }
 
@@ -4893,6 +5245,485 @@
         }
 
         // =====================================================================
+        // REMIXCRAFT: COMPETITOR VIDEO REMODELER JAVASCRIPT CONTROLLER
+        // =====================================================================
+        const remixState = {
+            sourceType: 'youtube',
+            culture: 'African / Nigerian',
+            duration: 'Standard (8–15 Mins)',
+            artStyle: 'Realistic',
+            visualFilter: 'Default',
+            leadCharacterId: '',
+            analysis: null,
+            selectedConcept: null,
+            package: null
+        };
+
+        function populateRemixCastDropdown() {
+            renderCharacterSelect();
+        }
+
+        function goToRemixStep(stepNum) {
+            document.querySelectorAll('.remix-step-pane').forEach(p => p.style.display = 'none');
+            const target = document.getElementById(`remix-step-${stepNum}`);
+            if (target) target.style.display = 'block';
+
+            for (let i = 1; i <= 3; i++) {
+                const tab = document.getElementById(`remix-tab-${i}`);
+                if (!tab) continue;
+                if (i === stepNum) tab.className = 'step-tab active';
+                else if (i < stepNum) tab.className = 'step-tab completed';
+                else tab.className = 'step-tab';
+            }
+
+            // Update price box on step 2
+            if (stepNum === 2) {
+                const isVip = currentUser && (parseInt(currentUser.credits || 0) >= 999999 || currentUser.tier === 'VIP' || currentUser.is_admin);
+                const priceEl = document.getElementById('remix-plan-price');
+                const balEl = document.getElementById('remix-user-balance');
+                if (priceEl) {
+                    if (isVip) {
+                        priceEl.innerText = '👑 0 Credits (Unlimited VIP)';
+                        priceEl.style.color = '#30d158';
+                    } else {
+                        priceEl.innerText = '30 Credits';
+                        priceEl.style.color = '#ec4899';
+                    }
+                }
+                if (balEl && currentUser) {
+                    balEl.innerText = isVip ? '👑 Unlimited' : `${(currentUser.credits || 0).toLocaleString()} credits`;
+                }
+            }
+
+            const mBody = document.querySelector('#modal-remixcraft .modal-body');
+            if (mBody) mBody.scrollTop = 0;
+        }
+
+        function setRemixSourceType(type, el) {
+            remixState.sourceType = type;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            const yt = document.getElementById('remix-container-youtube');
+            const sc = document.getElementById('remix-container-script');
+            const ti = document.getElementById('remix-container-title');
+            if (yt) yt.style.display = type === 'youtube' ? 'block' : 'none';
+            if (sc) sc.style.display = type === 'script' ? 'block' : 'none';
+            if (ti) ti.style.display = type === 'title' ? 'block' : 'none';
+        }
+
+        function setRemixCulture(cult, el) {
+            remixState.culture = cult;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function setRemixDuration(dur, el) {
+            remixState.duration = dur;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function setRemixArtStyle(art, el) {
+            remixState.artStyle = art;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function onRemixScriptInput() {
+            const txt = document.getElementById('remix-input-script')?.value.trim() || '';
+            const words = txt ? txt.split(/\s+/).filter(Boolean).length : 0;
+            const badge = document.getElementById('remix-script-count');
+            if (badge) {
+                badge.innerText = `${words.toLocaleString()} / 15,000 words`;
+                badge.style.color = (words >= 30 && words <= 15000) ? '#30d158' : (words > 15000 ? '#ff453a' : 'var(--text-muted)');
+            }
+        }
+
+        async function submitRemixAnalyze() {
+            let content = '';
+            if (remixState.sourceType === 'youtube') {
+                content = document.getElementById('remix-input-youtube')?.value.trim() || '';
+                if (!content) {
+                    showToast('Please enter a YouTube video URL to remodel.', false);
+                    return;
+                }
+            } else if (remixState.sourceType === 'script') {
+                content = document.getElementById('remix-input-script')?.value.trim() || '';
+                const words = content ? content.split(/\s+/).filter(Boolean).length : 0;
+                if (words < 20) {
+                    showToast('Please paste at least 20 words for the raw script.', false);
+                    return;
+                }
+            } else {
+                content = document.getElementById('remix-input-title')?.value.trim() || '';
+                if (!content) {
+                    showToast('Please enter a movie or video title to remodel.', false);
+                    return;
+                }
+            }
+
+            const filterEl = document.getElementById('remix-filter');
+            if (filterEl) remixState.visualFilter = filterEl.value;
+
+            const charEl = document.getElementById('remix-character');
+            if (charEl) remixState.leadCharacterId = charEl.value;
+
+            const btn = document.getElementById('btn-remix-analyze');
+            if (btn) btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Remodeling Competitor Video",
+                14,
+                [
+                    { at: 5, text: "Extracting competitor storyline & retention triggers..." },
+                    { at: 35, text: `Deconstructing viral DNA for ${remixState.culture}...` },
+                    { at: 65, text: `Synthesizing 3 copyright-safe angles for ${remixState.duration}...` },
+                    { at: 90, text: "Formatting concepts with opening hooks & twists..." }
+                ]
+            );
+
+            try {
+                const res = await fetch('/api/remixcraft/analyze', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        source_type: remixState.sourceType,
+                        source_content: content,
+                        culture: remixState.culture,
+                        target_duration: remixState.duration,
+                        lead_character_id: remixState.leadCharacterId
+                    })
+                });
+
+                const d = await res.json();
+                if (!d.success) {
+                    AIProgressTracker.fail(d.error || 'Failed to analyze competitor video');
+                    return;
+                }
+
+                AIProgressTracker.complete("3 Remodeled Angles Ready!");
+                try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+
+                remixState.analysis = d.analysis;
+                renderRemixAngles(d.analysis);
+                goToRemixStep(2);
+            } catch (err) {
+                console.error("Remix analyze error:", err);
+                AIProgressTracker.fail(err.message || 'Error analyzing competitor video');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function renderRemixAngles(analysis) {
+            if (!analysis) return;
+            const dna = analysis.viral_dna || {};
+            
+            const sumEl = document.getElementById('remix-source-summary');
+            if (sumEl) sumEl.innerText = analysis.source_summary || 'Competitor premise analyzed.';
+
+            const hookEl = document.getElementById('remix-dna-hook');
+            if (hookEl) hookEl.innerText = dna.hook_analysis || '--';
+
+            const trigEl = document.getElementById('remix-dna-trigger');
+            if (trigEl) trigEl.innerText = dna.psychological_trigger || '--';
+
+            const oppEl = document.getElementById('remix-dna-opp');
+            if (oppEl) oppEl.innerText = dna.opportunity || '--';
+
+            const container = document.getElementById('remix-angles-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const concepts = analysis.concepts || [];
+            if (concepts.length > 0) {
+                remixState.selectedConcept = concepts[0];
+            }
+
+            concepts.forEach((c, idx) => {
+                const card = document.createElement('div');
+                card.className = `remix-angle-card ${idx === 0 ? 'selected' : ''}`;
+                card.id = `remix-angle-${c.id || idx+1}`;
+                card.onclick = () => selectRemixAngle(c, card);
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="remix-badge">🔥 Angle ${idx + 1}: ${escapeHtml(c.angle_badge || 'Viral Concept')}</span>
+                    </div>
+                    <div style="font-size:14px; font-weight:700; color:var(--text-main);">${escapeHtml(c.title || 'Untitled')}</div>
+                    <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">${escapeHtml(c.logline || '')}</div>
+                    
+                    <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px; font-size:11px; display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+                        <div><strong style="color:#ec4899;">🎙️ Opening Hook (0-5s):</strong> <i>"${escapeHtml(c.hook_line || '')}"</i></div>
+                        <div><strong style="color:#e5a93c;">⚡ Climax Twist:</strong> ${escapeHtml(c.twist || '')}</div>
+                        <div><strong style="color:#30d158;">📈 Viral Engine:</strong> ${escapeHtml(c.why_it_goes_viral || '')}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectRemixAngle(concept, cardEl) {
+            try { tg?.HapticFeedback?.selectionChanged(); } catch(e){}
+            remixState.selectedConcept = concept;
+            document.querySelectorAll('.remix-angle-card').forEach(c => c.classList.remove('selected'));
+            if (cardEl) cardEl.classList.add('selected');
+        }
+
+        async function submitRemixProduce() {
+            if (!remixState.selectedConcept) {
+                showToast('Please select one of the 3 remodeled angles first.', false);
+                return;
+            }
+
+            const isVip = currentUser && (parseInt(currentUser.credits || 0) >= 999999 || currentUser.tier === 'VIP' || currentUser.is_admin);
+            const cost = isVip ? 0 : 30;
+
+            if (!isVip && currentUser && (currentUser.credits || 0) < cost) {
+                showToast(`Insufficient credits! Remixcraft production requires 30 credits. Please fund your balance.`, false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-remix-produce');
+            if (btn) btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Producing Remixcraft Package",
+                20,
+                [
+                    { at: 3, text: `Writing screenplay based on "${remixState.selectedConcept.title}"...` },
+                    { at: 25, text: `Adapting dialogue with ${remixState.culture} tone...` },
+                    { at: 50, text: `Crafting Midjourney prompts with ${remixState.artStyle} look...` },
+                    { at: 75, text: "Generating 3 high-CTR YouTube thumbnail concepts..." },
+                    { at: 92, text: "Finalizing scene bible & PDF documents..." }
+                ]
+            );
+
+            try {
+                const res = await fetch('/api/remixcraft/produce', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        selected_concept: remixState.selectedConcept,
+                        source_summary: remixState.analysis?.source_summary || '',
+                        culture: remixState.culture,
+                        target_duration: remixState.duration,
+                        art_style: remixState.artStyle,
+                        visual_filter: remixState.visualFilter,
+                        lead_character_id: remixState.leadCharacterId
+                    })
+                });
+
+                const d = await res.json();
+                if (!d.success) {
+                    AIProgressTracker.fail(d.error || 'Failed to produce screenplay');
+                    return;
+                }
+
+                AIProgressTracker.complete("Remixcraft Package Ready!");
+                try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+
+                remixState.package = d.package;
+
+                if (currentUser && typeof d.user_balance !== 'undefined') {
+                    currentUser.credits = d.user_balance;
+                    renderDashboard();
+                }
+
+                renderRemixPackage(d.package);
+                goToRemixStep(3);
+            } catch (err) {
+                console.error("Remix produce error:", err);
+                AIProgressTracker.fail(err.message || 'Error producing screenplay');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function renderRemixPackage(pkg) {
+            if (!pkg) return;
+
+            const titleEl = document.getElementById('remix-res-title');
+            if (titleEl) titleEl.innerText = pkg.title || 'Remodeled Screenplay';
+
+            const metaEl = document.getElementById('remix-res-meta');
+            const scCount = pkg.scenes ? pkg.scenes.length : 0;
+            if (metaEl) {
+                metaEl.innerText = `${scCount} Scenes • ${pkg.target_duration || remixState.duration} • ${pkg.culture || remixState.culture} • ${pkg.art_style || remixState.artStyle}`;
+            }
+
+            const loglineEl = document.getElementById('remix-res-logline');
+            if (loglineEl) {
+                loglineEl.innerText = pkg.logline ? `"${pkg.logline}"` : '';
+                loglineEl.style.display = pkg.logline ? 'block' : 'none';
+            }
+
+            const synEl = document.getElementById('remix-res-synopsis');
+            if (synEl) {
+                synEl.innerText = pkg.synopsis || '';
+                synEl.style.display = pkg.synopsis ? 'block' : 'none';
+            }
+
+            // Render Thumbnails
+            const thumbsContainer = document.getElementById('remix-thumbs-container');
+            if (thumbsContainer) {
+                thumbsContainer.innerHTML = '';
+                const thumbs = pkg.thumbnail_concepts || [];
+                thumbs.forEach((th, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'remix-thumb-card';
+                    const promptEsc = escapeHtml(th.visual_prompt || '');
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:12px; font-weight:700; color:#ec4899;">🖼️ Concept ${idx+1}: ${escapeHtml(th.headline || 'High-CTR Visual')}</span>
+                            <span class="chip" style="font-size:10px; background:rgba(236,72,153,0.15); color:#ec4899;">TEXT: ${escapeHtml(th.bold_text_overlay || '')}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                            <span style="font-size:11px; color:var(--text-muted);">Midjourney Visual Prompt:</span>
+                            <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${promptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                        </div>
+                        <div class="scene-prompt-box">${promptEsc}</div>
+                        <div style="font-size:11px; color:#30d158;">💡 ${escapeHtml(th.emotional_trigger || '')}</div>
+                    `;
+                    thumbsContainer.appendChild(card);
+                });
+            }
+
+            // Render Scenes
+            const scenesContainer = document.getElementById('remix-scenes-container');
+            if (scenesContainer) {
+                scenesContainer.innerHTML = '';
+                const scenes = pkg.scenes || [];
+                scenes.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'scene-card-item';
+                    
+                    const sNum = s.scene_number || 1;
+                    const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
+                    const sSetting = s.setting ? `<div style="font-size:11px; color:#ec4899; font-weight:600;">📍 ${escapeHtml(s.setting)}</div>` : '';
+                    const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid #ec4899; border-radius:4px;">🎙️ "${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
+                    
+                    const imgPromptEsc = escapeHtml(s.image_prompt || '');
+                    const vidPromptEsc = escapeHtml(s.video_prompt || '');
+
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px; font-weight:700; color:var(--text-main);">SCENE ${sNum}: ${sTitle}</span>
+                            <span class="chip" style="font-size:10px;">SHOT ${sNum}</span>
+                        </div>
+                        ${sSetting}
+                        ${sDialogue}
+                        
+                        <!-- Midjourney / Flux Prompt -->
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">📷 Midjourney / Flux Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${imgPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${imgPromptEsc}</div>
+                        </div>
+
+                        <!-- Video Motion Prompt -->
+                        ${s.video_prompt ? `
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">🎥 Video Camera Motion Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${vidPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${vidPromptEsc}</div>
+                        </div>
+                        ` : ''}
+                    `;
+                    scenesContainer.appendChild(card);
+                });
+            }
+
+            const mBody = document.querySelector('#modal-remixcraft .modal-body');
+            if (mBody) mBody.scrollTop = 0;
+        }
+
+        function copyRemixPrompt(btn, text) {
+            try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = '✓ Copied!';
+                btn.style.background = '#30d158';
+                btn.style.color = '#000';
+                setTimeout(() => {
+                    btn.innerText = orig;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 1800);
+            }).catch(() => {
+                showToast('Copied to clipboard!');
+            });
+        }
+
+        function copyRemixAllPrompts() {
+            if (!remixState.package) return;
+            const scenes = remixState.package.scenes || [];
+            let fullText = `🎬 ${remixState.package.title}\n${remixState.package.logline}\n\n`;
+            
+            scenes.forEach(s => {
+                fullText += `--- SCENE ${s.scene_number}: ${s.scene_title} ---\n`;
+                if (s.dialogue_or_narration) fullText += `VOICEOVER: "${s.dialogue_or_narration}"\n`;
+                if (s.image_prompt) fullText += `IMAGE PROMPT: ${s.image_prompt}\n`;
+                if (s.video_prompt) fullText += `VIDEO MOTION: ${s.video_prompt}\n`;
+                fullText += `\n`;
+            });
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                showToast('All scene prompts copied to clipboard!');
+            }).catch(() => {
+                showToast('Copied to clipboard!');
+            });
+        }
+
+        async function sendRemixToTelegram() {
+            if (!remixState.package) return;
+            showToast('Sending Remixcraft package to your Telegram chat...', true);
+
+            try {
+                const res = await fetch('/api/remixcraft/send_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ package: remixState.package })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('✓ Package delivered directly to your Telegram chat!', true);
+                    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                } else {
+                    showToast(d.error || 'Failed to send package to Telegram', false);
+                }
+            } catch (err) {
+                console.error("Send to TG error:", err);
+                showToast('Network error delivering to Telegram', false);
+            }
+        }
+
+        function resetRemixcraft() {
+            remixState.analysis = null;
+            remixState.package = null;
+            remixState.selectedConcept = null;
+            const yt = document.getElementById('remix-input-youtube');
+            const sc = document.getElementById('remix-input-script');
+            const ti = document.getElementById('remix-input-title');
+            if (yt) yt.value = '';
+            if (sc) sc.value = '';
+            if (ti) ti.value = '';
+            goToRemixStep(1);
+        }
+
+        // =====================================================================
         // VISUAL FRAME RENDERER ACTIONS (WITH DIRECT TELEGRAM PHOTO DELIVERY)
         // =====================================================================
         let lastRenderedImageData = null;
@@ -6069,6 +6900,7 @@
             bootstrapApp();
         }
         setTimeout(bootstrapApp, 50);
+        setTimeout(hideInitLoader, 4000);
     </script>
 
     <!-- ===================================================================== -->

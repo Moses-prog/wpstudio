@@ -1741,8 +1741,20 @@
                         <div class="form-hint" style="margin-bottom:10px;">Voice/accent flavor only — does not rename your cast.</div>
                         <div class="pills-grid" id="adapter-voice-pills">
                             <div class="pill-btn active" data-val="African / Nigerian" onclick="selectAdapterPill('voice', this)">🌍 African / Nigerian</div>
-                            <div class="pill-btn" data-val="American" onclick="selectAdapterPill('voice', this)">🇺🇸 American</div>
+                            <div class="pill-btn" data-val="Black American" onclick="selectAdapterPill('voice', this)">🇺🇸 Black American</div>
+                            <div class="pill-btn" data-val="American" onclick="selectAdapterPill('voice', this)">🇺🇸 American (General)</div>
                             <div class="pill-btn" data-val="British" onclick="selectAdapterPill('voice', this)">🇬🇧 British</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;">
+                        <div class="form-label">TARGET VIDEO DURATION / RUNTIME</div>
+                        <div class="form-hint" style="margin-bottom:10px;">Paces your scenes to match your planned video length.</div>
+                        <div class="pills-grid" id="adapter-duration-pills">
+                            <div class="pill-btn active" data-val="Short (3–5 Mins)" onclick="selectAdapterPill('duration', this)">⏱️ Short (~3-5 Mins)</div>
+                            <div class="pill-btn" data-val="Standard (8–15 Mins)" onclick="selectAdapterPill('duration', this)">🎬 YouTube (~8-15 Mins)</div>
+                            <div class="pill-btn" data-val="Long (30–60 Mins)" onclick="selectAdapterPill('duration', this)">🍿 Deep Dive (~30-60 Mins)</div>
+                            <div class="pill-btn" data-val="Feature (1–2+ Hours)" onclick="selectAdapterPill('duration', this)">🎥 Movie (~1-2+ Hours)</div>
                         </div>
                     </div>
 
@@ -4547,6 +4559,7 @@
         let adapterState = {
             genre: 'Drama',
             voice: 'African / Nigerian',
+            duration: 'Short (3–5 Mins)',
             filter: 'Default',
             art: 'Realistic',
             storyText: '',
@@ -4563,6 +4576,7 @@
             const val = el.getAttribute('data-val');
             if (type === 'genre') adapterState.genre = val;
             if (type === 'voice') adapterState.voice = val;
+            if (type === 'duration') adapterState.duration = val;
             if (type === 'art') adapterState.art = val;
         }
 
@@ -4693,7 +4707,8 @@
                         genre: adapterState.genre,
                         cinematic_filter: adapterState.filter,
                         art_style: adapterState.art,
-                        voice_accent: adapterState.voice
+                        voice_accent: adapterState.voice,
+                        target_duration: adapterState.duration || 'Short (3–5 Mins)'
                     })
                 });
 

@@ -783,6 +783,7 @@ async def adapt_story_to_scenes(
     cinematic_filter: str = "Default",
     art_style: str = "Realistic",
     voice_accent: str = "African / Nigerian",
+    target_duration: str = "Standard (8–15 Mins)",
     user_api_key: str = None,
     model_name: str = None
 ) -> dict:
@@ -794,7 +795,7 @@ async def adapt_story_to_scenes(
     STRICT GOVERNING RULES:
     1. ZERO PLOT/CHARACTER ALTERATIONS: Retains all original character names, relationships,
        locations, chronology, narrative pacing, dialogue, and ending 100% faithful to the source.
-    2. SCENE SEGMENTATION: Natural pacing into 1-80 coherent scenes without padding.
+    2. SCENE SEGMENTATION: Natural pacing into 1-80 coherent scenes tailored to target duration.
     3. CINEMATIC VISUAL FILTER: Locks consistent color grading, lighting, and camera treatment.
     4. ART STYLE: Realistic 8K photorealism or 3D Animated Pixar/Disney.
     5. VOICE FLAVOR: Infuses dialogue tags / narration pacing with the chosen accent flavor.
@@ -823,6 +824,8 @@ async def adapt_story_to_scenes(
     # Voice flavor
     if "African" in voice_accent or "Nigerian" in voice_accent:
         voice_treatment = "Authentic Nigerian English / Nollywood dramatic cadence, culturally rich emotional phrasing in dialogue and narration."
+    elif "Black American" in voice_accent:
+        voice_treatment = "Authentic Black American cultural cadence, soulful urban and African American expressive vernacular and rhythm in dialogue and narration."
     elif "British" in voice_accent:
         voice_treatment = "Refined British English cadence, measured storytelling delivery and polished dramatic tone."
     else:
@@ -834,7 +837,7 @@ Your mission is to adapt the creator's original written story into a complete, s
 
 CRITICAL NON-NEGOTIABLE LAWS:
 1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
-2. NATURAL SCENE LOAD: Break the story down into a natural sequence of 1 to 80 scenes. Shorter stories naturally produce 10–30 scenes; longer stories produce 30–80 scenes. NEVER artificially pad or stretch scenes with empty fluff.
+2. NATURAL SCENE LOAD & PACING: Break the story down into a natural sequence of 1 to 80 scenes paced specifically for a {target_duration} video. Shorter targets produce compact scenes; longer targets produce granular shots. NEVER artificially pad or stretch scenes with empty fluff.
 3. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
 4. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
 5. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
@@ -844,6 +847,7 @@ CONFIGURATION:
 - Cinematic Filter: {cinematic_filter} ({filter_treatment})
 - Art Style: {art_style} ({art_treatment})
 - Voice / Accent Flavor: {voice_accent} ({voice_treatment})
+- Target Runtime / Scope: {target_duration}
 
 OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
 {{

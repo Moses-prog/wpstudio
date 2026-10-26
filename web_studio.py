@@ -1326,6 +1326,7 @@ def api_story_adapter_generate():
     cinematic_filter = str(data.get("cinematic_filter", "Default")).strip()
     art_style = str(data.get("art_style", "Realistic")).strip()
     voice_accent = str(data.get("voice_accent", "African / Nigerian")).strip()
+    target_duration = str(data.get("target_duration", "Standard (8–15 Mins)")).strip()
 
     # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP)
     is_vip = int(user.get("credits", 0)) >= 999999
@@ -1344,6 +1345,7 @@ def api_story_adapter_generate():
             cinematic_filter=cinematic_filter,
             art_style=art_style,
             voice_accent=voice_accent,
+            target_duration=target_duration,
             user_api_key=custom_key,
             model_name=model_name
         ))

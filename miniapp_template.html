@@ -1302,19 +1302,19 @@
             position: relative;
         }
         .remix-angle-card:hover, .remix-angle-card.selected {
-            border-color: #ec4899;
-            background: rgba(236, 72, 153, 0.05);
-            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.15);
+            border-color: var(--accent, #e5a93c);
+            background: rgba(229, 169, 60, 0.08);
+            box-shadow: 0 4px 16px rgba(229, 169, 60, 0.12);
         }
         .remix-angle-card.selected::after {
-            content: "✓ SELECTED";
+            content: "SELECTED";
             position: absolute;
             top: 10px;
             right: 12px;
             font-size: 10px;
-            font-weight: 800;
-            color: #ec4899;
-            background: rgba(236, 72, 153, 0.15);
+            font-weight: 700;
+            color: var(--accent, #e5a93c);
+            background: rgba(229, 169, 60, 0.15);
             padding: 2px 8px;
             border-radius: 999px;
             letter-spacing: 0.5px;
@@ -1322,7 +1322,7 @@
         .remix-badge {
             font-size: 11px;
             font-weight: 700;
-            color: #ec4899;
+            color: var(--accent, #e5a93c);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -1479,13 +1479,13 @@
                 <div class="item-subtitle">Adapt original stories (500–5,000 words) into exact shot-by-shot scene prompts</div>
             </div>
             <div class="item-right">
-                <span class="chip active" style="color:#e5a93c; background:rgba(229,169,60,0.15);">ADAPT 15⚡</span>
+                <span class="chip active">15 Credits</span>
                 <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
 
         <div class="list-item" onclick="openModal('remixcraft')">
-            <div class="icon-box" style="color: #ec4899; background: rgba(236, 72, 153, 0.12);">
+            <div class="icon-box">
                 <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             </div>
             <div class="item-text">
@@ -1493,7 +1493,7 @@
                 <div class="item-subtitle">Remodel competitor YouTube videos, scripts, or movie titles into viral, copyright-safe screenplays</div>
             </div>
             <div class="item-right">
-                <span class="chip active" style="color:#ec4899; background:rgba(236,72,153,0.15);">REMIX 30⚡</span>
+                <span class="chip active">30 Credits</span>
                 <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
@@ -1839,10 +1839,10 @@
                         <div class="form-label">VOICE / ACCENT FLAVOR</div>
                         <div class="form-hint" style="margin-bottom:10px;">Voice/accent flavor only — does not rename your cast.</div>
                         <div class="pills-grid" id="adapter-voice-pills">
-                            <div class="pill-btn active" data-val="African / Nigerian" onclick="selectAdapterPill('voice', this)">🌍 African / Nigerian</div>
-                            <div class="pill-btn" data-val="Black American" onclick="selectAdapterPill('voice', this)">🇺🇸 Black American</div>
-                            <div class="pill-btn" data-val="American" onclick="selectAdapterPill('voice', this)">🇺🇸 American (General)</div>
-                            <div class="pill-btn" data-val="British" onclick="selectAdapterPill('voice', this)">🇬🇧 British</div>
+                            <div class="pill-btn active" data-val="African / Nigerian" onclick="selectAdapterPill('voice', this)">African / Nigerian</div>
+                            <div class="pill-btn" data-val="Black American" onclick="selectAdapterPill('voice', this)">Black American</div>
+                            <div class="pill-btn" data-val="American" onclick="selectAdapterPill('voice', this)">American (General)</div>
+                            <div class="pill-btn" data-val="British" onclick="selectAdapterPill('voice', this)">British</div>
                         </div>
                     </div>
 
@@ -1850,10 +1850,10 @@
                         <div class="form-label">TARGET VIDEO DURATION / RUNTIME</div>
                         <div class="form-hint" style="margin-bottom:10px;">Paces your scenes to match your planned video length.</div>
                         <div class="pills-grid" id="adapter-duration-pills">
-                            <div class="pill-btn active" data-val="Short (3–5 Mins)" onclick="selectAdapterPill('duration', this)">⏱️ Short (~3-5 Mins)</div>
-                            <div class="pill-btn" data-val="Standard (8–15 Mins)" onclick="selectAdapterPill('duration', this)">🎬 YouTube (~8-15 Mins)</div>
-                            <div class="pill-btn" data-val="Long (30–60 Mins)" onclick="selectAdapterPill('duration', this)">🍿 Deep Dive (~30-60 Mins)</div>
-                            <div class="pill-btn" data-val="Feature (1–2+ Hours)" onclick="selectAdapterPill('duration', this)">🎥 Movie (~1-2+ Hours)</div>
+                            <div class="pill-btn active" data-val="Short (3–5 Mins)" onclick="selectAdapterPill('duration', this)">Short (3–5 Mins)</div>
+                            <div class="pill-btn" data-val="Standard (8–15 Mins)" onclick="selectAdapterPill('duration', this)">YouTube (8–15 Mins)</div>
+                            <div class="pill-btn" data-val="Long (30–60 Mins)" onclick="selectAdapterPill('duration', this)">Deep Dive (30–60 Mins)</div>
+                            <div class="pill-btn" data-val="Feature (1–2+ Hours)" onclick="selectAdapterPill('duration', this)">Movie (1–2+ Hours)</div>
                         </div>
                     </div>
 
@@ -1861,9 +1861,9 @@
                         <div class="form-label">STORY DELIVERY FORMAT</div>
                         <div class="form-hint" style="margin-bottom:10px;">Select whether you want spoken character dialogue, narrator voiceover, or both.</div>
                         <div class="pills-grid" id="adapter-delivery-pills" style="grid-template-columns: repeat(3, 1fr);">
-                            <div class="pill-btn active" data-val="Dialogue / Narrative" onclick="selectAdapterPill('delivery', this)">🎙️ Both</div>
-                            <div class="pill-btn" data-val="Dialogue" onclick="selectAdapterPill('delivery', this)">💬 Dialogue Only</div>
-                            <div class="pill-btn" data-val="Narrative" onclick="selectAdapterPill('delivery', this)">📖 Narrative Only</div>
+                            <div class="pill-btn active" data-val="Dialogue / Narrative" onclick="selectAdapterPill('delivery', this)">Both (Dialogue & Narration)</div>
+                            <div class="pill-btn" data-val="Dialogue" onclick="selectAdapterPill('delivery', this)">Dialogue Only</div>
+                            <div class="pill-btn" data-val="Narrative" onclick="selectAdapterPill('delivery', this)">Narrative Only</div>
                         </div>
                     </div>
 
@@ -1913,8 +1913,8 @@
                     <div style="margin-top:16px;">
                         <div class="form-label">ART STYLE</div>
                         <div class="pills-grid" id="adapter-art-pills">
-                            <div class="pill-btn active" data-val="Realistic" onclick="selectAdapterPill('art', this)">📷 Realistic (8K Photo)</div>
-                            <div class="pill-btn" data-val="3D Animated" onclick="selectAdapterPill('art', this)">🎬 3D Animated (Pixar/Disney)</div>
+                            <div class="pill-btn active" data-val="Realistic" onclick="selectAdapterPill('art', this)">Realistic (8K Photo)</div>
+                            <div class="pill-btn" data-val="3D Animated" onclick="selectAdapterPill('art', this)">3D Animated</div>
                         </div>
                     </div>
 
@@ -1955,7 +1955,7 @@
                     <div style="display:flex; gap:10px; margin-top:20px;">
                         <button class="btn-cancel" style="flex:1;" onclick="goToAdapterStep(2)">&larr; Back</button>
                         <button id="btn-adapter-run" class="btn-submit" style="flex:2; margin-top:0;" onclick="submitStoryAdapter()">
-                            Refine into Scenes 🎬
+                            Refine into Scenes
                         </button>
                     </div>
                 </div>
@@ -1977,10 +1977,10 @@
                     <!-- Action Bar -->
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px;">
                         <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px;" onclick="copyAllAdapterPrompts()">
-                            📋 Copy All Prompts
+                            Copy All Prompts
                         </button>
-                        <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px; background:#229ED9; color:#fff;" onclick="sendAdapterToTelegram()">
-                            📱 Send to Telegram
+                        <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendAdapterToTelegram()">
+                            Send to Telegram
                         </button>
                     </div>
 
@@ -2002,7 +2002,7 @@
         <div class="modal-drag"></div>
         <div class="modal-header">
             <div class="modal-header-top">
-                <div class="modal-title" style="color:#ec4899;">
+                <div class="modal-title">
                     <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                     Remixcraft (Competitor Remodeler)
                 </div>
@@ -2034,9 +2034,9 @@
                     <div class="form-hint" style="margin-bottom:12px;">Choose how you want to feed the competitor story into Remixcraft.</div>
                     
                     <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:12px;">
-                        <div class="pill-btn active" data-source="youtube" onclick="setRemixSourceType('youtube', this)">🔴 YouTube Link</div>
-                        <div class="pill-btn" data-source="script" onclick="setRemixSourceType('script', this)">📝 Raw Script</div>
-                        <div class="pill-btn" data-source="title" onclick="setRemixSourceType('title', this)">💡 Movie / Title</div>
+                        <div class="pill-btn active" data-source="youtube" onclick="setRemixSourceType('youtube', this)">YouTube Link</div>
+                        <div class="pill-btn" data-source="script" onclick="setRemixSourceType('script', this)">Raw Script</div>
+                        <div class="pill-btn" data-source="title" onclick="setRemixSourceType('title', this)">Movie / Title</div>
                     </div>
 
                     <!-- Dynamic Input: YouTube -->
@@ -2069,10 +2069,10 @@
                     <div class="form-hint" style="margin-bottom:12px;">Infuses the dialogue, slang, and cultural emotional pacing into the script.</div>
                     
                     <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="pill-btn active" data-cult="African / Nigerian" onclick="setRemixCulture('African / Nigerian', this)">🌍 African / Nigerian</div>
-                        <div class="pill-btn" data-cult="Black American" onclick="setRemixCulture('Black American', this)">🇺🇸 Black American</div>
-                        <div class="pill-btn" data-cult="American" onclick="setRemixCulture('American', this)">🇺🇸 American</div>
-                        <div class="pill-btn" data-cult="Universal / Cinematic" onclick="setRemixCulture('Universal / Cinematic', this)">🌐 Universal / Cinematic</div>
+                        <div class="pill-btn active" data-cult="African / Nigerian" onclick="setRemixCulture('African / Nigerian', this)">African / Nigerian</div>
+                        <div class="pill-btn" data-cult="Black American" onclick="setRemixCulture('Black American', this)">Black American</div>
+                        <div class="pill-btn" data-cult="American" onclick="setRemixCulture('American', this)">American</div>
+                        <div class="pill-btn" data-cult="Universal / Cinematic" onclick="setRemixCulture('Universal / Cinematic', this)">Universal / Cinematic</div>
                     </div>
                 </div>
 
@@ -2082,10 +2082,10 @@
                     <div class="form-hint" style="margin-bottom:12px;">Sets the scene pacing, tension curve, and total shot breakdown.</div>
                     
                     <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="pill-btn" data-dur="Short (3–5 Mins)" onclick="setRemixDuration('Short (3–5 Mins)', this)">⚡ Short (3–5 Mins)</div>
-                        <div class="pill-btn active" data-dur="Standard (8–15 Mins)" onclick="setRemixDuration('Standard (8–15 Mins)', this)">📹 YouTube (8–15 Mins)</div>
-                        <div class="pill-btn" data-dur="Deep Dive (30–60 Mins)" onclick="setRemixDuration('Deep Dive (30–60 Mins)', this)">🍿 Deep Dive (30–60 Mins)</div>
-                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">🎬 Movie (1–2+ Hours)</div>
+                        <div class="pill-btn" data-dur="Short (3–5 Mins)" onclick="setRemixDuration('Short (3–5 Mins)', this)">Short (3–5 Mins)</div>
+                        <div class="pill-btn active" data-dur="Standard (8–15 Mins)" onclick="setRemixDuration('Standard (8–15 Mins)', this)">YouTube (8–15 Mins)</div>
+                        <div class="pill-btn" data-dur="Deep Dive (30–60 Mins)" onclick="setRemixDuration('Deep Dive (30–60 Mins)', this)">Deep Dive (30–60 Mins)</div>
+                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">Movie (1–2+ Hours)</div>
                     </div>
                 </div>
 
@@ -2096,8 +2096,8 @@
                     <div style="margin-bottom:12px;">
                         <div class="form-label" style="font-size:11px;">Art Style</div>
                         <div class="pills-grid" style="grid-template-columns: 1fr 1fr;">
-                            <div class="pill-btn active" data-art="Realistic" onclick="setRemixArtStyle('Realistic', this)">📷 Realistic (8K Movie Still)</div>
-                            <div class="pill-btn" data-art="3D Animated" onclick="setRemixArtStyle('3D Animated', this)">🎬 3D Animated (Pixar/Disney)</div>
+                            <div class="pill-btn active" data-art="Realistic" onclick="setRemixArtStyle('Realistic', this)">Realistic (8K Movie Still)</div>
+                            <div class="pill-btn" data-art="3D Animated" onclick="setRemixArtStyle('3D Animated', this)">3D Animated</div>
                         </div>
                     </div>
 
@@ -2115,14 +2115,14 @@
                     </div>
 
                     <div>
-                        <div class="form-label" style="font-size:11px;">👑 CastLock Lead Protagonist (Optional)</div>
+                        <div class="form-label" style="font-size:11px;">CastLock Lead Protagonist (Optional)</div>
                         <select id="remix-character" class="form-input">
                             <option value="">Auto-Cast New Character</option>
                         </select>
                     </div>
 
-                    <button id="btn-remix-analyze" class="btn-submit" style="margin-top:16px; background:#ec4899; color:#fff;" onclick="submitRemixAnalyze()">
-                        ⚡ Deconstruct Viral DNA & Remodel 3 Angles (Free)
+                    <button id="btn-remix-analyze" class="btn-submit" style="margin-top:16px;" onclick="submitRemixAnalyze()">
+                        Deconstruct Viral DNA & Remodel 3 Angles
                     </button>
                 </div>
             </div>
@@ -2130,21 +2130,21 @@
             <!-- STEP 2: 3 REMODELED ANGLES SELECTION -->
             <div id="remix-step-2" class="remix-step-pane" style="display:none;">
                 <!-- Viral DNA Card -->
-                <div class="form-card" style="border-left: 3px solid #ec4899;">
-                    <div class="remix-badge">🧬 Viral DNA Breakdown</div>
+                <div class="form-card" style="border-left: 3px solid var(--accent, #e5a93c);">
+                    <div class="remix-badge">Viral DNA Breakdown</div>
                     <div id="remix-source-summary" style="font-size:12px; color:var(--text-main); margin:6px 0 10px; line-height:1.4;">--</div>
                     
                     <div style="display:flex; flex-direction:column; gap:8px; font-size:11px;">
                         <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
-                            <strong style="color:#ec4899;">🎯 Retention Hook:</strong>
+                            <strong style="color:var(--accent, #e5a93c);">Retention Hook:</strong>
                             <span id="remix-dna-hook" style="color:var(--text-muted); margin-left:4px;">--</span>
                         </div>
                         <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
-                            <strong style="color:#e5a93c;">❤️ Emotional Trigger:</strong>
+                            <strong style="color:var(--text-main);">Emotional Trigger:</strong>
                             <span id="remix-dna-trigger" style="color:var(--text-muted); margin-left:4px;">--</span>
                         </div>
                         <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px;">
-                            <strong style="color:#30d158;">🚀 How We Win:</strong>
+                            <strong style="color:var(--text-main);">Viral Strategy:</strong>
                             <span id="remix-dna-opp" style="color:var(--text-muted); margin-left:4px;">--</span>
                         </div>
                     </div>
@@ -2153,7 +2153,7 @@
                 <!-- Angles Header -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:14px 4px 8px;">
                     <span style="font-size:13px; font-weight:700; color:var(--text-main);">Choose Your Remodeled Angle</span>
-                    <span class="chip" style="font-size:10px; color:#ec4899;">3 CONCEPTS READY</span>
+                    <span class="chip" style="font-size:10px;">3 CONCEPTS READY</span>
                 </div>
 
                 <!-- 3 Selectable Concept Cards -->
@@ -2163,7 +2163,7 @@
                 <div class="form-card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <span style="font-size:12px; color:var(--text-muted);">Package Generation Fee:</span>
-                        <span id="remix-plan-price" style="font-size:13px; font-weight:700; color:#ec4899;">30 Credits</span>
+                        <span id="remix-plan-price" style="font-size:13px; font-weight:700; color:var(--accent, #e5a93c);">30 Credits</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:12px; color:var(--text-muted);">Your Credit Balance:</span>
@@ -2172,8 +2172,8 @@
 
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn-cancel" style="flex:1;" onclick="goToRemixStep(1)">&larr; Back</button>
-                        <button id="btn-remix-produce" class="btn-submit" style="flex:2; margin-top:0; background:#ec4899; color:#fff;" onclick="submitRemixProduce()">
-                            ⚡ Produce Screenplay (30⚡)
+                        <button id="btn-remix-produce" class="btn-submit" style="flex:2; margin-top:0;" onclick="submitRemixProduce()">
+                            Produce Screenplay (30 Credits)
                         </button>
                     </div>
                 </div>
@@ -2182,13 +2182,13 @@
             <!-- STEP 3: PRODUCTION PACKAGE RESULTS -->
             <div id="remix-step-3" class="remix-step-pane" style="display:none;">
                 <!-- Header Card -->
-                <div class="form-card" style="border-top:3px solid #ec4899;">
+                <div class="form-card" style="border-top:3px solid var(--accent, #e5a93c);">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
                             <div id="remix-res-title" style="font-size:16px; font-weight:700; color:var(--text-main);">Remodeled Screenplay</div>
                             <div id="remix-res-meta" style="font-size:11px; color:var(--text-muted); margin-top:3px;">--</div>
                         </div>
-                        <span class="chip active" style="background:#ec4899; color:#fff;">READY</span>
+                        <span class="chip active">READY</span>
                     </div>
 
                     <div id="remix-res-logline" style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:10px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:8px;"></div>
@@ -2197,10 +2197,10 @@
                     <!-- Action Bar -->
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px;">
                         <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px;" onclick="copyRemixAllPrompts()">
-                            📋 Copy All Prompts
+                            Copy All Prompts
                         </button>
-                        <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px; background:#229ED9; color:#fff;" onclick="sendRemixToTelegram()">
-                            📱 Send to Telegram
+                        <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendRemixToTelegram()">
+                            Send to Telegram
                         </button>
                     </div>
 
@@ -2211,13 +2211,13 @@
 
                 <!-- 3 High-CTR Thumbnail Concepts -->
                 <div style="margin-top:14px;">
-                    <div class="section-label" style="margin-bottom:8px; color:#ec4899;">🖼️ 3 High-CTR YouTube Thumbnail Concepts</div>
+                    <div class="section-label" style="margin-bottom:8px;">3 High-CTR YouTube Thumbnail Concepts</div>
                     <div id="remix-thumbs-container" style="display:flex; flex-direction:column; gap:10px;"></div>
                 </div>
 
                 <!-- Shot-by-Shot Scene Cards -->
                 <div style="margin-top:18px;">
-                    <div class="section-label" style="margin-bottom:8px;">🎬 Shot-by-Shot Storyboard & Prompts</div>
+                    <div class="section-label" style="margin-bottom:8px;">Shot-by-Shot Storyboard & Prompts</div>
                     <div id="remix-scenes-container" style="display:flex; flex-direction:column; gap:12px;"></div>
                 </div>
             </div>
@@ -5147,8 +5147,8 @@
                 
                 const sNum = s.scene_number || 1;
                 const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
-                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600;">📍 ${escapeHtml(s.setting)}</div>` : '';
-                const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid #e5a93c; border-radius:4px;">🎙️ "${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
+                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600;">Setting: ${escapeHtml(s.setting)}</div>` : '';
+                const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid #e5a93c; border-radius:4px;">"${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
                 
                 const imgPromptEsc = escapeHtml(s.image_prompt || '');
                 const vidPromptEsc = escapeHtml(s.video_prompt || '');
@@ -5164,7 +5164,7 @@
                     <!-- Midjourney / Flux Prompt -->
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">📷 Midjourney / Flux Prompt:</span>
+                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Midjourney / Flux Prompt:</span>
                             <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${imgPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
                         </div>
                         <div class="scene-prompt-box">${imgPromptEsc}</div>
@@ -5174,7 +5174,7 @@
                     ${s.video_prompt ? `
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">🎥 Video Camera Motion Prompt:</span>
+                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Video Camera Motion Prompt:</span>
                             <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${vidPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
                         </div>
                         <div class="scene-prompt-box">${vidPromptEsc}</div>
@@ -5296,15 +5296,15 @@
                 const balEl = document.getElementById('remix-user-balance');
                 if (priceEl) {
                     if (isVip) {
-                        priceEl.innerText = '👑 0 Credits (Unlimited VIP)';
-                        priceEl.style.color = '#30d158';
+                        priceEl.innerText = '0 Credits (VIP)';
+                        priceEl.style.color = 'var(--accent, #e5a93c)';
                     } else {
                         priceEl.innerText = '30 Credits';
-                        priceEl.style.color = '#ec4899';
+                        priceEl.style.color = 'var(--accent, #e5a93c)';
                     }
                 }
                 if (balEl && currentUser) {
-                    balEl.innerText = isVip ? '👑 Unlimited' : `${(currentUser.credits || 0).toLocaleString()} credits`;
+                    balEl.innerText = isVip ? 'Unlimited' : `${(currentUser.credits || 0).toLocaleString()} credits`;
                 }
             }
 
@@ -5469,15 +5469,15 @@
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="remix-badge">🔥 Angle ${idx + 1}: ${escapeHtml(c.angle_badge || 'Viral Concept')}</span>
+                        <span class="remix-badge">Angle ${idx + 1}: ${escapeHtml(c.angle_badge || 'Viral Concept')}</span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:var(--text-main);">${escapeHtml(c.title || 'Untitled')}</div>
                     <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">${escapeHtml(c.logline || '')}</div>
                     
                     <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px; font-size:11px; display:flex; flex-direction:column; gap:4px; margin-top:2px;">
-                        <div><strong style="color:#ec4899;">🎙️ Opening Hook (0-5s):</strong> <i>"${escapeHtml(c.hook_line || '')}"</i></div>
-                        <div><strong style="color:#e5a93c;">⚡ Climax Twist:</strong> ${escapeHtml(c.twist || '')}</div>
-                        <div><strong style="color:#30d158;">📈 Viral Engine:</strong> ${escapeHtml(c.why_it_goes_viral || '')}</div>
+                        <div><strong style="color:var(--accent, #e5a93c);">Opening Hook (0-5s):</strong> <i>"${escapeHtml(c.hook_line || '')}"</i></div>
+                        <div><strong style="color:var(--text-main);">Climax Twist:</strong> ${escapeHtml(c.twist || '')}</div>
+                        <div><strong style="color:var(--text-main);">Viral Engine:</strong> ${escapeHtml(c.why_it_goes_viral || '')}</div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -5596,15 +5596,15 @@
                     const promptEsc = escapeHtml(th.visual_prompt || '');
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:12px; font-weight:700; color:#ec4899;">🖼️ Concept ${idx+1}: ${escapeHtml(th.headline || 'High-CTR Visual')}</span>
-                            <span class="chip" style="font-size:10px; background:rgba(236,72,153,0.15); color:#ec4899;">TEXT: ${escapeHtml(th.bold_text_overlay || '')}</span>
+                            <span style="font-size:12px; font-weight:700; color:var(--accent, #e5a93c);">Concept ${idx+1}: ${escapeHtml(th.headline || 'High-CTR Visual')}</span>
+                            <span class="chip" style="font-size:10px;">${escapeHtml(th.bold_text_overlay || '')}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                             <span style="font-size:11px; color:var(--text-muted);">Midjourney Visual Prompt:</span>
                             <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${promptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
                         </div>
                         <div class="scene-prompt-box">${promptEsc}</div>
-                        <div style="font-size:11px; color:#30d158;">💡 ${escapeHtml(th.emotional_trigger || '')}</div>
+                        <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(th.emotional_trigger || '')}</div>
                     `;
                     thumbsContainer.appendChild(card);
                 });
@@ -5621,8 +5621,8 @@
                     
                     const sNum = s.scene_number || 1;
                     const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
-                    const sSetting = s.setting ? `<div style="font-size:11px; color:#ec4899; font-weight:600;">📍 ${escapeHtml(s.setting)}</div>` : '';
-                    const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid #ec4899; border-radius:4px;">🎙️ "${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
+                    const sSetting = s.setting ? `<div style="font-size:11px; color:var(--accent, #e5a93c); font-weight:600;">Setting: ${escapeHtml(s.setting)}</div>` : '';
+                    const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid var(--accent, #e5a93c); border-radius:4px;">"${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
                     
                     const imgPromptEsc = escapeHtml(s.image_prompt || '');
                     const vidPromptEsc = escapeHtml(s.video_prompt || '');
@@ -5638,7 +5638,7 @@
                         <!-- Midjourney / Flux Prompt -->
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">📷 Midjourney / Flux Prompt:</span>
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Midjourney / Flux Prompt:</span>
                                 <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${imgPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
                             </div>
                             <div class="scene-prompt-box">${imgPromptEsc}</div>
@@ -5648,7 +5648,7 @@
                         ${s.video_prompt ? `
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">🎥 Video Camera Motion Prompt:</span>
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Video Camera Motion Prompt:</span>
                                 <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${vidPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
                             </div>
                             <div class="scene-prompt-box">${vidPromptEsc}</div>
@@ -5683,7 +5683,7 @@
         function copyRemixAllPrompts() {
             if (!remixState.package) return;
             const scenes = remixState.package.scenes || [];
-            let fullText = `🎬 ${remixState.package.title}\n${remixState.package.logline}\n\n`;
+            let fullText = `${remixState.package.title}\n${remixState.package.logline}\n\n`;
             
             scenes.forEach(s => {
                 fullText += `--- SCENE ${s.scene_number}: ${s.scene_title} ---\n`;

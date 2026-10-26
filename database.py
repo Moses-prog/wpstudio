@@ -91,6 +91,18 @@ def init_db():
         cursor.execute("ALTER TABLE story_jobs ADD COLUMN story_text TEXT")
     except Exception:
         pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN custom_openai_key TEXT")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN custom_claude_key TEXT")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN selected_provider TEXT DEFAULT 'gemini'")
+    except Exception:
+        pass
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS cast_characters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,8 +156,14 @@ def init_db():
     default_settings = {
         "gemini_api_key_primary": os.getenv("GEMINI_API_KEY", ""),
         "gemini_api_key_fallback": "",
+        "openai_api_key": os.getenv("OPENAI_API_KEY", ""),
+        "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY", ""),
+        "model_gemini_enabled": "1",
+        "model_gpt_enabled": "1",
+        "model_claude_enabled": "1",
+        "default_provider": "gemini",
         "default_model": "gemini-3.8-flash",
-        "byok_enabled": "0",  # Locked for users by default
+        "byok_enabled": "1",  # Enabled for users by default
         "maintenance_mode": "0",
         "maintenance_message": "WP Studio is currently undergoing scheduled platform upgrades. All features will resume shortly.",
         "feature_storycraft_enabled": "1",
@@ -166,6 +184,7 @@ def init_db():
     now_ts = datetime.utcnow().isoformat()
     for k, v in default_settings.items():
         cursor.execute("INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES (?, ?, ?)", (k, str(v), now_ts))
+    cursor.execute("UPDATE system_settings SET value = '1' WHERE key = 'byok_enabled' AND value = '0'")
 
     # Migration safeguard for existing tables
     try:
@@ -263,15 +282,23 @@ def get_user(user_id: int, username: str = None) -> dict:
 
     if user:
         if row:
+            row_d = dict(row)
+            if not user.get("custom_openai_key") and row_d.get("custom_openai_key"):
+                user["custom_openai_key"] = row_d.get("custom_openai_key")
+            if not user.get("custom_claude_key") and row_d.get("custom_claude_key"):
+                user["custom_claude_key"] = row_d.get("custom_claude_key")
+            if not user.get("selected_provider") and row_d.get("selected_provider"):
+                user["selected_provider"] = row_d.get("selected_provider")
+
             cursor.execute("""
-                UPDATE users SET username=?, credits=?, tier=?, custom_gemini_key=?, selected_model=?, stories_created=?, updated_at=?
+                UPDATE users SET username=?, credits=?, tier=?, custom_gemini_key=?, custom_openai_key=COALESCE(?, custom_openai_key), custom_claude_key=COALESCE(?, custom_claude_key), selected_model=?, selected_provider=COALESCE(?, selected_provider), stories_created=?, updated_at=?
                 WHERE user_id=?
-            """, (user.get("username"), user["credits"], user.get("tier"), user.get("custom_gemini_key"), user.get("selected_model"), user.get("stories_created", 0), now, user_id))
+            """, (user.get("username"), user["credits"], user.get("tier"), user.get("custom_gemini_key"), user.get("custom_openai_key"), user.get("custom_claude_key"), user.get("selected_model"), user.get("selected_provider", "gemini"), user.get("stories_created", 0), now, user_id))
         else:
             cursor.execute("""
-                INSERT INTO users (user_id, username, credits, tier, custom_gemini_key, selected_model, stories_created, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (user_id, user.get("username"), user["credits"], user.get("tier"), user.get("custom_gemini_key"), user.get("selected_model"), user.get("stories_created", 0), now, now))
+                INSERT INTO users (user_id, username, credits, tier, custom_gemini_key, custom_openai_key, custom_claude_key, selected_model, selected_provider, stories_created, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (user_id, user.get("username"), user["credits"], user.get("tier"), user.get("custom_gemini_key"), user.get("custom_openai_key"), user.get("custom_claude_key"), user.get("selected_model"), user.get("selected_provider", "gemini"), user.get("stories_created", 0), now, now))
         conn.commit()
         conn.close()
         return user
@@ -348,38 +375,66 @@ def add_credits(user_id: int, amount: int) -> bool:
     return True
 
 def update_user_key(user_id: int, api_key: str):
+    update_user_custom_keys(user_id, gemini_key=api_key)
+
+def update_user_custom_keys(user_id: int, gemini_key: str = None, openai_key: str = None, claude_key: str = None):
     now = datetime.utcnow().isoformat()
-    clean_key = api_key.strip() if api_key else None
+    clean_gem = gemini_key.strip() if (gemini_key is not None and gemini_key.strip()) else (None if gemini_key is not None else None)
+    clean_gpt = openai_key.strip() if (openai_key is not None and openai_key.strip()) else (None if openai_key is not None else None)
+    clean_claude = claude_key.strip() if (claude_key is not None and claude_key.strip()) else (None if claude_key is not None else None)
 
     if supabase_client:
         try:
-            supabase_client.table("wp_studio_users").update({
-                "custom_gemini_key": clean_key,
-                "updated_at": now
-            }).eq("user_id", user_id).execute()
+            update_data = {"updated_at": now}
+            if gemini_key is not None:
+                update_data["custom_gemini_key"] = clean_gem
+            if openai_key is not None:
+                update_data["custom_openai_key"] = clean_gpt
+            if claude_key is not None:
+                update_data["custom_claude_key"] = clean_claude
+            supabase_client.table("wp_studio_users").update(update_data).eq("user_id", user_id).execute()
         except Exception:
             pass
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET custom_gemini_key = ?, updated_at = ? WHERE user_id = ?", (clean_key, now, user_id))
+    updates = []
+    params = []
+    if gemini_key is not None:
+        updates.append("custom_gemini_key = ?")
+        params.append(clean_gem)
+    if openai_key is not None:
+        updates.append("custom_openai_key = ?")
+        params.append(clean_gpt)
+    if claude_key is not None:
+        updates.append("custom_claude_key = ?")
+        params.append(clean_claude)
+    updates.append("updated_at = ?")
+    params.append(now)
+    params.append(user_id)
+
+    sql = f"UPDATE users SET {', '.join(updates)} WHERE user_id = ?"
+    cursor.execute(sql, tuple(params))
     conn.commit()
     conn.close()
 
-def update_user_model(user_id: int, model_name: str):
+def update_user_model(user_id: int, model_name: str, provider: str = None):
     now = datetime.utcnow().isoformat()
     if supabase_client:
         try:
-            supabase_client.table("wp_studio_users").update({
-                "selected_model": model_name,
-                "updated_at": now
-            }).eq("user_id", user_id).execute()
+            up_dict = {"selected_model": model_name, "updated_at": now}
+            if provider:
+                up_dict["selected_provider"] = provider
+            supabase_client.table("wp_studio_users").update(up_dict).eq("user_id", user_id).execute()
         except Exception:
             pass
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET selected_model = ?, updated_at = ? WHERE user_id = ?", (model_name, now, user_id))
+    if provider:
+        cursor.execute("UPDATE users SET selected_model = ?, selected_provider = ?, updated_at = ? WHERE user_id = ?", (model_name, provider, now, user_id))
+    else:
+        cursor.execute("UPDATE users SET selected_model = ?, updated_at = ? WHERE user_id = ?", (model_name, now, user_id))
     conn.commit()
     conn.close()
 

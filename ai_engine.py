@@ -17,18 +17,119 @@ DEFAULT_KEY = os.getenv("DEFAULT_GEMINI_API_KEY", "")
 
 # Available AI Models for YouTube Automation Creators
 AVAILABLE_MODELS = {
-    "gemini-3.8-flash": "Gemini 3.8 Flash (Cinematic Pacing & Fast)",
+    # Google Gemini Models
+    "gemini-3.8-flash": "Gemini 3.8 Flash (Cinematic & Fast)",
     "gemini-3.5-flash": "Gemini 3.5 Flash (Ultra-Stable)",
     "gemini-3.5-flash-lite": "Gemini 3.5 Flash Lite (Fast)",
-    "gemini-3.1-pro-preview": "Gemini 3.1 Pro (BYOK High-Tier)",
-    "chatgpt-4o": "ChatGPT (GPT-4o) [Coming Soon 🔒]",
-    "claude-3-7-sonnet": "Claude 3.7 Sonnet [Coming Soon 🔒]"
+    "gemini-3.1-pro-preview": "Gemini 3.1 Pro (Deep Reasoning)",
+    # OpenAI ChatGPT Models
+    "gpt-4o": "ChatGPT GPT-4o (High-Intelligence Scripting)",
+    "gpt-4o-mini": "ChatGPT GPT-4o Mini (Fast & Efficient)",
+    "chatgpt-4o": "ChatGPT GPT-4o (High-Intelligence Scripting)",
+    # Anthropic Claude Models (BYOK Only)
+    "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet (Narrative Depth & Rich Dialogue)",
+    "claude-3-5-haiku-20241022": "Claude 3.5 Haiku (Ultra-Fast Scripting)",
+    "claude-3-7-sonnet": "Claude 3.5 Sonnet (Narrative Depth & Rich Dialogue)"
 }
-
 
 DEFAULT_MODEL = "gemini-3.8-flash"
 
-# Fallback chain excluding Pro to prevent free-tier 429 quota limits
+def get_model_provider(model_name: str) -> str:
+    """Returns 'gemini', 'gpt', or 'claude' based on the requested model name."""
+    if not model_name:
+        return "gemini"
+    m = model_name.lower()
+    if "claude" in m:
+        return "claude"
+    if "gpt" in m or "openai" in m or "chatgpt" in m:
+        return "gpt"
+    return "gemini"
+
+def get_provider_availability(user_dict=None) -> dict:
+    """
+    Evaluates availability for Gemini, GPT, and Claude:
+    - Gemini: Available if platform primary key or user BYOK key is set.
+    - GPT: Available if server key or user BYOK key is set. Otherwise marked unavailable.
+    - Claude: Strictly requires user personal BYOK key (no server free tier).
+    - Respects administrator toggles for each provider.
+    """
+    try:
+        import database
+        settings = database.get_system_settings()
+    except Exception:
+        settings = {}
+
+    is_admin = bool(user_dict and user_dict.get("is_admin"))
+    byok_allowed = (str(settings.get("byok_enabled", "1")).lower() not in ("0", "false") or is_admin)
+
+    # 1. Gemini
+    gem_primary, _ = get_master_keys()
+    user_gem = (user_dict.get("custom_gemini_key") or "").strip() if user_dict else ""
+    gem_has_key = bool(gem_primary or (user_gem and byok_allowed))
+    gem_admin = str(settings.get("model_gemini_enabled", "1")).lower() not in ("0", "false")
+    gem_avail = gem_has_key and gem_admin
+    gem_reason = "" if gem_avail else ("Disabled by administrator" if not gem_admin else "Gemini API key missing")
+
+    # 2. GPT (OpenAI)
+    server_gpt = (settings.get("openai_api_key") or os.getenv("OPENAI_API_KEY", "")).strip()
+    user_gpt = (user_dict.get("custom_openai_key") or "").strip() if user_dict else ""
+    gpt_has_key = bool(server_gpt or (user_gpt and byok_allowed))
+    gpt_admin = str(settings.get("model_gpt_enabled", "1")).lower() not in ("0", "false")
+    gpt_avail = gpt_has_key and gpt_admin
+    gpt_reason = ""
+    if not gpt_admin:
+        gpt_reason = "Disabled by administrator"
+    elif not gpt_has_key:
+        gpt_reason = "OpenAI API key not found"
+
+    # 3. Claude (Anthropic) - strictly requires user BYOK key
+    user_claude = (user_dict.get("custom_claude_key") or "").strip() if user_dict else ""
+    claude_has_key = bool(user_claude and byok_allowed)
+    claude_admin = str(settings.get("model_claude_enabled", "1")).lower() not in ("0", "false")
+    claude_avail = claude_has_key and claude_admin
+    claude_reason = ""
+    if not claude_admin:
+        claude_reason = "Disabled by administrator"
+    elif not claude_has_key:
+        claude_reason = "Requires personal Claude key (BYOK)"
+
+    return {
+        "gemini": {
+            "provider": "gemini",
+            "name": "Google Gemini",
+            "available": gem_avail,
+            "models": ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"],
+            "default_model": "gemini-3.8-flash",
+            "has_key": gem_has_key,
+            "has_user_byok": bool(user_gem and byok_allowed),
+            "admin_enabled": gem_admin,
+            "reason": gem_reason
+        },
+        "gpt": {
+            "provider": "gpt",
+            "name": "OpenAI ChatGPT",
+            "available": gpt_avail,
+            "models": ["gpt-4o", "gpt-4o-mini"],
+            "default_model": "gpt-4o",
+            "has_key": gpt_has_key,
+            "has_user_byok": bool(user_gpt and byok_allowed),
+            "admin_enabled": gpt_admin,
+            "reason": gpt_reason
+        },
+        "claude": {
+            "provider": "claude",
+            "name": "Anthropic Claude",
+            "available": claude_avail,
+            "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022"],
+            "default_model": "claude-3-5-sonnet-20241022",
+            "has_key": claude_has_key,
+            "has_user_byok": bool(user_claude and byok_allowed),
+            "admin_enabled": claude_admin,
+            "reason": claude_reason
+        }
+    }
+
+# Fallback chain for Gemini
 FALLBACK_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
 def clean_json_loads(text: str):
@@ -137,13 +238,170 @@ def generate_with_fallback(client, preferred_model, contents, config, user_api_k
             continue
     raise last_err
 
-async def generate_ten_concepts(source_title: str, source_context: str, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", lead_character: dict = None, user_api_key: str = None, model_name: str = None) -> list:
+def generate_ai_completion(
+    preferred_model: str,
+    system_instruction: str,
+    prompt: str,
+    temperature: float = 0.7,
+    json_mode: bool = True,
+    user_keys: dict = None,
+    user_api_key: str = None
+) -> str:
+    """
+    Unified multi-provider AI completion engine:
+    - Gemini: Uses Google GenAI client with fallback chain.
+    - GPT: Uses OpenAI REST API via httpx (respects server key or user BYOK key).
+    - Claude: Uses Anthropic REST API via httpx (strictly requires user BYOK key).
+    """
+    keys = {}
+    if isinstance(user_keys, dict):
+        keys = dict(user_keys)
+    elif user_api_key:
+        keys = {"custom_gemini_key": user_api_key}
+
+    provider = get_model_provider(preferred_model)
+
+    import database
+    settings = database.get_system_settings()
+    is_admin = bool(keys.get("is_admin"))
+    byok_allowed = (settings.get("byok_enabled") == "1" or is_admin)
+
+    # 1. GPT (OpenAI)
+    if provider == "gpt":
+        if settings.get("model_gpt_enabled", "1") == "0":
+            raise ValueError("OpenAI models are currently disabled by the studio administrator.")
+
+        key = ""
+        user_gpt = keys.get("custom_openai_key")
+        if user_gpt and byok_allowed:
+            key = user_gpt.strip()
+        if not key:
+            key = (settings.get("openai_api_key") or os.getenv("OPENAI_API_KEY", "")).strip()
+
+        if not key:
+            raise ValueError("OpenAI API key not found. Please provide an OpenAI key in Settings or contact admin.")
+
+        actual_model = "gpt-4o"
+        if "mini" in preferred_model.lower():
+            actual_model = "gpt-4o-mini"
+
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json"
+        }
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": prompt}
+        ]
+        payload = {
+            "model": actual_model,
+            "messages": messages,
+            "temperature": temperature
+        }
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
+
+        with httpx.Client(timeout=120.0) as http_client:
+            resp = http_client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+
+        if resp.status_code != 200:
+            err_msg = resp.text
+            try:
+                err_data = resp.json().get("error", {})
+                err_msg = err_data.get("message", err_msg)
+            except Exception:
+                pass
+            raise ValueError(f"OpenAI Generation Error ({resp.status_code}): {err_msg}")
+
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+    # 2. Claude (Anthropic) - strictly requires user BYOK
+    elif provider == "claude":
+        if settings.get("model_claude_enabled", "1") == "0":
+            raise ValueError("Claude models are currently disabled by the studio administrator.")
+
+        key = ""
+        user_claude = keys.get("custom_claude_key")
+        if user_claude and byok_allowed:
+            key = user_claude.strip()
+
+        if not key:
+            server_claude = (settings.get("anthropic_api_key") or os.getenv("ANTHROPIC_API_KEY", "")).strip()
+            if server_claude and is_admin:
+                key = server_claude
+
+        if not key:
+            raise ValueError("Claude requires a personal Anthropic API key (BYOK) because Anthropic provides no free tier. Please add your Claude key in Engines & API Settings.")
+
+        actual_model = "claude-3-5-sonnet-20241022"
+        if "haiku" in preferred_model.lower():
+            actual_model = "claude-3-5-haiku-20241022"
+
+        headers = {
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        sys_prompt = system_instruction
+        if json_mode:
+            sys_prompt += "\n\nCRITICAL: Return ONLY valid, parseable JSON conforming strictly to the requested schema. No conversational prose or markdown code fences outside the JSON object."
+
+        payload = {
+            "model": actual_model,
+            "max_tokens": 4096,
+            "system": sys_prompt,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": temperature
+        }
+
+        with httpx.Client(timeout=120.0) as http_client:
+            resp = http_client.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload)
+
+        if resp.status_code != 200:
+            err_msg = resp.text
+            try:
+                err_data = resp.json().get("error", {})
+                err_msg = err_data.get("message", err_msg)
+            except Exception:
+                pass
+            raise ValueError(f"Claude Generation Error ({resp.status_code}): {err_msg}")
+
+        data = resp.json()
+        content_blocks = data.get("content", [])
+        return "".join([b.get("text", "") for b in content_blocks if b.get("type") == "text"])
+
+    # 3. Google Gemini
+    else:
+        if settings.get("model_gemini_enabled", "1") == "0":
+            raise ValueError("Gemini models are currently disabled by the studio administrator.")
+
+        gem_key = keys.get("custom_gemini_key")
+        client = get_client(user_api_key=gem_key)
+        config = {
+            "system_instruction": system_instruction,
+            "temperature": temperature
+        }
+        if json_mode:
+            config["response_mime_type"] = "application/json"
+
+        response = generate_with_fallback(
+            client=client,
+            preferred_model=preferred_model,
+            contents=prompt,
+            config=config,
+            user_api_key=gem_key
+        )
+        return response.text
+
+async def generate_ten_concepts(source_title: str, source_context: str, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", lead_character: dict = None, user_api_key: str = None, model_name: str = None, user_keys: dict = None) -> list:
     """
     Step 1 of WP StoryCraft:
-    Generates 10 distinct, high-CTR, original YouTube story concepts based on the source.
+    Generates 10 distinct, high-CTR, original YouTube story concepts with tightened viral pacing.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
-    client = get_client(user_api_key)
 
     char_clause = ""
     if lead_character and isinstance(lead_character, dict):
@@ -163,27 +421,28 @@ MANDATE: Every single one of the 10 viral concepts MUST center on {c_name} as th
 
     genre_lower = (genre or "").lower()
     if "auto-detect" in genre_lower or "adaptive" in genre_lower:
-        genre_spec = "- Genre / Narrative Mode: AUTO-DETECT / ADAPTIVE. Deeply examine the user's source input. If it describes a personal life experience, true memoir, career journey, or real-life storytime, preserve authentic emotional vulnerability, personal stakes, and relatability—do NOT force synthetic Hollywood tropes. If it describes fiction or a cinematic premise, dynamically apply the most compelling dramatic genre."
+        genre_spec = "- Genre / Narrative Mode: AUTO-DETECT / ADAPTIVE. Deeply examine the user's source input. If it describes a personal life experience, true memoir, career journey, or real-life storytime, preserve authentic emotional vulnerability, personal stakes, and relatability. If it describes fiction or a cinematic premise, dynamically apply high dramatic tension."
     elif any(k in genre_lower for k in ["personal", "memoir", "true life", "life", "storytime", "biograph", "founder", "documentary", "slice of life", "real"]):
-        genre_spec = f"- Genre / Narrative Mode: {genre} (REAL-LIFE / PERSONAL MEMOIR). Focus on authentic human vulnerability, pivotal personal decisions, relatable emotional struggles, hard-won lessons, and genuine stakes rather than forced Hollywood fantasy tropes."
+        genre_spec = f"- Genre / Narrative Mode: {genre} (REAL-LIFE / PERSONAL MEMOIR). Focus on authentic human vulnerability, pivotal decisions, emotional struggles, hard-won lessons, and genuine stakes."
     else:
         genre_spec = f"- Genre: {genre}"
 
     system_instruction = f"""
-You are the Executive Showrunner at WP Studio, engineering viral YouTube Automation story concepts.
-Analyze the provided source material and generate 10 DISTINCT, ORIGINAL, HIGH-CTR concepts.
-Evaluate all 10 concepts and choose the SINGLE BEST ONE that will perform best on YouTube (highest curiosity gap, CTR, and watch-time retention).
+You are the Executive Showrunner & Master Story Architect at WP Studio.
+Your mission is to engineer 10 DISTINCT, HIGH-STAKES, IRRESISTIBLY INTERESTING YouTube story concepts based on the source.
+Evaluate all 10 concepts and select the #1 Top Recommendation that will generate the highest watch time and viewer retention.
 
 CREATIVE DIRECTION:
-- Culture Anchor: {culture}
+- Culture Anchor: {culture} (Infuse authentic speech cadence and cultural setting)
 - Visual Style: {visual_style}
 {genre_spec}
 {char_clause}
-RULES FOR YOUTUBE AUTOMATION VIRALITY:
-1. Each concept must have a 0-5s curiosity hook that makes viewers stop scrolling.
-2. Provide a unique angle/twist on the original source so it is completely fresh and not a duplicate.
-3. Highlight the viral trigger (why faceless channel audiences will click and watch to completion).
-4. Identify which concept is the #1 Top Recommendation and provide the concise strategic reason why.
+
+CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
+1. 0-3 SECOND CURIOSITY HOOK: The opening hook line must make the viewer immediately ask 'What happens next?!' It must present a burning question, high stakes, or a shocking life-altering dilemma.
+2. ESCALATING TENSION & TIGHT PACING: The story premise must have real stakes: secrets, rivalries, unexpected betrayal, desperate gambles, or underdog survival. Never write generic, flat, or predictable filler.
+3. SURPRISING CLIMAX TWIST: Every concept must build toward a genuine plot twist near the finale that rewards the viewer for watching.
+4. SIMPLE, NATURAL LANGUAGE: Write dialogue and premise in clear, everyday conversational words. Avoid big words, stiff jargon, or robotic phrasing.
 
 Return JSON matching this exact schema:
 {{
@@ -193,28 +452,26 @@ Return JSON matching this exact schema:
         {{
             "id": 1,
             "title": "High CTR Click-Worthy Title",
-            "hook": "Irresistible first 5 seconds spoken hook",
-            "premise": "2-sentence synopsis and narrative twist",
+            "hook": "Irresistible first 5 seconds spoken hook line",
+            "premise": "2-sentence synopsis detailing the inciting incident, escalating tension, and unexpected twist",
             "viral_trigger": "Psychological curiosity trigger that hooks YouTube audiences"
         }}
     ]
 }}
 """
 
-    prompt = f"SOURCE TITLE: {source_title}\n\nSOURCE MATERIAL / TRANSCRIPT CONTEXT:\n{source_context[:6000]}\n\nGenerate exactly 10 distinct viral concepts and select the top recommended one."
+    prompt = f"SOURCE TITLE: {source_title}\n\nSOURCE MATERIAL / TRANSCRIPT CONTEXT:\n{source_context[:6000]}\n\nGenerate exactly 10 distinct, tightly paced viral concepts and select the top recommended one."
 
-    response = generate_with_fallback(
-        client=client,
+    raw_response = generate_ai_completion(
         preferred_model=model,
-        contents=prompt,
-        config={
-            "system_instruction": system_instruction,
-            "response_mime_type": "application/json",
-            "temperature": 0.8
-        },
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.8,
+        json_mode=True,
+        user_keys=user_keys,
         user_api_key=user_api_key
     )
-    data = clean_json_loads(response.text)
+    data = clean_json_loads(raw_response)
     if isinstance(data, dict):
         return {
             "concepts": data.get("concepts", []),
@@ -229,7 +486,7 @@ Return JSON matching this exact schema:
         }
     return {"concepts": [], "recommended_concept_id": 1, "recommendation_reason": ""}
 
-async def generate_full_story_package(concept: dict, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", delivery_format: str = "Dialogue / Narrative", lead_character: dict = None, length_tier: str = "Short", timezone: str = "Africa/Lagos", user_api_key: str = None, model_name: str = None, channel_name: str = "") -> dict:
+async def generate_full_story_package(concept: dict, culture: str = "Universal", visual_style: str = "Stylised 3D", genre: str = "Action Thriller", delivery_format: str = "Dialogue / Narrative", lead_character: dict = None, length_tier: str = "Short", timezone: str = "Africa/Lagos", user_api_key: str = None, model_name: str = None, channel_name: str = "", user_keys: dict = None) -> dict:
     """
     Step 2 of WP StoryCraft:
     Generates the complete Story Bible + Scene Prompts Blueprint up to the chosen length ceiling.
@@ -238,7 +495,6 @@ async def generate_full_story_package(concept: dict, culture: str = "Universal",
     - Long: 90-150 scenes (ceiling 250)
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
-    client = get_client(user_api_key)
 
     scene_targets = {
         "Short": "12 to 16 scenes (fast, complete 2 to 4 minutes story, ceiling 20)",
@@ -415,23 +671,21 @@ Viral Trigger: {concept.get('viral_trigger')}
 
 Generate the complete production package with {target_scenes}."""
 
-    response = generate_with_fallback(
-        client=client,
+    raw_response = generate_ai_completion(
         preferred_model=model,
-        contents=prompt,
-        config={
-            "system_instruction": system_instruction,
-            "response_mime_type": "application/json",
-            "temperature": 0.7
-        },
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.7,
+        json_mode=True,
+        user_keys=user_keys,
         user_api_key=user_api_key
     )
-    data = clean_json_loads(response.text)
+    data = clean_json_loads(raw_response)
     if isinstance(data, dict):
         data["delivery_format"] = data.get("delivery_format", delivery_format)
         data["channel_name"] = channel_name or data.get("channel_name", "WP Studio Production")
         if not data.get("youtube_description"):
-            data["youtube_description"] = f"{data.get('logline', '')}\n\n{data.get('synopsis', '')}\n\n🔔 Subscribe to {data['channel_name']} for more cinematic stories!\n\n" + " ".join(data.get("hashtags", []))
+            data["youtube_description"] = f"{data.get('logline', '')}\n\n{data.get('synopsis', '')}\n\nSubscribe to {data['channel_name']} for more cinematic stories!\n\n" + " ".join(data.get("hashtags", []))
     return data
 
 async def generate_character_turnaround(character_desc, style="Stylised 3D", reference_image_bytes=None, reference_instruction=None, vision_biometrics=None, user_api_key=None, model_name=None):
@@ -786,7 +1040,8 @@ async def adapt_story_to_scenes(
     target_duration: str = "Standard (8–15 Mins)",
     delivery_format: str = "Dialogue / Narrative",
     user_api_key: str = None,
-    model_name: str = None
+    model_name: str = None,
+    user_keys: dict = None
 ) -> dict:
     """
     Story Adapter (Script to Scenes):
@@ -803,7 +1058,6 @@ async def adapt_story_to_scenes(
     6. DELIVERY FORMAT: Prioritizes character dialogue, narrator voiceover, or a balanced blend.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
-    client = get_client(user_api_key)
 
     # Filter definitions
     filter_map = {
@@ -848,9 +1102,10 @@ Your mission is to adapt the creator's original written story into a complete, s
 CRITICAL NON-NEGOTIABLE LAWS:
 1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
 2. NATURAL SCENE LOAD & PACING: Break the story down into a natural sequence of 1 to 80 scenes paced specifically for a {target_duration} video. Shorter targets produce compact scenes; longer targets produce granular shots. NEVER artificially pad or stretch scenes with empty fluff.
-3. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
-4. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
-5. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
+3. TIGHT & GRIPPING DIALOGUE: Spoken lines and narration must be punchy, emotional, and authentic. No robotic or filler lines.
+4. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
+5. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
+6. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
 
 CONFIGURATION:
 - Tone / Genre: {genre} (Pacing and intensity only)
@@ -895,19 +1150,17 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
 
 Adapt this exact story into chronological scene-by-scene prompts following all the rules above."""
 
-    response = generate_with_fallback(
-        client=client,
+    raw_response = generate_ai_completion(
         preferred_model=model,
-        contents=prompt,
-        config={
-            "system_instruction": system_instruction,
-            "response_mime_type": "application/json",
-            "temperature": 0.6
-        },
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.6,
+        json_mode=True,
+        user_keys=user_keys,
         user_api_key=user_api_key
     )
 
-    data = clean_json_loads(response.text)
+    data = clean_json_loads(raw_response)
     return data
 
 
@@ -922,24 +1175,24 @@ async def remodel_competitor_analysis(
     target_duration: str = "Standard (8–15 Mins)",
     lead_character: dict = None,
     user_api_key: str = None,
-    model_name: str = None
+    model_name: str = None,
+    user_keys: dict = None
 ) -> dict:
     """
     Stage 1: Deconstructs a competitor video, raw script, or movie premise into viral DNA,
     and returns 3 fresh, copyright-safe remodeled angles.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
-    client = get_client(user_api_key)
 
     lead_context = ""
     if lead_character and isinstance(lead_character, dict):
         lead_context = f"\nLEAD ACTOR (CASTLOCK CONTINUITY): {lead_character.get('name', 'Main Protagonist')} - {lead_character.get('visual_summary', '') or lead_character.get('prompt', '')}"
 
     system_instruction = f"""
-You are the Chief Viral Strategist at WP Studio.
+You are the Chief Viral Strategist & Story Architect at WP Studio.
 Your job is to study a competitor video, script, or movie idea and create 3 fresh, original, copyright-safe story angles for our creator's YouTube channel.
 
-CRITICAL RULES:
+CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
 1. USE SIMPLE, EVERYDAY WORDS: Do not use complicated jargon or big words. Write in plain, clear, engaging language.
 2. 100% ORIGINAL & COPYRIGHT-SAFE: Keep the emotional hook and viral engine of the original, but rewrite the characters, setting, and plot twists so it is completely fresh and safe from copyright strikes.
 3. CULTURE TASTE: Infuse the dialogue and tone with the chosen culture: {culture}.
@@ -998,19 +1251,17 @@ COMPETITOR CONTENT / PREMISE:
 
 Analyze this source and generate the viral DNA plus 3 distinct remodeled concepts."""
 
-    response = generate_with_fallback(
-        client=client,
+    raw_response = generate_ai_completion(
         preferred_model=model,
-        contents=prompt,
-        config={
-            "system_instruction": system_instruction,
-            "response_mime_type": "application/json",
-            "temperature": 0.7
-        },
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.7,
+        json_mode=True,
+        user_keys=user_keys,
         user_api_key=user_api_key
     )
 
-    data = clean_json_loads(response.text)
+    data = clean_json_loads(raw_response)
     return data
 
 
@@ -1023,14 +1274,14 @@ async def generate_remodeled_production_package(
     visual_filter: str = "Default",
     lead_character: dict = None,
     user_api_key: str = None,
-    model_name: str = None
+    model_name: str = None,
+    user_keys: dict = None
 ) -> dict:
     """
     Stage 2: Takes the selected remodeled angle and builds a complete, production-ready screenplay,
     shot-by-shot visual scene prompts, video camera motion prompts, and 3 high-CTR thumbnail ideas.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
-    client = get_client(user_api_key)
 
     # Filter definitions
     filter_map = {
@@ -1065,7 +1316,7 @@ async def generate_remodeled_production_package(
         lead_name = lead_character.get("name", "Protagonist")
         lead_desc = lead_character.get("visual_summary", "") or lead_character.get("prompt", "")
         lead_actor_instructions = f"""
-👑 CASTLOCK LEAD ACTOR MANDATE:
+CASTLOCK LEAD ACTOR MANDATE:
 The lead character MUST be named "{lead_name}".
 Their visual appearance in EVERY scene where they appear must maintain exact continuity:
 {lead_desc}
@@ -1075,7 +1326,7 @@ Their visual appearance in EVERY scene where they appear must maintain exact con
 You are the Executive Showrunner & Visual Director at WP Studio.
 Your mission is to write a complete, viral YouTube screenplay and production package based on the chosen remodeled story concept.
 
-CRITICAL RULES:
+CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
 1. USE SIMPLE, CLEAR WORDS: Write dialog and narration in easy, natural, conversational words. Avoid big, awkward, or dictionary-sounding words.
 2. RETENTION ENGINE: Start with an explosive hook in Scene 1. Maintain high tension, fast pacing, and deliver an unforgettable twist before the finale.
 3. SCENE BREAKDOWN FOR {target_duration}:
@@ -1156,19 +1407,17 @@ ORIGINAL CONTEXT:
 
 Write the complete shot-by-shot screenplay, Midjourney visual prompts, video motion prompts, and 3 thumbnail concepts following all instructions above."""
 
-    response = generate_with_fallback(
-        client=client,
+    raw_response = generate_ai_completion(
         preferred_model=model,
-        contents=prompt,
-        config={
-            "system_instruction": system_instruction,
-            "response_mime_type": "application/json",
-            "temperature": 0.65
-        },
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.65,
+        json_mode=True,
+        user_keys=user_keys,
         user_api_key=user_api_key
     )
 
-    data = clean_json_loads(response.text)
+    data = clean_json_loads(raw_response)
     return data
 
 

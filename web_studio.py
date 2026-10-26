@@ -521,6 +521,17 @@ def api_lock_studio():
     return jsonify({"success": True, "locked": True})
 
 
+def build_user_keys(user: dict) -> dict:
+    if not user:
+        return {}
+    return {
+        "custom_gemini_key": user.get("custom_gemini_key"),
+        "custom_openai_key": user.get("custom_openai_key"),
+        "custom_claude_key": user.get("custom_claude_key"),
+        "is_admin": database.is_admin(user.get("user_id")),
+    }
+
+
 @app.route('/api/user_info', methods=['GET'])
 def api_user_info():
     user = get_current_user()
@@ -533,6 +544,7 @@ def api_user_info():
     is_adm = database.is_admin(user["user_id"])
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or is_adm)
     pricing = get_active_pricing_tiers()
+    providers = ai_engine.get_provider_availability(user)
 
     return jsonify({
         "success": True,
@@ -544,12 +556,18 @@ def api_user_info():
             "photo_url": user.get("photo_url"),
             "has_custom_key": bool(user.get("custom_gemini_key")),
             "custom_key_preview": f"{user.get('custom_gemini_key')[:4]}...{user.get('custom_gemini_key')[-4:]}" if user.get("custom_gemini_key") else None,
+            "has_custom_openai_key": bool(user.get("custom_openai_key")),
+            "custom_openai_key_preview": f"{user.get('custom_openai_key')[:4]}...{user.get('custom_openai_key')[-4:]}" if user.get("custom_openai_key") else None,
+            "has_custom_claude_key": bool(user.get("custom_claude_key")),
+            "custom_claude_key_preview": f"{user.get('custom_claude_key')[:4]}...{user.get('custom_claude_key')[-4:]}" if user.get("custom_claude_key") else None,
             "selected_model": user.get("selected_model", sys_settings.get("default_model", ai_engine.DEFAULT_MODEL)),
+            "selected_provider": user.get("selected_provider", "gemini"),
             "stories_created": user.get("stories_created", 0),
             "characters_count": len(chars),
             "is_admin": is_adm
         },
         "models": ai_engine.AVAILABLE_MODELS,
+        "providers": providers,
         "pricing_tiers": pricing,
         "cultures": CULTURES,
         "styles": STYLES,
@@ -582,46 +600,106 @@ def api_update_settings():
     user_id = user["user_id"]
     sys_settings = database.get_system_settings()
 
-    if "custom_gemini_key" in data:
-        byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
-        key = str(data.get("custom_gemini_key", "")).strip()
-        if key and not byok_allowed:
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+    has_key_updates = any(k in data for k in ["custom_gemini_key", "custom_openai_key", "custom_claude_key"])
+
+    if has_key_updates:
+        gemini_k = data.get("custom_gemini_key")
+        openai_k = data.get("custom_openai_key")
+        claude_k = data.get("custom_claude_key")
+        if not byok_allowed and any(str(k or "").strip() for k in [gemini_k, openai_k, claude_k] if k is not None):
             return jsonify({
                 "success": False,
-                "error": "BYOK Locked: Custom Gemini Keys are currently disabled by the studio administrator. Standard quota is enforced."
+                "error": "BYOK Locked: Custom API keys are currently disabled by the studio administrator."
             }), 403
-        database.update_user_key(user_id, key if key else None)
+        database.update_user_custom_keys(
+            user_id,
+            gemini_key=gemini_k.strip() if gemini_k is not None else None,
+            openai_key=openai_k.strip() if openai_k is not None else None,
+            claude_key=claude_k.strip() if claude_k is not None else None
+        )
 
-    if "selected_model" in data:
-        model = str(data.get("selected_model", "")).strip()
-        if model in ai_engine.AVAILABLE_MODELS:
-            database.update_user_model(user_id, model)
+    if "selected_model" in data or "selected_provider" in data:
+        model = str(data.get("selected_model", "")).strip() or user.get("selected_model", ai_engine.DEFAULT_MODEL)
+        provider = str(data.get("selected_provider", "")).strip().lower() or ai_engine.get_model_provider(model)
+
+        # Check provider availability
+        avail = ai_engine.get_provider_availability(user).get(provider, {})
+        if not avail.get("available") and not database.is_admin(user_id):
+            return jsonify({
+                "success": False,
+                "error": f"Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            }), 400
+
+        database.update_user_model(user_id, model, provider)
 
     refreshed = database.get_user(user_id)
     return jsonify({
         "success": True,
         "credits": refreshed.get("credits", 0),
         "selected_model": refreshed.get("selected_model"),
-        "has_custom_key": bool(refreshed.get("custom_gemini_key"))
+        "selected_provider": refreshed.get("selected_provider", "gemini"),
+        "has_custom_key": bool(refreshed.get("custom_gemini_key")),
+        "has_custom_openai_key": bool(refreshed.get("custom_openai_key")),
+        "has_custom_claude_key": bool(refreshed.get("custom_claude_key")),
+        "providers": ai_engine.get_provider_availability(refreshed)
     })
 
 @app.route('/api/test_key', methods=['POST'])
 def api_test_key():
     data = request.get_json(silent=True, force=True) or {}
     key = str(data.get("api_key", "")).strip()
+    provider = str(data.get("provider", "gemini")).strip().lower()
     if not key:
         return jsonify({"success": False, "error": "No API key provided"}), 400
 
     try:
-        from google import genai
-        client = genai.Client(api_key=key)
-        resp = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents="Say 'OK' in 1 word."
-        )
-        if resp and resp.text:
-            return jsonify({"success": True, "message": "Key is valid and authenticated with Google GenAI!"})
-        return jsonify({"success": False, "error": "No response returned from model"}), 400
+        if provider == "openai":
+            with httpx.Client(timeout=12.0) as client:
+                resp = client.get("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {key}"})
+                if resp.status_code == 200:
+                    return jsonify({"success": True, "message": "Key is valid and authenticated with OpenAI API!"})
+                else:
+                    try:
+                        err_msg = resp.json().get("error", {}).get("message", resp.text)
+                    except Exception:
+                        err_msg = resp.text
+                    return jsonify({"success": False, "error": f"OpenAI authentication failed: {err_msg}"}), 400
+
+        elif provider in ["claude", "anthropic"]:
+            with httpx.Client(timeout=12.0) as client:
+                resp = client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json"
+                    },
+                    json={
+                        "model": "claude-3-5-haiku-20241022",
+                        "max_tokens": 10,
+                        "messages": [{"role": "user", "content": "ping"}]
+                    }
+                )
+                if resp.status_code == 200:
+                    return jsonify({"success": True, "message": "Key is valid and authenticated with Anthropic Claude API!"})
+                else:
+                    try:
+                        err_msg = resp.json().get("error", {}).get("message", resp.text)
+                    except Exception:
+                        err_msg = resp.text
+                    return jsonify({"success": False, "error": f"Claude authentication failed: {err_msg}"}), 400
+
+        else: # gemini
+            from google import genai
+            client = genai.Client(api_key=key)
+            resp = client.models.generate_content(
+                model=ai_engine.DEFAULT_MODEL,
+                contents="Say 'OK' in 1 word."
+            )
+            if resp and resp.text:
+                return jsonify({"success": True, "message": "Key is valid and authenticated with Google GenAI!"})
+            return jsonify({"success": False, "error": "No response returned from model"}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
@@ -757,7 +835,7 @@ def api_character_forge():
             send_telegram_document(
                 user_id=user_id,
                 file_path=char_pdf_path,
-                caption=f"🎭 <b>CastLock 3D Continuity Sheet</b>\n<i>{name}</i>"
+                caption=f"<b>CastLock 3D Continuity Sheet</b>\n<i>{name}</i>"
             )
     except Exception as c_err:
         print(f"[CHARACTER FORGE] PDF generation error: {c_err}")
@@ -815,12 +893,28 @@ def api_story_concepts():
     tier_cfg = get_active_pricing_tiers().get(length_tier, get_active_pricing_tiers()["Short"])
     concepts_cost = tier_cfg["concepts_cost"]
 
-    custom_key = user.get("custom_gemini_key")
-    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available") and not database.is_admin(user_id):
+        return jsonify({
+            "success": False,
+            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok_for_model = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok_for_model = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok_for_model = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok_for_model = True
 
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
-    actual_cost = 0 if (custom_key and byok_allowed) else concepts_cost
+    actual_cost = 0 if (has_byok_for_model and byok_allowed) else concepts_cost
 
     if actual_cost > 0 and user.get("credits", 0) < actual_cost:
         return jsonify({
@@ -832,7 +926,7 @@ def api_story_concepts():
     source_title = source_input[:50]
     transcript_text = source_input
     if "youtube.com" in source_input or "youtu.be" in source_input:
-        yt_res = source_extractor.get_youtube_transcript(source_input, custom_key)
+        yt_res = source_extractor.get_youtube_transcript(source_input, user_keys.get("custom_gemini_key"))
         if yt_res.get("success"):
             source_title = yt_res.get("title", source_title)
             transcript_text = yt_res.get("transcript", source_input)
@@ -854,8 +948,9 @@ def api_story_concepts():
             visual_style=style,
             genre=genre,
             lead_character=lead_char,
-            user_api_key=custom_key,
-            model_name=model_name
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
         ))
     except Exception as e:
         return jsonify({"success": False, "error": f"Concept generation error: {str(e)}"}), 500
@@ -878,8 +973,8 @@ def api_story_concepts():
     )
     database.update_job_concepts(job_id, json.dumps(concepts_list))
 
-    if not custom_key:
-        database.deduct_credits(user_id, concepts_cost)
+    if actual_cost > 0:
+        database.deduct_credits(user_id, actual_cost)
 
     refreshed_user = database.get_user(user_id)
     return jsonify({
@@ -917,12 +1012,28 @@ def api_story_generate():
     tier_cfg = get_active_pricing_tiers().get(length_tier, get_active_pricing_tiers()["Short"])
     pdfs_cost = tier_cfg["pdfs_cost"]
 
-    custom_key = user.get("custom_gemini_key")
-    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available") and not database.is_admin(user_id):
+        return jsonify({
+            "success": False,
+            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok_for_model = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok_for_model = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok_for_model = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok_for_model = True
 
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
-    actual_cost = 0 if (custom_key and byok_allowed) else pdfs_cost
+    actual_cost = 0 if (has_byok_for_model and byok_allowed) else pdfs_cost
 
     if actual_cost > 0 and user.get("credits", 0) < actual_cost:
         return jsonify({
@@ -971,9 +1082,10 @@ def api_story_generate():
             lead_character=lead_char,
             length_tier=length_tier,
             timezone="Africa/Lagos",
-            user_api_key=custom_key,
+            user_api_key=user_keys.get("custom_gemini_key"),
             model_name=model_name,
-            channel_name=channel_name
+            channel_name=channel_name,
+            user_keys=user_keys
         ))
     except Exception as e:
         return jsonify({"success": False, "error": f"Script production error: {str(e)}"}), 500
@@ -1035,13 +1147,13 @@ def api_story_generate():
         sent_bible = send_telegram_document(
             user_id=user_id,
             file_path=bible_pdf,
-            caption=f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"
+            caption=f"<b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"
         )
     if scene_pdf and os.path.exists(scene_pdf):
         sent_scene = send_telegram_document(
             user_id=user_id,
             file_path=scene_pdf,
-            caption=f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"
+            caption=f"<b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"
         )
 
     refreshed_user = database.get_user(user_id)
@@ -1119,10 +1231,10 @@ def api_send_pdf_to_telegram():
             gc.collect()
 
     if need_bible and bible_path and os.path.exists(bible_path):
-        files_to_send.append((bible_path, f"🎬 <b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"))
+        files_to_send.append((bible_path, f"<b>PDF 1: Image Production Prompts</b>\n<i>{story_title}</i>"))
 
     if need_scene and scene_path and os.path.exists(scene_path):
-        files_to_send.append((scene_path, f"📹 <b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"))
+        files_to_send.append((scene_path, f"<b>PDF 2: Video Production Prompts</b>\n<i>{story_title}</i>"))
 
     if not files_to_send:
         return jsonify({"success": False, "error": "PDF files could not be found or built for this screenplay."}), 404
@@ -1219,7 +1331,7 @@ def api_send_thumbnail_to_telegram():
     if not concepts:
         return jsonify({"success": False, "error": "No thumbnail concepts to send"}), 400
 
-    msg = "🖼️ <b>WP Studio — YouTube Thumbnail Master Prompts</b>\n"
+    msg = "<b>WP Studio — YouTube Thumbnail Master Prompts</b>\n"
     if data.get("topic"):
         msg += f"<i>Project: {data.get('topic')}</i>\n"
     if data.get("channel_name"):
@@ -1233,15 +1345,15 @@ def api_send_thumbnail_to_telegram():
         trigger = c.get("psychological_trigger", "")
 
         msg += "\n<b>━━━━━━━━━━━━━━━━━━━━</b>\n"
-        msg += f"<b>📌 {v_name.upper()}</b>\n"
+        msg += f"<b>{v_name.upper()}</b>\n"
         if headline:
-            msg += f"🎬 <b>Recommended Title:</b> {headline}\n"
+            msg += f"<b>Recommended Title:</b> {headline}\n"
         if overlay:
-            msg += f"🏷️ <b>Overlay Sticker:</b> <code>{overlay}</code>\n"
+            msg += f"<b>Overlay Sticker:</b> <code>{overlay}</code>\n"
         if trigger:
-            msg += f"🎯 <b>Click Trigger:</b> {trigger}\n"
+            msg += f"<b>Click Trigger:</b> {trigger}\n"
         if prompt:
-            msg += f"📋 <b>Midjourney / Flux / Google Flow Prompt:</b>\n<code>{prompt}</code>\n"
+            msg += f"<b>Midjourney / Flux / Google Flow Prompt:</b>\n<code>{prompt}</code>\n"
 
     success = send_telegram_message(user_id, msg)
     if success:
@@ -1257,7 +1369,7 @@ def api_send_image_to_telegram():
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
     image_data = data.get("image_data", "")
-    caption = data.get("caption", "🎬 <b>WP Studio Production Image</b>")
+    caption = data.get("caption", "<b>WP Studio Production Image</b>")
 
     if not image_data or not image_data.startswith("data:image"):
         return jsonify({"success": False, "error": "Invalid image data"}), 400
@@ -1329,15 +1441,35 @@ def api_story_adapter_generate():
     target_duration = str(data.get("target_duration", "Standard (8–15 Mins)")).strip()
     delivery_format = str(data.get("delivery_format", "Dialogue / Narrative")).strip()
 
-    # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP)
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available") and not database.is_admin(user_id):
+        return jsonify({
+            "success": False,
+            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok_for_model = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok_for_model = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok_for_model = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok_for_model = True
+
+    sys_settings = database.get_system_settings()
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+
+    # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP or BYOK)
     is_vip = int(user.get("credits", 0)) >= 999999
-    cost = 15 if not is_vip else 0
+    is_free = is_vip or (has_byok_for_model and byok_allowed)
+    cost = 15 if not is_free else 0
 
     if cost > 0 and user.get("credits", 0) < cost:
         return jsonify({"success": False, "error": f"Insufficient credits! Story Adapter requires {cost} credits."}), 402
-
-    custom_key = user.get("custom_gemini_key")
-    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
 
     try:
         adapted_data = run_async(ai_engine.adapt_story_to_scenes(
@@ -1348,13 +1480,14 @@ def api_story_adapter_generate():
             voice_accent=voice_accent,
             target_duration=target_duration,
             delivery_format=delivery_format,
-            user_api_key=custom_key,
-            model_name=model_name
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
         ))
 
         # Check total scenes produced
         total_scenes = len(adapted_data.get("scenes", []))
-        if total_scenes > 40 and not is_vip:
+        if total_scenes > 40 and not is_free:
             extra = total_scenes - 40
             cost += extra
 
@@ -1405,7 +1538,7 @@ def api_story_adapter_send_to_telegram():
         return jsonify({"success": False, "error": "No scenes found to send"}), 400
 
     # Header message
-    header_msg = f"🎬 <b>WP Studio — Story Adapter Breakdown</b>\n"
+    header_msg = f"<b>WP Studio — Story Adapter Breakdown</b>\n"
     header_msg += f"<b>Title:</b> {title}\n"
     if logline:
         header_msg += f"<i>{logline}</i>\n"
@@ -1425,15 +1558,15 @@ def api_story_adapter_send_to_telegram():
         img_prompt = s.get("image_prompt", "")
         vid_prompt = s.get("video_prompt", "")
 
-        scene_text = f"\n\n<b>📍 SCENE {s_num}: {s_title}</b>"
+        scene_text = f"\n\n<b>SCENE {s_num}: {s_title}</b>"
         if setting:
             scene_text += f"\n<i>Setting: {setting}</i>"
         if narration:
-            scene_text += f"\n🎙️ <i>\"{narration}\"</i>"
+            scene_text += f"\n<i>\"{narration}\"</i>"
         if img_prompt:
-            scene_text += f"\n📷 <b>Visual Image Prompt:</b>\n<code>{img_prompt}</code>"
+            scene_text += f"\n<b>Visual Image Prompt:</b>\n<code>{img_prompt}</code>"
         if vid_prompt:
-            scene_text += f"\n🎥 <b>Camera Motion:</b>\n<code>{vid_prompt}</code>"
+            scene_text += f"\n<b>Camera Motion:</b>\n<code>{vid_prompt}</code>"
 
         if len(current_chunk) + len(scene_text) > 3600:
             send_telegram_message(user_id, current_chunk)
@@ -1508,8 +1641,17 @@ def api_remixcraft_analyze():
         except Exception:
             pass
 
-    custom_key = user.get("custom_gemini_key")
-    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available") and not database.is_admin(user_id):
+        return jsonify({
+            "success": False,
+            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+        }), 400
+
+    user_keys = build_user_keys(user)
 
     try:
         analysis = run_async(ai_engine.remodel_competitor_analysis(
@@ -1518,8 +1660,9 @@ def api_remixcraft_analyze():
             culture=culture,
             target_duration=target_duration,
             lead_character=lead_char,
-            user_api_key=custom_key,
-            model_name=model_name
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
         ))
 
         return jsonify({
@@ -1551,11 +1694,29 @@ def api_remixcraft_produce():
     visual_filter = str(data.get("visual_filter", "Default")).strip()
     lead_character_id = data.get("lead_character_id")
 
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available") and not database.is_admin(user_id):
+        return jsonify({
+            "success": False,
+            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok_for_model = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok_for_model = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok_for_model = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok_for_model = True
+
     # Pricing: 30 credits (0 for VIPs or BYOK)
     is_vip = int(user.get("credits", 0)) >= 999999
-    custom_key = user.get("custom_gemini_key")
     byok_allowed = database.get_system_settings().get("byok_enabled", "1") == "1"
-    cost = 0 if (is_vip or (custom_key and byok_allowed)) else 30
+    cost = 0 if (is_vip or (has_byok_for_model and byok_allowed)) else 30
 
     if cost > 0 and int(user.get("credits", 0)) < cost:
         return jsonify({
@@ -1575,8 +1736,6 @@ def api_remixcraft_produce():
         except Exception:
             pass
 
-    model_name = user.get("selected_model", ai_engine.DEFAULT_MODEL)
-
     try:
         package = run_async(ai_engine.generate_remodeled_production_package(
             selected_concept=selected_concept,
@@ -1586,8 +1745,9 @@ def api_remixcraft_produce():
             art_style=art_style,
             visual_filter=visual_filter,
             lead_character=lead_char,
-            user_api_key=custom_key,
-            model_name=model_name
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
         ))
 
         # Deduct credits
@@ -1642,20 +1802,20 @@ def api_remixcraft_send_to_telegram():
         return jsonify({"success": False, "error": "No scenes found to send"}), 400
 
     # Header message with Thumbnails
-    header = f"🔥 <b>WP Studio — Remixcraft Production Package</b>\n\n"
-    header += f"🎬 <b>Title:</b> {title}\n"
+    header = f"<b>WP Studio — Remixcraft Production Package</b>\n\n"
+    header += f"<b>Title:</b> {title}\n"
     if logline:
-        header += f"💡 <b>Logline:</b> <i>{logline}</i>\n\n"
-    header += f"⏱️ <b>Target Runtime:</b> {pkg.get('target_duration', 'Standard')} | <b>Art Style:</b> {pkg.get('art_style', 'Realistic')}\n"
-    header += f"🌍 <b>Culture / Voice:</b> {pkg.get('culture', 'African / Nigerian')}\n"
-    header += f"📊 <b>Total Scenes:</b> {len(scenes)}\n"
+        header += f"<b>Logline:</b> <i>{logline}</i>\n\n"
+    header += f"<b>Target Runtime:</b> {pkg.get('target_duration', 'Standard')} | <b>Art Style:</b> {pkg.get('art_style', 'Realistic')}\n"
+    header += f"<b>Culture / Voice:</b> {pkg.get('culture', 'African / Nigerian')}\n"
+    header += f"<b>Total Scenes:</b> {len(scenes)}\n"
 
     if thumbnails:
-        header += f"\n🖼️ <b>HIGH-CTR THUMBNAIL CONCEPTS:</b>\n"
+        header += f"\n<b>HIGH-CTR THUMBNAIL CONCEPTS:</b>\n"
         for idx, th in enumerate(thumbnails, 1):
             header += f"\n<b>Concept {idx}:</b> {th.get('headline', '')}\n"
-            header += f"🏷️ <b>Overlay Text:</b> <code>{th.get('bold_text_overlay', '')}</code>\n"
-            header += f"🎨 <b>Prompt:</b> <code>{th.get('visual_prompt', '')}</code>\n"
+            header += f"<b>Overlay Text:</b> <code>{th.get('bold_text_overlay', '')}</code>\n"
+            header += f"<b>Prompt:</b> <code>{th.get('visual_prompt', '')}</code>\n"
 
     header += "\n<b>━━━━━━━━━━━━━━━━━━━━</b>"
     send_telegram_message(user_id, header)
@@ -1670,15 +1830,15 @@ def api_remixcraft_send_to_telegram():
         img_p = s.get("image_prompt", "")
         vid_p = s.get("video_prompt", "")
 
-        block = f"\n\n<b>📍 SCENE {s_num}: {s_title}</b>"
+        block = f"\n\n<b>SCENE {s_num}: {s_title}</b>"
         if setting:
             block += f"\n<i>Setting: {setting}</i>"
         if dialogue:
-            block += f"\n🎙️ <i>\"{dialogue}\"</i>"
+            block += f"\n<i>\"{dialogue}\"</i>"
         if img_p:
-            block += f"\n📷 <b>Visual Image Prompt:</b>\n<code>{img_p}</code>"
+            block += f"\n<b>Visual Image Prompt:</b>\n<code>{img_p}</code>"
         if vid_p:
-            block += f"\n🎥 <b>Camera Motion:</b>\n<code>{vid_p}</code>"
+            block += f"\n<b>Camera Motion:</b>\n<code>{vid_p}</code>"
 
         if len(chunk) + len(block) > 3600:
             send_telegram_message(user_id, chunk)
@@ -1707,9 +1867,9 @@ def api_remixcraft_send_to_telegram():
             length_tier=pkg.get("target_duration", "Standard")
         )
         if b_pdf and os.path.exists(b_pdf):
-            send_telegram_document(user_id, b_pdf, caption=f"🎬 <b>Remixcraft Image Prompts PDF</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, b_pdf, caption=f"<b>Remixcraft Image Prompts PDF</b>\n<i>{title}</i>")
         if s_pdf and os.path.exists(s_pdf):
-            send_telegram_document(user_id, s_pdf, caption=f"📹 <b>Remixcraft Video Prompts PDF</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, s_pdf, caption=f"<b>Remixcraft Video Prompts PDF</b>\n<i>{title}</i>")
     except Exception as pdf_e:
         print(f"[REMIXCRAFT PDF ERROR] {pdf_e}")
 
@@ -1807,6 +1967,12 @@ def api_admin_overview():
             "primary_key_preview": f"{primary_k[:6]}...{primary_k[-4:]}" if primary_k else "Not Set",
             "has_fallback_key": bool(fallback_k),
             "fallback_key_preview": f"{fallback_k[:6]}...{fallback_k[-4:]}" if fallback_k else "Not Set",
+            "has_openai_key": bool(settings.get("openai_api_key")),
+            "openai_key_preview": f"{settings.get('openai_api_key')[:6]}...{settings.get('openai_api_key')[-4:]}" if settings.get("openai_api_key") else "Not Set",
+            "model_gemini_enabled": settings.get("model_gemini_enabled", "1") != "0",
+            "model_gpt_enabled": settings.get("model_gpt_enabled", "1") != "0",
+            "model_claude_enabled": settings.get("model_claude_enabled", "1") != "0",
+            "providers_status": ai_engine.get_provider_availability(user),
             "default_model": settings.get("default_model", "gemini-3.8-flash"),
             "byok_enabled": settings.get("byok_enabled") == "1",
             "maintenance_mode": settings.get("maintenance_mode") == "1",
@@ -1925,6 +2091,15 @@ def api_admin_update_settings():
     elif "gemini_api_key_fallback" in data:
         updates["gemini_api_key_fallback"] = str(data["gemini_api_key_fallback"]).strip()
 
+    if "openai_api_key" in data:
+        updates["openai_api_key"] = str(data["openai_api_key"]).strip()
+    elif "openai_key" in data:
+        updates["openai_api_key"] = str(data["openai_key"]).strip()
+
+    for m in ["model_gemini_enabled", "model_gpt_enabled", "model_claude_enabled"]:
+        if m in data:
+            updates[m] = "1" if data[m] in [True, 1, "1"] else "0"
+
     if "default_model" in data:
         updates["default_model"] = str(data["default_model"]).strip()
 
@@ -2031,7 +2206,7 @@ def api_admin_broadcast_telegram():
     import requests
     import time
     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload_text = f"📢 <b>Announcement from WP Studio</b>\n\n{message}"
+    payload_text = f"<b>Announcement from WP Studio</b>\n\n{message}"
 
     for uid in user_ids:
         try:

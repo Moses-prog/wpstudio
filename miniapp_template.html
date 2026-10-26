@@ -1047,6 +1047,36 @@
             transition: opacity 0.15s;
         }
         .btn-sm-action:active { opacity: 0.8; }
+        .btn-sm-action.active {
+            background: var(--accent, #e5a93c);
+            color: #0b0c0e;
+        }
+
+        .btn-provider {
+            background: var(--surface-card, #111216);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            padding: 7px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-provider.active {
+            background: rgba(229, 169, 60, 0.12);
+            border-color: var(--accent, #e5a93c);
+            color: var(--accent, #e5a93c);
+        }
+        .btn-provider.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .btn-provider:active:not(.disabled) {
+            transform: scale(0.98);
+        }
 
         .btn-del {
             background: transparent;
@@ -1736,6 +1766,32 @@
                     </select>
                 </div>
 
+                <!-- Model Provider Selection -->
+                <div style="margin-top: 10px; padding: 10px; background: var(--surface-card, #111216); border: 1px solid var(--border-color); border-radius: var(--radius-sm, 6px);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div class="form-label" style="font-size:10px; margin-bottom:0;">AI Story Engine</div>
+                        <span id="storycraft-prov-badge" class="chip ready" style="font-size:9px; padding:2px 6px;">Gemini Active</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
+                        <button type="button" class="btn-provider active" id="story-prov-gemini" onclick="selectStorycraftProvider('gemini')">
+                            <span style="font-weight:600; font-size:11px;">Gemini</span>
+                            <span id="badge-story-gemini" style="font-size:9px; opacity:0.8;">Ready</span>
+                        </button>
+                        <button type="button" class="btn-provider" id="story-prov-openai" onclick="selectStorycraftProvider('openai')">
+                            <span style="font-weight:600; font-size:11px;">ChatGPT</span>
+                            <span id="badge-story-openai" style="font-size:9px; opacity:0.8;">Check</span>
+                        </button>
+                        <button type="button" class="btn-provider" id="story-prov-claude" onclick="selectStorycraftProvider('claude')">
+                            <span style="font-weight:600; font-size:11px;">Claude</span>
+                            <span id="badge-story-claude" style="font-size:9px; opacity:0.8;">BYOK</span>
+                        </button>
+                    </div>
+                    <div>
+                        <select id="storycraft-sel-model" class="form-input" style="font-size:12px;" onchange="onStorycraftModelChanged()"></select>
+                    </div>
+                    <div id="storycraft-prov-notice" style="display:none; margin-top:6px; font-size:10px; color:var(--text-muted); line-height:1.4;"></div>
+                </div>
+
                 <button id="btn-generate-concepts" class="btn-submit" onclick="submitStoryConcepts()">
                     <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     Generate 10 Concepts
@@ -1767,7 +1823,7 @@
                 <!-- Ready to copy YouTube Video Description -->
                 <div id="story-result-desc-wrap" style="background:#080d1a; border:1px solid #1e293b; border-radius:8px; padding:10px; margin-bottom:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="font-size:10px; font-weight:700; color:#38bdf8; text-transform:uppercase;">📝 Ready-to-Copy YouTube Description:</span>
+                        <span style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase;">Ready-to-Copy YouTube Description:</span>
                         <button type="button" class="btn-secondary" style="font-size:10px; padding:3px 8px; cursor:pointer;" onclick="copyStoryDescription()">
                             <svg viewBox="0 0 24 24" style="width:10px; height:10px; margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                             Copy
@@ -2723,44 +2779,85 @@
             </div>
 
             <div class="form-card" id="settings-byok-card">
-                <div class="form-label">Bring Your Own Key (BYOK)</div>
-                <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                    <span class="chip ready" style="padding:4px 8px; font-size:11px; font-weight:700;">🟢 Google Gemini</span>
-                    <span class="chip" style="padding:4px 8px; font-size:11px; opacity:0.65; border:1px dashed var(--border-color); cursor:pointer;" onclick="showToast('ChatGPT BYOK integration coming soon in the next studio update!', false)">🔒 OpenAI ChatGPT (Coming Soon)</span>
-                    <span class="chip" style="padding:4px 8px; font-size:11px; opacity:0.65; border:1px dashed var(--border-color); cursor:pointer;" onclick="showToast('Claude 3.7 Sonnet BYOK integration coming soon in the next studio update!', false)">🔒 Anthropic Claude (Coming Soon)</span>
+                <div class="form-label">BYOK API Credentials</div>
+                <div class="form-hint" id="settings-byok-hint">Add personal API keys to unlock provider models or run free of platform credits. Claude requires a personal key because Anthropic offers no free tier.</div>
+
+                <div style="display:flex; gap:6px; margin: 10px 0 12px; border-bottom: 1px solid var(--border-color); padding-bottom:8px;">
+                    <button type="button" class="btn-sm-action active" id="tab-btn-byok-gemini" onclick="switchByokTab('gemini')">Google Gemini</button>
+                    <button type="button" class="btn-sm-action" id="tab-btn-byok-openai" onclick="switchByokTab('openai')">OpenAI</button>
+                    <button type="button" class="btn-sm-action" id="tab-btn-byok-claude" onclick="switchByokTab('claude')">Anthropic Claude</button>
                 </div>
-                <div class="form-hint" id="settings-byok-hint">Obtain a free Gemini API key at Google AI Studio (aistudio.google.com). With a custom key, all story generations, CastLock character builds, and thumbnail prompts cost 0 credits.</div>
-                <input id="settings-api-key" type="password" class="form-input" placeholder="AIzaSy...">
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button id="btn-save-byok" class="btn-submit" onclick="submitSaveApiKey()" style="margin-top:0; flex:1;">
-                        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        Save Key
-                    </button>
-                    <button id="btn-test-byok" class="btn-secondary" onclick="submitTestApiKey()" style="padding:0 14px;">
-                        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                        Test Key
-                    </button>
+
+                <!-- 1. Gemini BYOK Pane -->
+                <div id="pane-byok-gemini">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">Google Gemini Key (Optional)</span>
+                        <span id="chip-status-gemini" class="chip model" style="font-size:9px;">DEFAULT SERVER</span>
+                    </div>
+                    <div class="form-hint" style="margin-bottom:8px;">Get a free key at aistudio.google.com. With a custom key, all story generations cost 0 credits.</div>
+                    <input id="settings-api-key" type="password" class="form-input" placeholder="AIzaSy...">
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button id="btn-save-byok" class="btn-submit" onclick="submitSaveApiKey('gemini')" style="margin-top:0; flex:1;">
+                            Save Gemini Key
+                        </button>
+                        <button id="btn-test-byok" class="btn-secondary" onclick="submitTestApiKey('gemini')" style="padding:0 14px;">
+                            Test Key
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. OpenAI BYOK Pane -->
+                <div id="pane-byok-openai" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">OpenAI API Key (Optional)</span>
+                        <span id="chip-status-openai" class="chip model" style="font-size:9px;">NOT SET</span>
+                    </div>
+                    <div class="form-hint" style="margin-bottom:8px;">Get your key from platform.openai.com. Unlocks GPT-4o and GPT-4o Mini with your OpenAI quota.</div>
+                    <input id="settings-openai-key" type="password" class="form-input" placeholder="sk-...">
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button id="btn-save-openai" class="btn-submit" onclick="submitSaveApiKey('openai')" style="margin-top:0; flex:1;">
+                            Save OpenAI Key
+                        </button>
+                        <button id="btn-test-openai" class="btn-secondary" onclick="submitTestApiKey('openai')" style="padding:0 14px;">
+                            Test Key
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Claude BYOK Pane -->
+                <div id="pane-byok-claude" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">Anthropic Claude Key (Required for Claude)</span>
+                        <span id="chip-status-claude" class="chip danger" style="font-size:9px;">REQUIRES BYOK</span>
+                    </div>
+                    <div class="form-hint" style="margin-bottom:8px;">Get your key from console.anthropic.com. Claude operates strictly under BYOK because Anthropic offers no free tier API.</div>
+                    <input id="settings-claude-key" type="password" class="form-input" placeholder="sk-ant-...">
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button id="btn-save-claude" class="btn-submit" onclick="submitSaveApiKey('claude')" style="margin-top:0; flex:1;">
+                            Save Claude Key
+                        </button>
+                        <button id="btn-test-claude" class="btn-secondary" onclick="submitTestApiKey('claude')" style="padding:0 14px;">
+                            Test Key
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="form-card">
                 <div class="form-label">Active AI Model Engine</div>
-                <div class="form-hint">Select the AI model variant to drive the storytelling and screenwriting pipeline.</div>
+                <div class="form-hint">Select the active model to drive all storytelling, screenplay, and adaptation generation.</div>
                 <select id="settings-sel-model" class="form-input" onchange="submitUpdateModel()">
-                    <optgroup label="Google Gemini (Available Now)">
+                    <optgroup label="Google Gemini">
                         <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended & Fast)</option>
-                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Ultra-Stable)</option>
-                        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Fast)</option>
-                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Deep Reasoning)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                     </optgroup>
-                    <optgroup label="OpenAI ChatGPT (Coming Soon)">
-                        <option value="chatgpt-4o" disabled>ChatGPT (GPT-4o) [Coming Soon 🔒]</option>
-                        <option value="chatgpt-4o-mini" disabled>ChatGPT (GPT-4o Mini) [Coming Soon 🔒]</option>
-                        <option value="chatgpt-o3-mini" disabled>OpenAI o3-mini [Coming Soon 🔒]</option>
+                    <optgroup label="OpenAI ChatGPT">
+                        <option value="gpt-4o">GPT-4o (Flagship Model)</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini (Fast & Compact)</option>
                     </optgroup>
-                    <optgroup label="Anthropic Claude (Coming Soon)">
-                        <option value="claude-3-7-sonnet" disabled>Claude 3.7 Sonnet [Coming Soon 🔒]</option>
-                        <option value="claude-3-5-haiku" disabled>Claude 3.5 Haiku [Coming Soon 🔒]</option>
+                    <optgroup label="Anthropic Claude (Requires BYOK)">
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (High Stakes & Depth)</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Fast & Punchy)</option>
                     </optgroup>
                 </select>
             </div>
@@ -3486,7 +3583,7 @@
             const rawCredits = currentUser.credits ?? 0;
             const isUnlimited = (rawCredits >= 999999);
             const creditsVal = isUnlimited ? '∞' : rawCredits;
-            document.getElementById('header-credits-count').innerText = isUnlimited ? '👑 Unlimited VIP' : `${creditsVal} Credits`;
+            document.getElementById('header-credits-count').innerText = isUnlimited ? 'Unlimited VIP' : `${creditsVal} Credits`;
             document.getElementById('stat-credits').innerText = creditsVal;
             document.getElementById('settings-credits-display').innerText = isUnlimited ? 'Unlimited (VIP Access)' : `${creditsVal} Credits`;
 
@@ -3547,6 +3644,31 @@
                     bannerKey.style.display = 'none';
                     document.getElementById('badge-engine').className = 'badge free';
                 }
+            }
+
+            // Update Multi-Provider BYOK Status Chips in Settings Modal
+            const chipGem = document.getElementById('chip-status-gemini');
+            const chipOAI = document.getElementById('chip-status-openai');
+            const chipCld = document.getElementById('chip-status-claude');
+
+            if (chipGem) {
+                chipGem.innerText = currentUser.has_custom_key ? 'BYOK ACTIVE' : 'DEFAULT SERVER';
+                chipGem.className = currentUser.has_custom_key ? 'chip byok' : 'chip model';
+            }
+            if (chipOAI) {
+                const provs = studioMeta?.providers || {};
+                const oaiAvail = provs.openai?.available;
+                chipOAI.innerText = currentUser.has_custom_openai_key ? 'BYOK ACTIVE' : (oaiAvail ? 'SERVER READY' : 'NOT SET');
+                chipOAI.className = (currentUser.has_custom_openai_key || oaiAvail) ? 'chip ready' : 'chip model';
+            }
+            if (chipCld) {
+                chipCld.innerText = currentUser.has_custom_claude_key ? 'BYOK ACTIVE' : 'REQUIRES BYOK';
+                chipCld.className = currentUser.has_custom_claude_key ? 'chip byok' : 'chip danger';
+            }
+
+            // Sync StoryCraft UI
+            if (typeof updateStorycraftProviderUI === 'function') {
+                updateStorycraftProviderUI();
             }
 
             document.getElementById('stat-stories').innerText = currentUser.stories_created || storyHistory.length;
@@ -3919,7 +4041,8 @@
                 delivery_format: deliveryFormat,
                 length_tier: tier,
                 locked_lead_id: document.getElementById('story-sel-character').value || null,
-                channel_name: document.getElementById('story-channel-name')?.value?.trim() || ""
+                channel_name: document.getElementById('story-channel-name')?.value?.trim() || "",
+                model_name: document.getElementById('storycraft-sel-model')?.value || currentUser.selected_model || "gemini-3.8-flash"
             };
 
             try {
@@ -4100,7 +4223,8 @@
                 selected_concept_idx: selectedConceptIndex,
                 locked_lead_id: document.getElementById('story-sel-character').value || null,
                 channel_name: document.getElementById('story-channel-name')?.value?.trim() || "",
-                delivery_format: document.getElementById('story-sel-delivery')?.value || "Dialogue / Narrative"
+                delivery_format: document.getElementById('story-sel-delivery')?.value || "Dialogue / Narrative",
+                model_name: document.getElementById('storycraft-sel-model')?.value || currentUser.selected_model || "gemini-3.8-flash"
             };
 
             try {
@@ -4885,7 +5009,7 @@
             try {
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
                 const text = document.getElementById('stamper-text')?.value?.trim() || "";
-                const caption = `🎬 <b>Finished YouTube Thumbnail</b>\n` +
+                const caption = `<b>Finished YouTube Thumbnail</b>\n` +
                                 (text ? `Writeup: <b>${escapeHtml(text)}</b>\n` : '') +
                                 `<i>Ready to upload to YouTube Studio!</i>`;
 
@@ -5007,7 +5131,7 @@
             const priceEl = document.getElementById('adapter-plan-price');
             if (priceEl) {
                 if (isVip) {
-                    priceEl.innerText = '👑 0 Credits (Unlimited VIP)';
+                    priceEl.innerText = '0 Credits (Unlimited VIP)';
                     priceEl.style.color = '#30d158';
                 } else {
                     priceEl.innerText = `${totalCost} Credits (15 Base${extraScenes > 0 ? ` + ${extraScenes}` : ''})`;
@@ -5018,7 +5142,7 @@
             const balEl = document.getElementById('adapter-user-balance');
             if (balEl && currentUser) {
                 const bal = currentUser.credits || 0;
-                balEl.innerText = isVip ? '👑 Unlimited' : `${bal.toLocaleString()} credits`;
+                balEl.innerText = isVip ? 'Unlimited (VIP)' : `${bal.toLocaleString()} credits`;
             }
         }
 
@@ -5073,7 +5197,8 @@
                         art_style: adapterState.art,
                         voice_accent: adapterState.voice,
                         target_duration: adapterState.duration || 'Short (3–5 Mins)',
-                        delivery_format: adapterState.delivery || 'Dialogue / Narrative'
+                        delivery_format: adapterState.delivery || 'Dialogue / Narrative',
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
 
@@ -5412,7 +5537,8 @@
                         source_content: content,
                         culture: remixState.culture,
                         target_duration: remixState.duration,
-                        lead_character_id: remixState.leadCharacterId
+                        lead_character_id: remixState.leadCharacterId,
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
 
@@ -5531,7 +5657,8 @@
                         target_duration: remixState.duration,
                         art_style: remixState.artStyle,
                         visual_filter: remixState.visualFilter,
-                        lead_character_id: remixState.leadCharacterId
+                        lead_character_id: remixState.leadCharacterId,
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
 
@@ -5822,7 +5949,7 @@
                     headers: getHeaders(),
                     body: JSON.stringify({
                         image_data: lastRenderedImageData,
-                        caption: `🖼️ <b>Rendered Visual Frame</b>\n\n📝 <i>${escapeHtml((lastRenderedPrompt || '').slice(0, 300))}</i>`
+                        caption: `<b>Rendered Visual Frame</b>\n\n<i>${escapeHtml((lastRenderedPrompt || '').slice(0, 300))}</i>`
                     })
                 });
                 const d = await res.json();
@@ -5845,37 +5972,75 @@
         // =====================================================================
         // SETTINGS & BYOK ACTIONS
         // =====================================================================
-        async function submitSaveApiKey() {
-            const key = document.getElementById('settings-api-key').value.trim();
+        let currentByokTab = 'gemini';
+        function switchByokTab(tab) {
+            currentByokTab = tab;
+            ['gemini', 'openai', 'claude'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-byok-${t}`);
+                const pane = document.getElementById(`pane-byok-${t}`);
+                if (btn) btn.className = `btn-sm-action ${t === tab ? 'active' : ''}`;
+                if (pane) pane.style.display = (t === tab ? 'block' : 'none');
+            });
+        }
+
+        async function submitSaveApiKey(provider = 'gemini') {
+            let key = '';
+            let payload = {};
+            if (provider === 'gemini') {
+                key = (document.getElementById('settings-api-key')?.value || '').trim();
+                payload.custom_gemini_key = key;
+            } else if (provider === 'openai') {
+                key = (document.getElementById('settings-openai-key')?.value || '').trim();
+                payload.custom_openai_key = key;
+            } else if (provider === 'claude') {
+                key = (document.getElementById('settings-claude-key')?.value || '').trim();
+                payload.custom_claude_key = key;
+            }
+
             try {
                 const res = await fetch('/api/update_settings', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ custom_gemini_key: key })
+                    body: JSON.stringify(payload)
                 });
                 const d = await res.json();
                 if (d.success) {
                     currentUser.has_custom_key = d.has_custom_key;
+                    currentUser.has_custom_openai_key = d.has_custom_openai_key;
+                    currentUser.has_custom_claude_key = d.has_custom_claude_key;
+                    if (d.providers && studioMeta) {
+                        studioMeta.providers = d.providers;
+                    }
                     renderDashboard();
-                    showToast(d.has_custom_key ? 'BYOK Gemini Key saved!' : 'Custom key removed');
+                    showToast(`${provider.toUpperCase()} API Key saved!`);
+                } else {
+                    showToast(d.error || 'Failed to save key', false);
                 }
             } catch (err) {
                 showToast('Error saving API key', false);
             }
         }
 
-        async function submitTestApiKey() {
-            const key = document.getElementById('settings-api-key').value.trim();
+        async function submitTestApiKey(provider = 'gemini') {
+            let key = '';
+            if (provider === 'gemini') {
+                key = (document.getElementById('settings-api-key')?.value || '').trim();
+            } else if (provider === 'openai') {
+                key = (document.getElementById('settings-openai-key')?.value || '').trim();
+            } else if (provider === 'claude') {
+                key = (document.getElementById('settings-claude-key')?.value || '').trim();
+            }
+
             if (!key) {
-                showToast('Enter key to test first', false);
+                showToast(`Enter ${provider.toUpperCase()} key to test first`, false);
                 return;
             }
-            showToast('Testing key against Google GenAI...');
+            showToast(`Authenticating key with ${provider.toUpperCase()}...`);
             try {
                 const res = await fetch('/api/test_key', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ api_key: key })
+                    body: JSON.stringify({ api_key: key, provider: provider })
                 });
                 const d = await res.json();
                 if (d.success) {
@@ -5899,12 +6064,149 @@
                 const d = await res.json();
                 if (d.success) {
                     currentUser.selected_model = d.selected_model;
+                    currentUser.selected_provider = d.selected_provider;
                     renderDashboard();
                     showToast(`Model set to ${model}`);
+                } else {
+                    showToast(d.error || 'Error changing model', false);
+                    if (currentUser.selected_model) {
+                        document.getElementById('settings-sel-model').value = currentUser.selected_model;
+                    }
                 }
             } catch (err) {
                 showToast('Error changing model', false);
             }
+        }
+
+        // =====================================================================
+        // STORYCRAFT PROVIDER & MODEL ROUTER
+        // =====================================================================
+        const MODEL_GROUPS = {
+            gemini: [
+                { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (Recommended & Fast)' },
+                { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }
+            ],
+            openai: [
+                { id: 'gpt-4o', label: 'GPT-4o (Flagship Model)' },
+                { id: 'gpt-4o-mini', label: 'GPT-4o Mini (Fast & Compact)' }
+            ],
+            claude: [
+                { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (High Stakes & Depth)' },
+                { id: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Fast & Punchy)' }
+            ]
+        };
+
+        let currentStorycraftProvider = 'gemini';
+
+        function updateStorycraftProviderUI() {
+            const providers = studioMeta?.providers || {};
+            const provGemini = providers.gemini || { available: true };
+            const provOpenAI = providers.openai || { available: false };
+            const provClaude = providers.claude || { available: false };
+
+            const badgeGem = document.getElementById('badge-story-gemini');
+            const badgeOAI = document.getElementById('badge-story-openai');
+            const badgeCld = document.getElementById('badge-story-claude');
+
+            if (badgeGem) badgeGem.innerText = provGemini.available ? (currentUser?.has_custom_key ? 'BYOK' : 'Ready') : 'Disabled';
+            if (badgeOAI) badgeOAI.innerText = provOpenAI.available ? (currentUser?.has_custom_openai_key ? 'BYOK' : 'Ready') : 'No Key';
+            if (badgeCld) badgeCld.innerText = provClaude.available ? 'BYOK Active' : 'Requires BYOK';
+
+            // Determine active provider based on active model
+            const activeModel = currentUser?.selected_model || 'gemini-3.8-flash';
+            let activeProv = 'gemini';
+            if (activeModel.startsWith('gpt-')) activeProv = 'openai';
+            else if (activeModel.startsWith('claude-')) activeProv = 'claude';
+            currentStorycraftProvider = activeProv;
+
+            ['gemini', 'openai', 'claude'].forEach(p => {
+                const btn = document.getElementById(`story-prov-${p}`);
+                if (btn) {
+                    btn.classList.toggle('active', p === activeProv);
+                }
+            });
+
+            populateStorycraftModels(activeProv, activeModel);
+        }
+
+        function populateStorycraftModels(provider, preselectModel) {
+            const sel = document.getElementById('storycraft-sel-model');
+            const badge = document.getElementById('storycraft-prov-badge');
+            const notice = document.getElementById('storycraft-prov-notice');
+            if (!sel) return;
+
+            const models = MODEL_GROUPS[provider] || MODEL_GROUPS.gemini;
+            sel.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+
+            const selected = preselectModel || models[0].id;
+            sel.value = selected;
+
+            const providers = studioMeta?.providers || {};
+            const pInfo = providers[provider] || {};
+
+            if (badge) {
+                if (pInfo.available) {
+                    badge.className = 'chip ready';
+                    badge.innerText = `${provider.toUpperCase()} Active`;
+                } else {
+                    badge.className = 'chip danger';
+                    badge.innerText = `${provider.toUpperCase()} Unavailable`;
+                }
+            }
+
+            if (notice) {
+                if (!pInfo.available) {
+                    notice.style.display = 'block';
+                    if (provider === 'claude') {
+                        notice.innerText = 'Claude requires your personal Anthropic API key in Settings (Anthropic has no free tier).';
+                    } else if (provider === 'openai') {
+                        notice.innerText = 'OpenAI is unavailable. Server key missing and no personal key provided in Settings.';
+                    } else {
+                        notice.innerText = pInfo.reason || 'This provider is disabled.';
+                    }
+                } else {
+                    notice.style.display = 'none';
+                }
+            }
+        }
+
+        function selectStorycraftProvider(provider) {
+            const providers = studioMeta?.providers || {};
+            const pInfo = providers[provider] || {};
+
+            if (!pInfo.available && !currentUser?.is_admin) {
+                if (provider === 'claude') {
+                    showToast('Claude requires BYOK. Open Settings to enter your Anthropic API key.', false);
+                } else if (provider === 'openai') {
+                    showToast('OpenAI key missing. Open Settings to enter your OpenAI key.', false);
+                } else {
+                    showToast(`Provider '${provider.toUpperCase()}' is disabled by admin.`, false);
+                }
+            }
+
+            currentStorycraftProvider = provider;
+            ['gemini', 'openai', 'claude'].forEach(p => {
+                const btn = document.getElementById(`story-prov-${p}`);
+                if (btn) btn.classList.toggle('active', p === provider);
+            });
+
+            populateStorycraftModels(provider);
+        }
+
+        async function onStorycraftModelChanged() {
+            const sel = document.getElementById('storycraft-sel-model');
+            if (!sel) return;
+            const newModel = sel.value;
+            currentUser.selected_model = newModel;
+            currentUser.selected_provider = currentStorycraftProvider;
+
+            try {
+                await fetch('/api/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ selected_model: newModel, selected_provider: currentStorycraftProvider })
+                });
+            } catch(e) {}
         }
 
         // =====================================================================
@@ -6136,7 +6438,7 @@
                     </div>
 
                     <!-- FALLBACK KEY -->
-                    <div class="form-card">
+                    <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <div class="form-label" style="margin-bottom:0;">Fallback Key (429 Failover Pool)</div>
                             <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'CONFIGURED' : 'UNSET'}</span>
@@ -6145,6 +6447,20 @@
                         <input type="password" id="admin-key-fallback" class="form-input" placeholder="Paste new fallback AIzaSy... key" style="margin-bottom:10px; font-family:monospace;">
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                             <button class="btn-sm-action" style="padding:9px; text-align:center; font-weight:600;" onclick="testAdminKey('fallback')">Test Gemini Auth</button>
+                            <button class="btn-submit" style="margin-top:0; padding:9px; font-weight:600;" onclick="adminSaveKeys()">Save Key</button>
+                        </div>
+                    </div>
+
+                    <!-- OPENAI SERVER KEY -->
+                    <div class="form-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div class="form-label" style="margin-bottom:0;">OpenAI (ChatGPT) Server Key</div>
+                            <span class="chip ${settings.has_openai_key ? 'ready' : 'danger'}" style="font-size:10px;">${settings.has_openai_key ? 'CONFIGURED' : 'UNSET'}</span>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:10px;">Enables GPT-4o and GPT-4o Mini models across the studio using platform credits. Optional if users provide personal keys.</div>
+                        <input type="password" id="admin-key-openai" class="form-input" placeholder="Paste new sk-... key to update" style="margin-bottom:10px; font-family:monospace;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button class="btn-sm-action" style="padding:9px; text-align:center; font-weight:600;" onclick="testAdminKey('openai')">Test OpenAI Auth</button>
                             <button class="btn-submit" style="margin-top:0; padding:9px; font-weight:600;" onclick="adminSaveKeys()">Save Key</button>
                         </div>
                     </div>
@@ -6182,7 +6498,44 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="form-hint">Allow creators to connect and use their own Google GenAI API keys. When toggled OFF, personal keys are locked out and all users must use platform credits.</div>
+                        <div class="form-hint">Allow creators to connect and use their own API keys. When toggled OFF, personal keys are locked out and all users must use platform credits.</div>
+                    </div>
+
+                    <!-- MODEL PROVIDERS KILL-SWITCHES -->
+                    <div class="form-card" style="margin-bottom:14px;">
+                        <div class="form-label" style="margin-bottom:10px;">Model Provider Controls</div>
+                        <div class="list-group" style="margin:0;">
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Google Gemini Engine</div>
+                                    <div class="item-subtitle">Gemini 3.8 Flash, 2.5 Flash</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-model-gemini" ${settings.model_gemini_enabled !== false ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">OpenAI (ChatGPT) Engine</div>
+                                    <div class="item-subtitle">GPT-4o, GPT-4o Mini</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-model-gpt" ${settings.model_gpt_enabled !== false ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="list-item" style="padding:8px 0;">
+                                <div class="item-text">
+                                    <div class="item-title">Anthropic Claude Engine (BYOK)</div>
+                                    <div class="item-subtitle">Claude 3.5 Sonnet, Haiku</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-model-claude" ${settings.model_claude_enabled !== false ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- GRANULAR FEATURE KILL-SWITCHES -->
@@ -6287,7 +6640,7 @@
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 100)">+100</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 500)">+500</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 1000)">+1k</button>
-                                <button class="btn-sm-action" style="padding:6px 4px; font-size:11px; font-weight:800; color:#ffd700; background:rgba(255,215,0,0.15); border:1px solid rgba(255,215,0,0.4); text-align:center;" onclick="adminGrantUnlimitedCredits()">👑 ∞ UNLIMITED</button>
+                                <button class="btn-sm-action" style="padding:6px 4px; font-size:11px; font-weight:800; color:var(--accent, #e5a93c); background:rgba(229,169,60,0.15); border:1px solid rgba(229,169,60,0.4); text-align:center;" onclick="adminGrantUnlimitedCredits()">UNLIMITED (VIP)</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 50)">-50</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 100)">-100</button>
                             </div>
@@ -6300,7 +6653,7 @@
                                         <option value="add">Add (+)</option>
                                         <option value="deduct">Deduct (-)</option>
                                         <option value="set">Set Balance (=)</option>
-                                        <option value="unlimited">👑 Grant Unlimited (∞)</option>
+                                        <option value="unlimited">Grant Unlimited (VIP)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -6311,7 +6664,7 @@
                             <input type="text" id="admin-user-reason" class="form-input" placeholder="Audit note (e.g. Contest winner reward)" style="font-size:12px; margin-bottom:8px;">
                             <div style="display:flex; gap:6px;">
                                 <button class="btn-submit" style="margin-top:0; padding:8px; font-size:12px; flex:1;" onclick="adminApplyCreditAction()">Apply Modification</button>
-                                <button type="button" class="btn-secondary" style="padding:8px 10px; font-size:11px; font-weight:700; border-color:rgba(255,215,0,0.4); color:#ffd700; white-space:nowrap;" onclick="adminGrantUnlimitedCredits()">👑 1-Tap Unlimited</button>
+                                <button type="button" class="btn-secondary" style="padding:8px 10px; font-size:11px; font-weight:700; border-color:rgba(229,169,60,0.4); color:var(--accent, #e5a93c); white-space:nowrap;" onclick="adminGrantUnlimitedCredits()">1-Tap Unlimited</button>
                             </div>
 
                             <!-- TIER SELECTOR -->
@@ -6461,7 +6814,7 @@
 
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Top Banner</button>
-                            <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="background:var(--accent-blue, #0a84ff);">📢 Send Message to Users Who Sent /start</button>
+                            <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="background:var(--accent-blue, #0a84ff);">Send Message to Users Who Sent /start</button>
                         </div>
                     </div>
                 `;
@@ -6479,12 +6832,15 @@
         async function adminSaveKeys() {
             const pKeyInput = document.getElementById('admin-key-primary');
             const fKeyInput = document.getElementById('admin-key-fallback');
+            const oKeyInput = document.getElementById('admin-key-openai');
             const pKey = pKeyInput ? pKeyInput.value.trim() : '';
             const fKey = fKeyInput ? fKeyInput.value.trim() : '';
+            const oKey = oKeyInput ? oKeyInput.value.trim() : '';
 
             const payload = {};
             if (pKey) payload.primary_key = pKey;
             if (fKey) payload.fallback_key = fKey;
+            if (oKey) payload.openai_api_key = oKey;
 
             if (Object.keys(payload).length === 0) {
                 showToast("Enter a key in the input field to save", false);
@@ -6502,6 +6858,7 @@
                     showToast("Master API keys updated successfully!");
                     if (pKeyInput) pKeyInput.value = '';
                     if (fKeyInput) fKeyInput.value = '';
+                    if (oKeyInput) oKeyInput.value = '';
                     await loadAdminOverview();
                 } else {
                     showToast(d.error || 'Failed to update keys', false);
@@ -6512,19 +6869,27 @@
         }
 
         async function testAdminKey(which) {
-            const inputId = which === 'primary' ? 'admin-key-primary' : 'admin-key-fallback';
+            let inputId = 'admin-key-primary';
+            let provider = 'gemini';
+            if (which === 'fallback') {
+                inputId = 'admin-key-fallback';
+                provider = 'gemini';
+            } else if (which === 'openai') {
+                inputId = 'admin-key-openai';
+                provider = 'openai';
+            }
             const inputEl = document.getElementById(inputId);
             const key = inputEl ? inputEl.value.trim() : '';
             if (!key) {
                 showToast("Enter the key in the input field first to test", false);
                 return;
             }
-            showToast(`Authenticating ${which} key with Google GenAI...`);
+            showToast(`Authenticating ${which} key with ${provider.toUpperCase()}...`);
             try {
                 const res = await fetch('/api/test_key', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ api_key: key })
+                    body: JSON.stringify({ api_key: key, provider: provider })
                 });
                 const d = await res.json();
                 if (d.success) {
@@ -6545,6 +6910,9 @@
             const forgeCheck = document.getElementById('admin-toggle-character-forge');
             const thumbCheck = document.getElementById('admin-toggle-thumbnail-lab');
             const frameCheck = document.getElementById('admin-toggle-frame-renderer');
+            const geminiModelCheck = document.getElementById('admin-toggle-model-gemini');
+            const gptModelCheck = document.getElementById('admin-toggle-model-gpt');
+            const claudeModelCheck = document.getElementById('admin-toggle-model-claude');
 
             const payload = {
                 maintenance_mode: (maintCheck && maintCheck.checked) ? 1 : 0,
@@ -6553,7 +6921,10 @@
                 feature_storycraft: (craftCheck && craftCheck.checked) ? 1 : 0,
                 feature_character_forge: (forgeCheck && forgeCheck.checked) ? 1 : 0,
                 feature_thumbnail_lab: (thumbCheck && thumbCheck.checked) ? 1 : 0,
-                feature_frame_renderer: (frameCheck && frameCheck.checked) ? 1 : 0
+                feature_frame_renderer: (frameCheck && frameCheck.checked) ? 1 : 0,
+                model_gemini_enabled: (geminiModelCheck && geminiModelCheck.checked) ? 1 : 0,
+                model_gpt_enabled: (gptModelCheck && gptModelCheck.checked) ? 1 : 0,
+                model_claude_enabled: (claudeModelCheck && claudeModelCheck.checked) ? 1 : 0
             };
 
             try {
@@ -6893,7 +7264,7 @@
                     const btn = document.getElementById('btn-admin-broadcast-telegram');
                     if (btn) {
                         btn.disabled = false;
-                        btn.innerText = "📢 Send Message to Users Who Sent /start";
+                        btn.innerText = "Send Message to Users Who Sent /start";
                     }
                 }
             });

@@ -532,6 +532,15 @@ def build_user_keys(user: dict) -> dict:
     }
 
 
+def sanitize_user_error(err) -> str:
+    msg = str(err or "").strip()
+    if any(k in msg.lower() for k in ["api key", "key required", "not found", "not configured", "requires an api key"]):
+        return "This model requires an API key. Please configure your key in Settings or choose another model."
+    if "unavailable" in msg.lower() or "disabled" in msg.lower():
+        return "This model is currently unavailable. Please select another model."
+    return "Generation could not be completed with the selected model. Please try again or switch to Gemini."
+
+
 @app.route('/api/user_info', methods=['GET'])
 def api_user_info():
     user = get_current_user()
@@ -897,10 +906,10 @@ def api_story_concepts():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
-    if not avail.get("available") and not database.is_admin(user_id):
+    if not avail.get("available"):
         return jsonify({
             "success": False,
-            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
         }), 400
 
     user_keys = build_user_keys(user)
@@ -953,7 +962,8 @@ def api_story_concepts():
             user_keys=user_keys
         ))
     except Exception as e:
-        return jsonify({"success": False, "error": f"Concept generation error: {str(e)}"}), 500
+        print(f"[CONCEPTS GENERATION ERROR] {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
     # Normalize concepts to list
     concepts_list = concepts.get("concepts", []) if isinstance(concepts, dict) else (concepts if isinstance(concepts, list) else [])
@@ -1016,10 +1026,10 @@ def api_story_generate():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
-    if not avail.get("available") and not database.is_admin(user_id):
+    if not avail.get("available"):
         return jsonify({
             "success": False,
-            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
         }), 400
 
     user_keys = build_user_keys(user)
@@ -1088,7 +1098,8 @@ def api_story_generate():
             user_keys=user_keys
         ))
     except Exception as e:
-        return jsonify({"success": False, "error": f"Script production error: {str(e)}"}), 500
+        print(f"[STORY PRODUCTION ERROR] {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
     # Generate Dual Production PDFs
     bible_pdf = ""
@@ -1445,10 +1456,10 @@ def api_story_adapter_generate():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
-    if not avail.get("available") and not database.is_admin(user_id):
+    if not avail.get("available"):
         return jsonify({
             "success": False,
-            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
         }), 400
 
     user_keys = build_user_keys(user)
@@ -1521,7 +1532,7 @@ def api_story_adapter_generate():
         })
     except Exception as e:
         print(f"[STORY ADAPTER ERROR] {e}")
-        return jsonify({"success": False, "error": f"Story adaptation failed: {str(e)}"}), 500
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
 @app.route('/api/story_adapter/send_to_telegram', methods=['POST'])
 def api_story_adapter_send_to_telegram():
@@ -1645,10 +1656,10 @@ def api_remixcraft_analyze():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
-    if not avail.get("available") and not database.is_admin(user_id):
+    if not avail.get("available"):
         return jsonify({
             "success": False,
-            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
         }), 400
 
     user_keys = build_user_keys(user)
@@ -1672,7 +1683,7 @@ def api_remixcraft_analyze():
         })
     except Exception as e:
         print(f"[REMIXCRAFT ANALYZE ERROR] {e}")
-        return jsonify({"success": False, "error": f"Remixcraft analysis failed: {str(e)}"}), 500
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
 
 @app.route('/api/remixcraft/produce', methods=['POST'])
@@ -1698,10 +1709,10 @@ def api_remixcraft_produce():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
-    if not avail.get("available") and not database.is_admin(user_id):
+    if not avail.get("available"):
         return jsonify({
             "success": False,
-            "error": f"Model Provider '{provider.upper()}' is not available: {avail.get('reason', 'Missing credentials or disabled.')}"
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
         }), 400
 
     user_keys = build_user_keys(user)
@@ -1780,7 +1791,7 @@ def api_remixcraft_produce():
         })
     except Exception as e:
         print(f"[REMIXCRAFT PRODUCE ERROR] {e}")
-        return jsonify({"success": False, "error": f"Production failed: {str(e)}"}), 500
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
 
 @app.route('/api/remixcraft/send_to_telegram', methods=['POST'])

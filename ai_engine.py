@@ -50,7 +50,7 @@ def get_provider_availability(user_dict=None) -> dict:
     Evaluates availability for Gemini, GPT, and Claude:
     - Gemini: Available if platform primary key or user BYOK key is set.
     - GPT: Available if server key or user BYOK key is set. Otherwise marked unavailable.
-    - Claude: Strictly requires user personal BYOK key (no server free tier).
+    - Claude: Strictly requires user personal custom key.
     - Respects administrator toggles for each provider.
     """
     try:
@@ -68,7 +68,7 @@ def get_provider_availability(user_dict=None) -> dict:
     gem_has_key = bool(gem_primary or (user_gem and byok_allowed))
     gem_admin = str(settings.get("model_gemini_enabled", "1")).lower() not in ("0", "false")
     gem_avail = gem_has_key and gem_admin
-    gem_reason = "" if gem_avail else ("Disabled by administrator" if not gem_admin else "Gemini API key missing")
+    gem_reason = "" if gem_avail else ("Temporarily unavailable" if not gem_admin else "API key required")
 
     # 2. GPT (OpenAI)
     server_gpt = (settings.get("openai_api_key") or os.getenv("OPENAI_API_KEY", "")).strip()
@@ -78,20 +78,20 @@ def get_provider_availability(user_dict=None) -> dict:
     gpt_avail = gpt_has_key and gpt_admin
     gpt_reason = ""
     if not gpt_admin:
-        gpt_reason = "Disabled by administrator"
+        gpt_reason = "Temporarily unavailable"
     elif not gpt_has_key:
-        gpt_reason = "OpenAI API key not found"
+        gpt_reason = "API key required"
 
-    # 3. Claude (Anthropic) - strictly requires user BYOK key
+    # 3. Claude (Anthropic) - strictly requires user custom key
     user_claude = (user_dict.get("custom_claude_key") or "").strip() if user_dict else ""
     claude_has_key = bool(user_claude and byok_allowed)
     claude_admin = str(settings.get("model_claude_enabled", "1")).lower() not in ("0", "false")
     claude_avail = claude_has_key and claude_admin
     claude_reason = ""
     if not claude_admin:
-        claude_reason = "Disabled by administrator"
+        claude_reason = "Temporarily unavailable"
     elif not claude_has_key:
-        claude_reason = "Requires personal Claude key (BYOK)"
+        claude_reason = "API key required"
 
     return {
         "gemini": {
@@ -269,7 +269,7 @@ def generate_ai_completion(
     # 1. GPT (OpenAI)
     if provider == "gpt":
         if settings.get("model_gpt_enabled", "1") == "0":
-            raise ValueError("OpenAI models are currently disabled by the studio administrator.")
+            raise ValueError("This model is currently unavailable. Please select another model.")
 
         key = ""
         user_gpt = keys.get("custom_openai_key")
@@ -279,7 +279,7 @@ def generate_ai_completion(
             key = (settings.get("openai_api_key") or os.getenv("OPENAI_API_KEY", "")).strip()
 
         if not key:
-            raise ValueError("OpenAI API key not found. Please provide an OpenAI key in Settings or contact admin.")
+            raise ValueError("This model requires an API key. Please configure your key in Settings or choose another model.")
 
         actual_model = "gpt-4o"
         if "mini" in preferred_model.lower():
@@ -311,15 +311,16 @@ def generate_ai_completion(
                 err_msg = err_data.get("message", err_msg)
             except Exception:
                 pass
-            raise ValueError(f"OpenAI Generation Error ({resp.status_code}): {err_msg}")
+            print(f"[GPT API ERROR] ({resp.status_code}): {err_msg}")
+            raise ValueError("The selected model could not process your request. Please verify your API key in Settings or choose another model.")
 
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    # 2. Claude (Anthropic) - strictly requires user BYOK
+    # 2. Claude (Anthropic)
     elif provider == "claude":
         if settings.get("model_claude_enabled", "1") == "0":
-            raise ValueError("Claude models are currently disabled by the studio administrator.")
+            raise ValueError("This model is currently unavailable. Please select another model.")
 
         key = ""
         user_claude = keys.get("custom_claude_key")
@@ -332,7 +333,7 @@ def generate_ai_completion(
                 key = server_claude
 
         if not key:
-            raise ValueError("Claude requires a personal Anthropic API key (BYOK) because Anthropic provides no free tier. Please add your Claude key in Engines & API Settings.")
+            raise ValueError("This model requires an API key. Please configure your key in Settings or choose another model.")
 
         actual_model = "claude-3-5-sonnet-20241022"
         if "haiku" in preferred_model.lower():
@@ -367,7 +368,8 @@ def generate_ai_completion(
                 err_msg = err_data.get("message", err_msg)
             except Exception:
                 pass
-            raise ValueError(f"Claude Generation Error ({resp.status_code}): {err_msg}")
+            print(f"[CLAUDE API ERROR] ({resp.status_code}): {err_msg}")
+            raise ValueError("The selected model could not process your request. Please verify your API key in Settings or choose another model.")
 
         data = resp.json()
         content_blocks = data.get("content", [])
@@ -376,7 +378,7 @@ def generate_ai_completion(
     # 3. Google Gemini
     else:
         if settings.get("model_gemini_enabled", "1") == "0":
-            raise ValueError("Gemini models are currently disabled by the studio administrator.")
+            raise ValueError("This model is currently unavailable. Please select another model.")
 
         gem_key = keys.get("custom_gemini_key")
         client = get_client(user_api_key=gem_key)

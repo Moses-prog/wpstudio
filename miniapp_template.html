@@ -7,27 +7,29 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-            --accent: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --bg-color: #0b0c0e;
+            --card-bg: #16181d;
+            --surface-card: #111216;
+            --text-main: #f3f4f6;
+            --text-muted: #94a3b8;
+            --border-color: #272a34;
+            --accent: #e5a93c;
+            --success: #30d158;
+            --warning: #e5a93c;
+            --danger: #ff453a;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #000000;
-                --card-bg: #1c1c1e;
-                --text-main: #ffffff;
-                --text-muted: #8e8e93;
-                --border-color: #2c2c2e;
-                --accent: #0a84ff;
+                --bg-color: #0b0c0e;
+                --card-bg: #16181d;
+                --surface-card: #111216;
+                --text-main: #f3f4f6;
+                --text-muted: #94a3b8;
+                --border-color: #272a34;
+                --accent: #e5a93c;
                 --success: #30d158;
-                --warning: #ffd60a;
+                --warning: #e5a93c;
                 --danger: #ff453a;
             }
         }
@@ -509,12 +511,12 @@
         .btn-submit {
             width: 100%;
             background: var(--accent);
-            color: white;
+            color: #0b0c0e;
             border: none;
             padding: 13px;
             border-radius: 10px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             margin-top: 10px;
             transition: opacity 0.2s;
@@ -1615,7 +1617,7 @@
                 <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
             </div>
             <div class="item-text">
-                <div class="item-title">BYOK Gemini API Key</div>
+                <div class="item-title">Custom Gemini API Key</div>
                 <div class="item-subtitle" id="sub-key-status">Connect personal Google key for unlimited runs</div>
             </div>
             <div class="item-right">
@@ -1652,7 +1654,7 @@
                 </div>
                 <div class="item-text">
                     <div class="item-title">Master Control Suite</div>
-                    <div class="item-subtitle">Manage API keys, BYOK locks, maintenance, pricing & user credits</div>
+                    <div class="item-subtitle">Manage API keys, model locks, maintenance, pricing & user credits</div>
                 </div>
                 <div class="item-right">
                     <span class="chip active" style="color:var(--danger); background:rgba(255,69,58,0.15);">MASTER</span>
@@ -1779,11 +1781,11 @@
                         </button>
                         <button type="button" class="btn-provider" id="story-prov-openai" onclick="selectStorycraftProvider('openai')">
                             <span style="font-weight:600; font-size:11px;">ChatGPT</span>
-                            <span id="badge-story-openai" style="font-size:9px; opacity:0.8;">Check</span>
+                            <span id="badge-story-openai" style="font-size:9px; opacity:0.8;">Setup</span>
                         </button>
                         <button type="button" class="btn-provider" id="story-prov-claude" onclick="selectStorycraftProvider('claude')">
                             <span style="font-weight:600; font-size:11px;">Claude</span>
-                            <span id="badge-story-claude" style="font-size:9px; opacity:0.8;">BYOK</span>
+                            <span id="badge-story-claude" style="font-size:9px; opacity:0.8;">Setup</span>
                         </button>
                     </div>
                     <div>
@@ -1793,7 +1795,6 @@
                 </div>
 
                 <button id="btn-generate-concepts" class="btn-submit" onclick="submitStoryConcepts()">
-                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     Generate 10 Concepts
                 </button>
             </div>
@@ -2763,32 +2764,32 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Connect your custom Gemini key for zero-credit unlimited runs</div>
+            <div class="modal-subtitle">Connect your custom API key for zero-credit unlimited runs</div>
         </div>
         <div class="modal-body">
             <!-- Key Banner -->
             <div id="settings-key-banner" class="info-banner" style="display:none;">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span id="settings-key-banner-text">BYOK is active. All script generations are free.</span>
+                <span id="settings-key-banner-text">Custom key is active. All script generations are free.</span>
             </div>
             
-            <!-- BYOK Locked Notice -->
+            <!-- Custom Keys Locked Notice -->
             <div id="settings-byok-locked-banner" class="announcement-banner danger" style="display:none; margin:0 0 12px;">
                 <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span><strong>BYOK Locked:</strong> Administrator has disabled custom API keys. Server platform credits are required for all creations.</span>
+                <span><strong>Custom Keys Locked:</strong> Administrator has disabled custom API keys. Server platform credits are required for all creations.</span>
             </div>
 
             <div class="form-card" id="settings-byok-card">
-                <div class="form-label">BYOK API Credentials</div>
-                <div class="form-hint" id="settings-byok-hint">Add personal API keys to unlock provider models or run free of platform credits. Claude requires a personal key because Anthropic offers no free tier.</div>
+                <div class="form-label">Personal API Keys</div>
+                <div class="form-hint" id="settings-byok-hint">Add personal API keys to unlock additional models or run free of platform credits.</div>
 
                 <div style="display:flex; gap:6px; margin: 10px 0 12px; border-bottom: 1px solid var(--border-color); padding-bottom:8px;">
                     <button type="button" class="btn-sm-action active" id="tab-btn-byok-gemini" onclick="switchByokTab('gemini')">Google Gemini</button>
-                    <button type="button" class="btn-sm-action" id="tab-btn-byok-openai" onclick="switchByokTab('openai')">OpenAI</button>
-                    <button type="button" class="btn-sm-action" id="tab-btn-byok-claude" onclick="switchByokTab('claude')">Anthropic Claude</button>
+                    <button type="button" class="btn-sm-action" id="tab-btn-byok-openai" onclick="switchByokTab('openai')">ChatGPT</button>
+                    <button type="button" class="btn-sm-action" id="tab-btn-byok-claude" onclick="switchByokTab('claude')">Claude</button>
                 </div>
 
-                <!-- 1. Gemini BYOK Pane -->
+                <!-- 1. Gemini Pane -->
                 <div id="pane-byok-gemini">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                         <span style="font-size:11px; font-weight:600; color:var(--text-main);">Google Gemini Key (Optional)</span>
@@ -2806,13 +2807,13 @@
                     </div>
                 </div>
 
-                <!-- 2. OpenAI BYOK Pane -->
+                <!-- 2. OpenAI Pane -->
                 <div id="pane-byok-openai" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">OpenAI API Key (Optional)</span>
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">ChatGPT API Key (Optional)</span>
                         <span id="chip-status-openai" class="chip model" style="font-size:9px;">NOT SET</span>
                     </div>
-                    <div class="form-hint" style="margin-bottom:8px;">Get your key from platform.openai.com. Unlocks GPT-4o and GPT-4o Mini with your OpenAI quota.</div>
+                    <div class="form-hint" style="margin-bottom:8px;">Get your key from platform.openai.com to unlock ChatGPT models.</div>
                     <input id="settings-openai-key" type="password" class="form-input" placeholder="sk-...">
                     <div style="display:flex; gap:8px; margin-top:8px;">
                         <button id="btn-save-openai" class="btn-submit" onclick="submitSaveApiKey('openai')" style="margin-top:0; flex:1;">
@@ -2824,13 +2825,13 @@
                     </div>
                 </div>
 
-                <!-- 3. Claude BYOK Pane -->
+                <!-- 3. Claude Pane -->
                 <div id="pane-byok-claude" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">Anthropic Claude Key (Required for Claude)</span>
-                        <span id="chip-status-claude" class="chip danger" style="font-size:9px;">REQUIRES BYOK</span>
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main);">Claude API Key</span>
+                        <span id="chip-status-claude" class="chip danger" style="font-size:9px;">KEY REQUIRED</span>
                     </div>
-                    <div class="form-hint" style="margin-bottom:8px;">Get your key from console.anthropic.com. Claude operates strictly under BYOK because Anthropic offers no free tier API.</div>
+                    <div class="form-hint" style="margin-bottom:8px;">Get your key from console.anthropic.com to unlock Claude models.</div>
                     <input id="settings-claude-key" type="password" class="form-input" placeholder="sk-ant-...">
                     <div style="display:flex; gap:8px; margin-top:8px;">
                         <button id="btn-save-claude" class="btn-submit" onclick="submitSaveApiKey('claude')" style="margin-top:0; flex:1;">
@@ -2855,7 +2856,7 @@
                         <option value="gpt-4o">GPT-4o (Flagship Model)</option>
                         <option value="gpt-4o-mini">GPT-4o Mini (Fast & Compact)</option>
                     </optgroup>
-                    <optgroup label="Anthropic Claude (Requires BYOK)">
+                    <optgroup label="Claude (Key Required)">
                         <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (High Stakes & Depth)</option>
                         <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Fast & Punchy)</option>
                     </optgroup>
@@ -3608,7 +3609,7 @@
                 if (byokLockedBanner) byokLockedBanner.style.display = 'flex';
                 if (keyInput) {
                     keyInput.disabled = true;
-                    keyInput.placeholder = "BYOK Locked by Administrator";
+                    keyInput.placeholder = "Custom Keys Locked by Administrator";
                 }
                 if (btnSaveByok) btnSaveByok.disabled = true;
                 if (btnTestByok) btnTestByok.disabled = true;
@@ -3616,7 +3617,7 @@
                     chipKey.innerText = 'LOCKED';
                     chipKey.className = 'chip model';
                 }
-                if (subKey) subKey.innerText = 'BYOK locked by Studio Admin (Standard credits required)';
+                if (subKey) subKey.innerText = 'Custom keys locked by Studio Admin (Standard credits required)';
                 document.getElementById('stat-engine-mode').innerText = 'Credits Only';
                 if (bannerKey) bannerKey.style.display = 'none';
                 document.getElementById('badge-engine').className = 'badge free';
@@ -3630,10 +3631,10 @@
                 if (btnTestByok) btnTestByok.disabled = false;
 
                 if (hasKey) {
-                    chipKey.innerText = 'BYOK ACTIVE';
+                    chipKey.innerText = 'CUSTOM KEY';
                     chipKey.className = 'chip byok';
                     subKey.innerText = `Custom key enabled (${currentUser.custom_key_preview || 'Connected'})`;
-                    document.getElementById('stat-engine-mode').innerText = 'BYOK Active';
+                    document.getElementById('stat-engine-mode').innerText = 'Custom Key';
                     bannerKey.style.display = 'flex';
                     document.getElementById('badge-engine').className = 'badge key';
                 } else {
@@ -3646,24 +3647,24 @@
                 }
             }
 
-            // Update Multi-Provider BYOK Status Chips in Settings Modal
+            // Update Multi-Provider Status Chips in Settings Modal
             const chipGem = document.getElementById('chip-status-gemini');
             const chipOAI = document.getElementById('chip-status-openai');
             const chipCld = document.getElementById('chip-status-claude');
 
             if (chipGem) {
-                chipGem.innerText = currentUser.has_custom_key ? 'BYOK ACTIVE' : 'DEFAULT SERVER';
-                chipGem.className = currentUser.has_custom_key ? 'chip byok' : 'chip model';
+                chipGem.innerText = currentUser.has_custom_key ? 'CUSTOM KEY' : 'DEFAULT';
+                chipGem.className = currentUser.has_custom_key ? 'chip ready' : 'chip model';
             }
             if (chipOAI) {
                 const provs = studioMeta?.providers || {};
                 const oaiAvail = provs.openai?.available;
-                chipOAI.innerText = currentUser.has_custom_openai_key ? 'BYOK ACTIVE' : (oaiAvail ? 'SERVER READY' : 'NOT SET');
-                chipOAI.className = (currentUser.has_custom_openai_key || oaiAvail) ? 'chip ready' : 'chip model';
+                chipOAI.innerText = currentUser.has_custom_openai_key ? 'CUSTOM KEY' : (oaiAvail ? 'READY' : 'KEY REQUIRED');
+                chipOAI.className = (currentUser.has_custom_openai_key || oaiAvail) ? 'chip ready' : 'chip danger';
             }
             if (chipCld) {
-                chipCld.innerText = currentUser.has_custom_claude_key ? 'BYOK ACTIVE' : 'REQUIRES BYOK';
-                chipCld.className = currentUser.has_custom_claude_key ? 'chip byok' : 'chip danger';
+                chipCld.innerText = currentUser.has_custom_claude_key ? 'CUSTOM KEY' : 'KEY REQUIRED';
+                chipCld.className = currentUser.has_custom_claude_key ? 'chip ready' : 'chip danger';
             }
 
             // Sync StoryCraft UI
@@ -4111,7 +4112,7 @@
                 showToast(err.message || 'Error generating concepts', false);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Re-Generate 10 Concepts';
+                btn.innerHTML = 'Re-Generate 10 Concepts';
             }
         }
 
@@ -6108,9 +6109,9 @@
             const badgeOAI = document.getElementById('badge-story-openai');
             const badgeCld = document.getElementById('badge-story-claude');
 
-            if (badgeGem) badgeGem.innerText = provGemini.available ? (currentUser?.has_custom_key ? 'BYOK' : 'Ready') : 'Disabled';
-            if (badgeOAI) badgeOAI.innerText = provOpenAI.available ? (currentUser?.has_custom_openai_key ? 'BYOK' : 'Ready') : 'No Key';
-            if (badgeCld) badgeCld.innerText = provClaude.available ? 'BYOK Active' : 'Requires BYOK';
+            if (badgeGem) badgeGem.innerText = provGemini.available ? (currentUser?.has_custom_key ? 'Active' : 'Ready') : 'Offline';
+            if (badgeOAI) badgeOAI.innerText = provOpenAI.available ? (currentUser?.has_custom_openai_key ? 'Active' : 'Ready') : 'Setup';
+            if (badgeCld) badgeCld.innerText = provClaude.available ? 'Active' : 'Setup';
 
             // Determine active provider based on active model
             const activeModel = currentUser?.selected_model || 'gemini-3.8-flash';
@@ -6147,23 +6148,17 @@
             if (badge) {
                 if (pInfo.available) {
                     badge.className = 'chip ready';
-                    badge.innerText = `${provider.toUpperCase()} Active`;
+                    badge.innerText = 'Active';
                 } else {
                     badge.className = 'chip danger';
-                    badge.innerText = `${provider.toUpperCase()} Unavailable`;
+                    badge.innerText = 'Setup Required';
                 }
             }
 
             if (notice) {
                 if (!pInfo.available) {
                     notice.style.display = 'block';
-                    if (provider === 'claude') {
-                        notice.innerText = 'Claude requires your personal Anthropic API key in Settings (Anthropic has no free tier).';
-                    } else if (provider === 'openai') {
-                        notice.innerText = 'OpenAI is unavailable. Server key missing and no personal key provided in Settings.';
-                    } else {
-                        notice.innerText = pInfo.reason || 'This provider is disabled.';
-                    }
+                    notice.innerText = 'This engine requires an API key. Please configure your key in Settings or choose another model.';
                 } else {
                     notice.style.display = 'none';
                 }
@@ -6175,13 +6170,7 @@
             const pInfo = providers[provider] || {};
 
             if (!pInfo.available && !currentUser?.is_admin) {
-                if (provider === 'claude') {
-                    showToast('Claude requires BYOK. Open Settings to enter your Anthropic API key.', false);
-                } else if (provider === 'openai') {
-                    showToast('OpenAI key missing. Open Settings to enter your OpenAI key.', false);
-                } else {
-                    showToast(`Provider '${provider.toUpperCase()}' is disabled by admin.`, false);
-                }
+                showToast('This engine requires an API key. Please configure it in Settings or select Gemini.', false);
             }
 
             currentStorycraftProvider = provider;
@@ -6489,10 +6478,10 @@
                         <input type="text" id="admin-maintenance-msg" class="form-input" placeholder="Custom maintenance message shown to users..." value="${(settings.maintenance_message || '').replace(/"/g, '&quot;')}">
                     </div>
 
-                    <!-- BYOK GOVERNANCE -->
+                    <!-- CUSTOM KEYS GOVERNANCE -->
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="form-label" style="margin-bottom:0;">BYOK Policy (Personal Keys)</span>
+                            <span class="form-label" style="margin-bottom:0;">Custom API Keys Policy</span>
                             <label class="switch">
                                 <input type="checkbox" id="admin-lock-byok" ${byokAllowed ? 'checked' : ''}>
                                 <span class="slider"></span>
@@ -6527,7 +6516,7 @@
                             </div>
                             <div class="list-item" style="padding:8px 0;">
                                 <div class="item-text">
-                                    <div class="item-title">Anthropic Claude Engine (BYOK)</div>
+                                    <div class="item-title">Anthropic Claude Engine</div>
                                     <div class="item-subtitle">Claude 3.5 Sonnet, Haiku</div>
                                 </div>
                                 <label class="switch">

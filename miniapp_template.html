@@ -1857,6 +1857,16 @@
                         </div>
                     </div>
 
+                    <div style="margin-top:16px;">
+                        <div class="form-label">STORY DELIVERY FORMAT</div>
+                        <div class="form-hint" style="margin-bottom:10px;">Select whether you want spoken character dialogue, narrator voiceover, or both.</div>
+                        <div class="pills-grid" id="adapter-delivery-pills" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="pill-btn active" data-val="Dialogue / Narrative" onclick="selectAdapterPill('delivery', this)">🎙️ Both</div>
+                            <div class="pill-btn" data-val="Dialogue" onclick="selectAdapterPill('delivery', this)">💬 Dialogue Only</div>
+                            <div class="pill-btn" data-val="Narrative" onclick="selectAdapterPill('delivery', this)">📖 Narrative Only</div>
+                        </div>
+                    </div>
+
                     <button class="btn-submit" style="margin-top:20px;" onclick="goToAdapterStep(2)">
                         Next: Cinematic Filter &rarr;
                     </button>
@@ -4912,6 +4922,7 @@
             genre: 'Drama',
             voice: 'African / Nigerian',
             duration: 'Short (3–5 Mins)',
+            delivery: 'Dialogue / Narrative',
             filter: 'Default',
             art: 'Realistic',
             storyText: '',
@@ -4929,6 +4940,7 @@
             if (type === 'genre') adapterState.genre = val;
             if (type === 'voice') adapterState.voice = val;
             if (type === 'duration') adapterState.duration = val;
+            if (type === 'delivery') adapterState.delivery = val;
             if (type === 'art') adapterState.art = val;
         }
 
@@ -5060,7 +5072,8 @@
                         cinematic_filter: adapterState.filter,
                         art_style: adapterState.art,
                         voice_accent: adapterState.voice,
-                        target_duration: adapterState.duration || 'Short (3–5 Mins)'
+                        target_duration: adapterState.duration || 'Short (3–5 Mins)',
+                        delivery_format: adapterState.delivery || 'Dialogue / Narrative'
                     })
                 });
 

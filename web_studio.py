@@ -1327,6 +1327,7 @@ def api_story_adapter_generate():
     art_style = str(data.get("art_style", "Realistic")).strip()
     voice_accent = str(data.get("voice_accent", "African / Nigerian")).strip()
     target_duration = str(data.get("target_duration", "Standard (8–15 Mins)")).strip()
+    delivery_format = str(data.get("delivery_format", "Dialogue / Narrative")).strip()
 
     # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP)
     is_vip = int(user.get("credits", 0)) >= 999999
@@ -1346,6 +1347,7 @@ def api_story_adapter_generate():
             art_style=art_style,
             voice_accent=voice_accent,
             target_duration=target_duration,
+            delivery_format=delivery_format,
             user_api_key=custom_key,
             model_name=model_name
         ))
@@ -1371,7 +1373,7 @@ def api_story_adapter_generate():
             genre=genre,
             timezone="Africa/Lagos",
             length_tier=f"{total_scenes} Scenes",
-            delivery_format="Scene Prompts",
+            delivery_format=delivery_format,
             job_type="story_adapter",
             story_text=text
         )

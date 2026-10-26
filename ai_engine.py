@@ -784,6 +784,7 @@ async def adapt_story_to_scenes(
     art_style: str = "Realistic",
     voice_accent: str = "African / Nigerian",
     target_duration: str = "Standard (8–15 Mins)",
+    delivery_format: str = "Dialogue / Narrative",
     user_api_key: str = None,
     model_name: str = None
 ) -> dict:
@@ -799,6 +800,7 @@ async def adapt_story_to_scenes(
     3. CINEMATIC VISUAL FILTER: Locks consistent color grading, lighting, and camera treatment.
     4. ART STYLE: Realistic 8K photorealism or 3D Animated Pixar/Disney.
     5. VOICE FLAVOR: Infuses dialogue tags / narration pacing with the chosen accent flavor.
+    6. DELIVERY FORMAT: Prioritizes character dialogue, narrator voiceover, or a balanced blend.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
     client = get_client(user_api_key)
@@ -831,6 +833,14 @@ async def adapt_story_to_scenes(
     else:
         voice_treatment = "Modern cinematic American pacing, conversational natural flow in voiceover and dialogue."
 
+    # Delivery format treatment
+    if "Dialogue" in delivery_format and "Narrative" not in delivery_format:
+        delivery_treatment = "DIALOGUE FOCUSED: Prioritize character dialogue and spoken character interactions for each scene."
+    elif "Narrative" in delivery_format and "Dialogue" not in delivery_format:
+        delivery_treatment = "NARRATIVE / VOICE-OVER FOCUSED: Prioritize rich voiceover narration and descriptive storytelling lines for each scene (ideal for faceless YouTube narrators)."
+    else:
+        delivery_treatment = "BALANCED DIALOGUE & NARRATION: Deliver a balanced blend of spoken character dialogue and narrator voiceover lines across scenes."
+
     system_instruction = f"""
 You are the Master Storyboard Director & Visual Prompt Engineer at WP Studio.
 Your mission is to adapt the creator's original written story into a complete, shot-by-shot cinematic production breakdown.
@@ -848,6 +858,7 @@ CONFIGURATION:
 - Art Style: {art_style} ({art_treatment})
 - Voice / Accent Flavor: {voice_accent} ({voice_treatment})
 - Target Runtime / Scope: {target_duration}
+- Delivery Format: {delivery_format} ({delivery_treatment})
 
 OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
 {{
@@ -858,6 +869,7 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
     "cinematic_filter": "{cinematic_filter}",
     "art_style": "{art_style}",
     "voice_accent": "{voice_accent}",
+    "delivery_format": "{delivery_format}",
     "characters": [
         {{
             "name": "Character Name",

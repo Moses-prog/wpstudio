@@ -133,7 +133,7 @@ def get_provider_availability(user_dict=None) -> dict:
 FALLBACK_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
 def clean_json_loads(text: str):
-    """Safely extracts and parses JSON even if wrapped in markdown code fences or with trailing text."""
+    """Safely extracts and parses JSON even if wrapped in markdown code fences, with trailing text, or truncated mid-stream."""
     if not text:
         return {}
     clean = text.strip()
@@ -157,6 +157,25 @@ def clean_json_loads(text: str):
                 return json.loads(clean[start_arr:end_arr+1])
             except Exception:
                 pass
+
+        # Automatic Truncated JSON Recovery (if output hit token ceiling mid-scene)
+        if start_obj != -1:
+            sub = clean[start_obj:]
+            search_pos = len(sub)
+            for _ in range(50):
+                brace_idx = sub.rfind("}", 0, search_pos)
+                if brace_idx == -1:
+                    break
+                candidate_base = sub[:brace_idx + 1]
+                for suffix in ("]}", "}", "]]}", "]"):
+                    try:
+                        parsed = json.loads(candidate_base + suffix)
+                        if isinstance(parsed, (dict, list)):
+                            logger.warning(f"Recovered truncated JSON cleanly at char {brace_idx} using suffix '{suffix}'")
+                            return parsed
+                    except Exception:
+                        pass
+                search_pos = brace_idx
         raise
 
 def get_master_keys():
@@ -220,6 +239,13 @@ def generate_with_fallback(client, preferred_model, contents, config, user_api_k
             return client.models.generate_content(model=m, contents=contents, config=config)
         except Exception as e:
             err_str = str(e)
+            if "max_output_tokens" in err_str.lower() and isinstance(config, dict) and "max_output_tokens" in config:
+                try:
+                    fallback_cfg = {k: v for k, v in config.items() if k != "max_output_tokens"}
+                    return client.models.generate_content(model=m, contents=contents, config=fallback_cfg)
+                except Exception as inner_e:
+                    e = inner_e
+                    err_str = str(e)
             logger.warning(f"Model {m} failed ({err_str[:120]}...), trying fallback (attempt {attempt}/{len(models_to_try)})...")
             last_err = e
             # If rate limit or quota exceeded and we have a secondary key, attempt failover
@@ -297,12 +323,12 @@ def generate_ai_completion(
             "model": actual_model,
             "messages": messages,
             "temperature": temperature,
-            "max_tokens": 8192
+            "max_tokens": 16384
         }
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
 
-        with httpx.Client(timeout=120.0) as http_client:
+        with httpx.Client(timeout=180.0) as http_client:
             resp = http_client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
 
         if resp.status_code != 200:
@@ -359,7 +385,7 @@ def generate_ai_completion(
             "temperature": temperature
         }
 
-        with httpx.Client(timeout=120.0) as http_client:
+        with httpx.Client(timeout=180.0) as http_client:
             resp = http_client.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload)
 
         if resp.status_code != 200:
@@ -386,7 +412,7 @@ def generate_ai_completion(
         config = {
             "system_instruction": system_instruction,
             "temperature": temperature,
-            "max_output_tokens": 8192
+            "max_output_tokens": 65536
         }
         if json_mode:
             config["response_mime_type"] = "application/json"

@@ -498,7 +498,7 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
     # 4. Insert into Supabase Master Database
     if supabase_client:
         try:
-            supabase_client.table("wp_studio_jobs").insert({
+            job_payload = {
                 "job_id": new_job_id,
                 "user_id": user_id,
                 "source_input": source_input,
@@ -509,11 +509,20 @@ def create_story_job(user_id: int, source_input: str, source_title: str, transcr
                 "genre": genre,
                 "timezone": timezone,
                 "length_tier": length_tier,
-                "delivery_format": delivery_format,
                 "status": "draft",
                 "created_at": now,
                 "updated_at": now
-            }).execute()
+            }
+            if delivery_format:
+                job_payload["delivery_format"] = delivery_format
+            try:
+                supabase_client.table("wp_studio_jobs").insert(job_payload).execute()
+            except Exception as se:
+                if "delivery_format" in str(se):
+                    job_payload.pop("delivery_format", None)
+                    supabase_client.table("wp_studio_jobs").insert(job_payload).execute()
+                else:
+                    raise se
         except Exception as e:
             logger.warning(f"Supabase insert job notice: {e}")
 

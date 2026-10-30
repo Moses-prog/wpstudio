@@ -723,7 +723,13 @@
         .progress-hud-overlay.active {
             display: flex !important;
             opacity: 1 !important;
-            pointer-events: auto;
+            pointer-events: auto !important;
+        }
+
+        .progress-hud-overlay:not(.active) {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
 
         .progress-hud-card {
@@ -2901,10 +2907,13 @@
     <!-- ===================================================================== -->
     <!-- REAL-TIME AI PROGRESS & TIME TRACKER HUD (100% WP RELAY DESIGN)       -->
     <!-- ===================================================================== -->
-    <div id="ai-progress-hud" class="progress-hud-overlay">
-        <div class="progress-hud-card">
+    <div id="ai-progress-hud" class="progress-hud-overlay" onclick="AIProgressTracker.stop()">
+        <div class="progress-hud-card" onclick="event.stopPropagation()">
+            <button type="button" onclick="AIProgressTracker.stop()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:6px; line-height:1;" title="Close" aria-label="Close">
+                <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; stroke-width:2; fill:none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
             <!-- Top Badges -->
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-right:20px;">
                 <div class="badge pro" id="hud-op-title" style="font-size:11px; letter-spacing:0.5px;">
                     <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                     <span>GENERATING CONCEPTS</span>
@@ -3007,6 +3016,8 @@
                 this.stop();
                 const hud = document.getElementById('ai-progress-hud');
                 if (!hud) return;
+                hud.style.display = 'flex';
+                hud.style.pointerEvents = 'auto';
                 hud.classList.add('active');
 
                 const titleEl = document.getElementById('hud-op-title');
@@ -3140,7 +3151,7 @@
                 }
             },
 
-            async complete(successText = "Operation Complete") {
+            complete(successText = "Operation Complete") {
                 clearInterval(this.intervalId);
                 clearInterval(this.timerId);
 
@@ -3166,17 +3177,30 @@
                 const rateEl = document.getElementById('hud-latency-value');
                 if (rateEl) rateEl.innerText = "COMPLETE";
 
-                await new Promise(r => setTimeout(r, 450));
-                const hud = document.getElementById('ai-progress-hud');
-                if (hud) hud.classList.remove('active');
-                if (fillEl) fillEl.classList.remove('completed');
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        this.stop();
+                        resolve();
+                    }, 350);
+                });
             },
 
             stop() {
                 clearInterval(this.intervalId);
                 clearInterval(this.timerId);
                 const hud = document.getElementById('ai-progress-hud');
-                if (hud) hud.classList.remove('active');
+                if (hud) {
+                    hud.classList.remove('active');
+                    hud.style.display = 'none';
+                    hud.style.pointerEvents = 'none';
+                }
+                const fillEl = document.getElementById('hud-bar-fill');
+                if (fillEl) fillEl.classList.remove('completed');
+            },
+
+            fail(errorText) {
+                this.stop();
+                showToast(errorText || "Operation failed", false);
             }
         };
 
@@ -3959,7 +3983,7 @@
                 if (channelEl) {
                     channelEl.innerText = channelName ? `Channel: ${channelName}` : '';
                 }
-                const descBox = document.getElementById('story-result-desc-box');
+                const descBox = document.getElementById('story-result-desc-wrap') || document.getElementById('story-result-desc-box');
                 const descTextEl = document.getElementById('story-result-desc-text');
                 if (descBox && descTextEl) {
                     if (descText) {
@@ -4243,9 +4267,19 @@
                 }
                 if (d.success) {
                     await AIProgressTracker.complete("Screenplay Produced & Sent to Chat!");
-                    showTelegramAlert("Your PDFs have been sent directly to your Telegram chat! Check your bot messages.");
+                    showToast("Screenplay Produced & PDFs sent to Telegram chat!", true);
                     const resSection = document.getElementById('story-result-section');
-                    if (resSection) resSection.style.display = 'block';
+                    if (resSection) {
+                        resSection.style.display = 'block';
+                        setTimeout(() => {
+                            const modalBody = resSection.closest('.modal-body') || document.querySelector('#modal-storycraft .modal-body') || document.querySelector('#modal-story .modal-body');
+                            if (modalBody) {
+                                modalBody.scrollTo({ top: resSection.offsetTop - 12, behavior: 'smooth' });
+                            } else {
+                                resSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }, 120);
+                    }
 
                     const resTitle = document.getElementById('story-result-title');
                     if (resTitle) {
@@ -4257,7 +4291,7 @@
                         resChannel.innerText = chName ? `Channel: ${chName}` : '';
                     }
 
-                    const descBox = document.getElementById('story-result-desc-box');
+                    const descBox = document.getElementById('story-result-desc-wrap') || document.getElementById('story-result-desc-box');
                     const descTextEl = document.getElementById('story-result-desc-text');
                     const descText = (d.story && (d.story.youtube_description || d.story.description || d.story.synopsis)) || "";
                     if (descBox && descTextEl) {
@@ -5217,7 +5251,7 @@
                     return;
                 }
 
-                AIProgressTracker.complete("Story scenes successfully produced!");
+                await AIProgressTracker.complete("Story scenes successfully produced!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 adapterState.data = d.data;
@@ -5567,7 +5601,7 @@
                     return;
                 }
 
-                AIProgressTracker.complete("3 Remodeled Angles Ready!");
+                await AIProgressTracker.complete("3 Remodeled Angles Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 remixState.analysis = d.analysis;
@@ -5687,7 +5721,7 @@
                     return;
                 }
 
-                AIProgressTracker.complete("Remixcraft Package Ready!");
+                await AIProgressTracker.complete("Remixcraft Package Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 remixState.package = d.package;

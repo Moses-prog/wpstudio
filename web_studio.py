@@ -39,25 +39,30 @@ def send_telegram_document(user_id: int, file_path: str, caption: str = "") -> b
     bot_token = os.getenv("BOT_TOKEN", "").strip() or BOT_TOKEN
     if not bot_token or not file_path or not os.path.exists(file_path):
         return False
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-        filename = os.path.basename(file_path)
-        with open(file_path, "rb") as f:
-            files = {"document": (filename, f, "application/pdf")}
-            data = {"chat_id": str(user_id)}
-            if caption:
-                data["caption"] = caption
-                data["parse_mode"] = "HTML"
-            r = requests.post(url, data=data, files=files, timeout=40)
-            if r.status_code == 200:
-                print(f"[TELEGRAM DOC] Successfully delivered {filename} to chat {user_id}")
-                return True
-            else:
-                print(f"[TELEGRAM DOC] Delivery failed for {user_id} (status {r.status_code}): {r.text}")
-                return False
-    except Exception as e:
-        print(f"[TELEGRAM DOC] Exception sending {file_path} to {user_id}: {e}")
-        return False
+    url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+    filename = os.path.basename(file_path)
+    for attempt in range(2):
+        try:
+            with open(file_path, "rb") as f:
+                files = {"document": (filename, f, "application/pdf")}
+                data = {"chat_id": str(user_id)}
+                if caption:
+                    data["caption"] = caption
+                    data["parse_mode"] = "HTML"
+                r = requests.post(url, data=data, files=files, timeout=90)
+                if r.status_code == 200:
+                    print(f"[TELEGRAM DOC] Successfully delivered {filename} to chat {user_id}")
+                    return True
+                else:
+                    print(f"[TELEGRAM DOC] Delivery failed for {user_id} (status {r.status_code}): {r.text}")
+                    return False
+        except Exception as e:
+            print(f"[TELEGRAM DOC] Exception sending {file_path} to {user_id} (attempt {attempt+1}/2): {e}")
+            if attempt == 0:
+                time.sleep(2)
+                continue
+            return False
+    return False
 
 def send_telegram_photo(user_id: int, photo_bytes: bytes, caption: str = "") -> bool:
     """Delivers an image directly into the user's private Telegram chat with zero link exposure."""

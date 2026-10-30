@@ -296,7 +296,8 @@ def generate_ai_completion(
         payload = {
             "model": actual_model,
             "messages": messages,
-            "temperature": temperature
+            "temperature": temperature,
+            "max_tokens": 8192
         }
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
@@ -350,7 +351,7 @@ def generate_ai_completion(
 
         payload = {
             "model": actual_model,
-            "max_tokens": 4096,
+            "max_tokens": 8192,
             "system": sys_prompt,
             "messages": [
                 {"role": "user", "content": prompt}
@@ -384,7 +385,8 @@ def generate_ai_completion(
         client = get_client(user_api_key=gem_key)
         config = {
             "system_instruction": system_instruction,
-            "temperature": temperature
+            "temperature": temperature,
+            "max_output_tokens": 8192
         }
         if json_mode:
             config["response_mime_type"] = "application/json"
@@ -492,18 +494,18 @@ async def generate_full_story_package(concept: dict, culture: str = "Universal",
     """
     Step 2 of WP StoryCraft:
     Generates the complete Story Bible + Scene Prompts Blueprint up to the chosen length ceiling.
-    - Short: 15-30 scenes (ceiling 40)
-    - Medium: 45-75 scenes (ceiling 120)
-    - Long: 90-150 scenes (ceiling 250)
+    - Short: 8-12 scenes
+    - Medium: 18-26 scenes
+    - Long: 50-60 scenes
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
 
     scene_targets = {
-        "Short": "10 to 14 complete dramatic scenes (fast, punchy 3 to 5 minutes YouTube story, ceiling 16)",
-        "Medium": "16 to 24 complete dramatic scenes (fully developed 10 to 15 minutes YouTube story, ceiling 28)",
-        "Long": "25 to 35 complete dramatic scenes (extended 25 to 45+ minutes cinematic YouTube story, ceiling 40)"
+        "Short": "8 to 12 complete dramatic scenes (fast, punchy 3 to 5 minutes YouTube story, ceiling 15)",
+        "Medium": "18 to 26 complete dramatic scenes (fully developed 10 to 15 minutes YouTube story, ceiling 30)",
+        "Long": "50 to 60 deep cinematic sequence scenes (complete 1 to 2 hour feature movie screenplay, each scene fully developed with substantial multi-character dialogues, dramatic tension, detailed blocking, and cinematic camera directives, ceiling 65)"
     }
-    target_scenes = scene_targets.get(length_tier, "10 to 14 complete dramatic scenes")
+    target_scenes = scene_targets.get(length_tier, "8 to 12 complete dramatic scenes")
 
     char_clause = ""
     if lead_character and isinstance(lead_character, dict):
@@ -598,6 +600,8 @@ CRITICAL FILMMAKING CONTINUITY MANDATE (NO SCATTERED SINGLE-LINE SCENES):
 - A SCENE is defined by one continuous location and dramatic beat (Location from Location Bible).
 - Under NO circumstances split an ongoing conversation across multiple scenes!
 - If multiple characters are present in a location, their complete back-and-forth dialogue exchange, reactions, and conflicts MUST take place together within that SAME scene.
+- FEATURE MOVIE / LONG SCOPE MANDATE (NO SHORT CUT-SCENES):
+  For Long / 1-2 hour movie packages, every single scene must be substantial, deep, and fully developed. Absolutely NO rushed or cut-short 10-second scenes. Write genuine cinematic screenplay depth: authentic multi-turn character conversations, distinct character voices, emotional stakes, underlying motives, physical character actions, and meaningful plot progression. Treat this as a full, immersive feature film.
 - If "{delivery_format}" == "Dialogue":
   The story is driven strictly by spoken conversations between characters like a screenplay. In every scene, script authentic, emotionally charged back-and-forth spoken lines in "dialogue" with speaker names across multiple turns (e.g. 'Marcus: "I told you never to come back here."\nElena: "You don\'t own this city, Marcus."\nMarcus: "Then why are you shaking, Elena?"'). Narration voiceover should be empty string (""). Never write only one solitary line of dialogue for an entire scene!
 - If "{delivery_format}" == "Narrative":
@@ -1107,7 +1111,7 @@ Your mission is to adapt the creator's original written story into a complete, s
 
 CRITICAL NON-NEGOTIABLE LAWS:
 1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
-2. NATURAL SCENE LOAD & PACING: Break the story down into coherent scenes paced specifically for a {target_duration} video.
+2. NATURAL SCENE LOAD & PACING: Break the story down into coherent, substantial scenes paced specifically for a {target_duration} video (Short: 8 to 12 scenes; Standard: 18 to 26 scenes; Deep Dive: 30 to 42 scenes; Feature Movie 1-2+ Hours: 50 to 60 deep, richly developed sequence scenes with full dialogue and no cut-short scenes).
 3. SCENE CONTINUITY (NO SPLIT-UP CONVERSATIONS): A SCENE is defined by one continuous location and dramatic beat. If two or more characters are talking in that location, their entire conversation and interactions belong together within that SAME scene. Never isolate a single line of reply into a new scene.
 4. TIGHT & COMPLETE SCRIPTING: "dialogue_or_narration" must contain the full spoken exchange or rich narration paragraph for that scene, not just an isolated fragment.
 5. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
@@ -1339,10 +1343,10 @@ CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
 1. USE SIMPLE, CLEAR WORDS: Write dialog and narration in easy, natural, conversational words. Avoid big, awkward, or dictionary-sounding words.
 2. RETENTION ENGINE: Start with an explosive hook in Scene 1. Maintain high tension, fast pacing, and deliver an unforgettable twist before the finale.
 3. SCENE BREAKDOWN & RUNTIME DEPTH FOR {target_duration}:
-   - For Short (3–5 Mins): 6 to 8 fully developed scenes (each ~30–45s).
-   - For Standard (8–15 Mins): 12 to 16 rich scenes (each ~1–2 mins of dialogue).
-   - For Deep Dive (30–60 Mins): 18 to 26 extended scenes (each ~2–3 mins of dialogue/dramatics).
-   - For Feature Movie (1–2+ Hours): 28 to 36 major cinematic sequence scenes (each ~3–4 mins with extensive multi-character dialogues, dramatic conflicts, and plot twists).
+   - For Short (3–5 Mins): 8 to 12 fully developed scenes (each ~30–45s).
+   - For Standard (8–15 Mins): 18 to 26 rich scenes (each ~1–2 mins of dialogue).
+   - For Deep Dive (30–60 Mins): 30 to 42 extended scenes (each ~2–3 mins of dialogue/dramatics).
+   - For Feature Movie (1–2+ Hours): 50 to 60 deep, major cinematic sequence scenes (each ~2–3 mins with substantial multi-character dialogues, dramatic conflicts, plot twists, emotional stakes, and full sequence progression. Absolutely NO cut-short or rushed scenes!).
 
 4. CRITICAL SCREENPLAY & SCENE CONTINUITY (NO ISOLATED SINGLE-LINE SCENES):
    - A SCENE is defined by one continuous location and dramatic beat (e.g. INT. ATLANTA GRAND BALLROOM - NIGHT).

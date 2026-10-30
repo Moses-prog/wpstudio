@@ -1760,9 +1760,9 @@
                     <div>
                         <div class="form-label" style="font-size:10px;">Video Runtime & Ceiling</div>
                         <select id="story-sel-tier" class="form-input">
-                            <option value="Short">Short (~2-4 Mins | ≤ 40 scenes)</option>
-                            <option value="Medium">Medium (~8-15 Mins | ≤ 120 scenes)</option>
-                            <option value="Long">Long (~1-2+ Hours | ≤ 250 scenes)</option>
+                            <option value="Short">Short (~3-5 Mins | 8-12 Scenes)</option>
+                            <option value="Medium">Medium (~10-15 Mins | 18-26 Scenes)</option>
+                            <option value="Long">Movie Feature (~1-2 Hours | 50-60 Deep Scenes)</option>
                         </select>
                     </div>
                 </div>
@@ -2148,7 +2148,7 @@
                         <div class="pill-btn" data-dur="Short (3–5 Mins)" onclick="setRemixDuration('Short (3–5 Mins)', this)">Short (3–5 Mins)</div>
                         <div class="pill-btn active" data-dur="Standard (8–15 Mins)" onclick="setRemixDuration('Standard (8–15 Mins)', this)">YouTube (8–15 Mins)</div>
                         <div class="pill-btn" data-dur="Deep Dive (30–60 Mins)" onclick="setRemixDuration('Deep Dive (30–60 Mins)', this)">Deep Dive (30–60 Mins)</div>
-                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">Movie (1–2+ Hours)</div>
+                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">Movie (1–2+ Hours | 50-60 Scenes)</div>
                     </div>
                 </div>
 
@@ -6778,7 +6778,7 @@
 
                         <!-- SHORT -->
                         <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Short Format (~2-4 Mins | ≤ 40 scenes)</div>
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Short Format (~3-5 Mins | 8-12 scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
                                     <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
@@ -6793,7 +6793,7 @@
 
                         <!-- MEDIUM -->
                         <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Medium Format (~8-15 Mins | ≤ 120 scenes)</div>
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Medium Format (~10-15 Mins | 18-26 scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
                                     <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
@@ -6808,7 +6808,7 @@
 
                         <!-- LONG -->
                         <div style="margin-bottom:6px;">
-                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Long Feature (~1-2+ Hours | ≤ 250 scenes)</div>
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Movie Feature (~1-2+ Hours | 50-60 Deep Scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
                                     <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
@@ -7189,31 +7189,31 @@
             const pricingPayload = {
                 pricing_tiers: {
                     Short: {
-                        label: "Short (~2-4 Mins | ≤ 40 scenes)",
-                        duration: "~2-4 Mins",
-                        runtime_detail: "~2 to 4 Minutes YouTube Video",
+                        label: "Short (~3-5 Mins | 8-12 scenes)",
+                        duration: "~3-5 Mins",
+                        runtime_detail: "~3 to 5 Minutes YouTube Video",
                         concepts_cost: sConcept,
                         pdfs_cost: sPdf,
                         total: sConcept + sPdf,
-                        scenes: "15-25 scenes (~2 to 4 mins, ceiling 40)"
+                        scenes: "8-12 scenes (~3 to 5 mins, ceiling 15)"
                     },
                     Medium: {
-                        label: "Medium (~8-15 Mins | ≤ 120 scenes)",
-                        duration: "~8-15 Mins",
-                        runtime_detail: "~8 to 15 Minutes YouTube Video",
+                        label: "Medium (~10-15 Mins | 18-26 scenes)",
+                        duration: "~10-15 Mins",
+                        runtime_detail: "~10 to 15 Minutes YouTube Video",
                         concepts_cost: mConcept,
                         pdfs_cost: mPdf,
                         total: mConcept + mPdf,
-                        scenes: "40-60 scenes (~8 to 15 mins, ceiling 120)"
+                        scenes: "18-26 scenes (~10 to 15 mins, ceiling 30)"
                     },
                     Long: {
-                        label: "Long (~1-2+ Hours | ≤ 250 scenes)",
+                        label: "Movie Feature (~1-2+ Hours | 50-60 Deep Scenes)",
                         duration: "~1-2+ Hours",
-                        runtime_detail: "~1 to 2+ Hours Feature/Doc",
+                        runtime_detail: "~1 to 2+ Hours Feature Movie",
                         concepts_cost: lConcept,
                         pdfs_cost: lPdf,
                         total: lConcept + lPdf,
-                        scenes: "80-120 scenes (~1 to 2+ hours, ceiling 250)"
+                        scenes: "50-60 deep sequence scenes (~1 to 2+ hours, ceiling 65)"
                     }
                 },
                 cost_character_forge: forgeCost,

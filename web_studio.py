@@ -1840,16 +1840,23 @@ def api_remixcraft_send_to_telegram():
         dialogue = s.get("dialogue_or_narration", "")
         img_p = s.get("image_prompt", "")
         vid_p = s.get("video_prompt", "")
+        dur = s.get("estimated_duration") or s.get("duration", "")
+        raw_chars = s.get("characters_present", [])
+        chars_str = ", ".join(raw_chars) if isinstance(raw_chars, list) else (str(raw_chars) if raw_chars else "")
 
-        block = f"\n\n<b>SCENE {s_num}: {s_title}</b>"
+        block = f"\n\n<b>🎬 SCENE {s_num}: {s_title}</b>"
+        if dur:
+            block += f" <i>({dur})</i>"
         if setting:
-            block += f"\n<i>Setting: {setting}</i>"
+            block += f"\n📍 <i>Setting: {setting}</i>"
+        if chars_str:
+            block += f"\n👥 <i>Cast: {chars_str}</i>"
         if dialogue:
-            block += f"\n<i>\"{dialogue}\"</i>"
+            block += f"\n\n<b>🗣️ Script & Dialogue:</b>\n<i>{dialogue}</i>"
         if img_p:
-            block += f"\n<b>Visual Image Prompt:</b>\n<code>{img_p}</code>"
+            block += f"\n\n<b>🖼️ Visual Image Prompt:</b>\n<code>{img_p}</code>"
         if vid_p:
-            block += f"\n<b>Camera Motion:</b>\n<code>{vid_p}</code>"
+            block += f"\n\n<b>📹 Camera Motion:</b>\n<code>{vid_p}</code>"
 
         if len(chunk) + len(block) > 3600:
             send_telegram_message(user_id, chunk)

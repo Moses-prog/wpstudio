@@ -5273,8 +5273,25 @@
                 
                 const sNum = s.scene_number || 1;
                 const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
-                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600;">Setting: ${escapeHtml(s.setting)}</div>` : '';
-                const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid #e5a93c; border-radius:4px;">"${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
+                const sDur = s.estimated_duration || s.duration || '';
+                const sDurChip = sDur ? `<span class="chip" style="font-size:10px;">${escapeHtml(sDur)}</span>` : `<span class="chip" style="font-size:10px;">SCENE ${sNum}</span>`;
+                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600; margin-top:2px;">📍 Setting: ${escapeHtml(s.setting)}</div>` : '';
+                const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">👥 Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
+
+                let sDialogue = '';
+                if (s.dialogue_or_narration) {
+                    const rawLines = String(s.dialogue_or_narration).split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    const formatted = rawLines.map(line => {
+                        const colonIdx = line.indexOf(':');
+                        if (colonIdx > 0 && colonIdx < 35 && !line.startsWith('http')) {
+                            const speaker = line.substring(0, colonIdx).trim();
+                            const speech = line.substring(colonIdx + 1).trim();
+                            return `<div style="margin-bottom:4px;"><strong style="color:#e5a93c; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(speaker)}:</strong> <span style="color:var(--text-main); font-size:12px;">${escapeHtml(speech)}</span></div>`;
+                        }
+                        return `<div style="margin-bottom:4px; color:var(--text-main); font-size:12px; font-style:italic;">${escapeHtml(line)}</div>`;
+                    }).join('');
+                    sDialogue = `<div style="padding:8px 12px; background:rgba(255,255,255,0.03); border-left:3px solid #e5a93c; border-radius:4px; margin:8px 0;">${formatted}</div>`;
+                }
                 
                 const imgPromptEsc = escapeHtml(s.image_prompt || '');
                 const vidPromptEsc = escapeHtml(s.video_prompt || '');
@@ -5282,13 +5299,14 @@
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:13px; font-weight:700; color:var(--text-main);">SCENE ${sNum}: ${sTitle}</span>
-                        <span class="chip" style="font-size:10px;">SHOT ${sNum}</span>
+                        ${sDurChip}
                     </div>
                     ${sSetting}
+                    ${sChars}
                     ${sDialogue}
                     
                     <!-- Midjourney / Flux Prompt -->
-                    <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Midjourney / Flux Prompt:</span>
                             <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${imgPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
@@ -5298,7 +5316,7 @@
 
                     <!-- Video Motion Prompt -->
                     ${s.video_prompt ? `
-                    <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Video Camera Motion Prompt:</span>
                             <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${vidPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
@@ -5749,8 +5767,25 @@
                     
                     const sNum = s.scene_number || 1;
                     const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
-                    const sSetting = s.setting ? `<div style="font-size:11px; color:var(--accent, #e5a93c); font-weight:600;">Setting: ${escapeHtml(s.setting)}</div>` : '';
-                    const sDialogue = s.dialogue_or_narration ? `<div style="font-size:12px; color:var(--text-main); font-style:italic; padding:6px 10px; background:rgba(255,255,255,0.03); border-left:3px solid var(--accent, #e5a93c); border-radius:4px;">"${escapeHtml(s.dialogue_or_narration)}"</div>` : '';
+                    const sDur = s.estimated_duration || s.duration || '';
+                    const sDurChip = sDur ? `<span class="chip" style="font-size:10px;">${escapeHtml(sDur)}</span>` : `<span class="chip" style="font-size:10px;">SCENE ${sNum}</span>`;
+                    const sSetting = s.setting ? `<div style="font-size:11px; color:var(--accent, #e5a93c); font-weight:600; margin-top:2px;">📍 Setting: ${escapeHtml(s.setting)}</div>` : '';
+                    const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">👥 Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
+
+                    let sDialogue = '';
+                    if (s.dialogue_or_narration) {
+                        const rawLines = String(s.dialogue_or_narration).split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        const formatted = rawLines.map(line => {
+                            const colonIdx = line.indexOf(':');
+                            if (colonIdx > 0 && colonIdx < 35 && !line.startsWith('http')) {
+                                const speaker = line.substring(0, colonIdx).trim();
+                                const speech = line.substring(colonIdx + 1).trim();
+                                return `<div style="margin-bottom:4px;"><strong style="color:var(--accent, #e5a93c); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(speaker)}:</strong> <span style="color:var(--text-main); font-size:12px;">${escapeHtml(speech)}</span></div>`;
+                            }
+                            return `<div style="margin-bottom:4px; color:var(--text-main); font-size:12px; font-style:italic;">${escapeHtml(line)}</div>`;
+                        }).join('');
+                        sDialogue = `<div style="padding:8px 12px; background:rgba(255,255,255,0.03); border-left:3px solid var(--accent, #e5a93c); border-radius:4px; margin:8px 0;">${formatted}</div>`;
+                    }
                     
                     const imgPromptEsc = escapeHtml(s.image_prompt || '');
                     const vidPromptEsc = escapeHtml(s.video_prompt || '');
@@ -5758,13 +5793,14 @@
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-size:13px; font-weight:700; color:var(--text-main);">SCENE ${sNum}: ${sTitle}</span>
-                            <span class="chip" style="font-size:10px;">SHOT ${sNum}</span>
+                            ${sDurChip}
                         </div>
                         ${sSetting}
+                        ${sChars}
                         ${sDialogue}
                         
                         <!-- Midjourney / Flux Prompt -->
-                        <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Midjourney / Flux Prompt:</span>
                                 <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${imgPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
@@ -5774,7 +5810,7 @@
 
                         <!-- Video Motion Prompt -->
                         ${s.video_prompt ? `
-                        <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Video Camera Motion Prompt:</span>
                                 <button class="copy-pill-btn" onclick="copyRemixPrompt(this, \`${vidPromptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>

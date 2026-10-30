@@ -285,11 +285,16 @@ Reflecting: *{c_expr}*.
     for s in scenes:
         s_num = s.get("scene_number", 1)
         s_title = s.get("scene_title", f"Scene {s_num}")
-        s_type = s.get("scene_type", "Action")
-        s_dur = s.get("duration", "5s")
+        s_type = s.get("scene_type", "Cinematic Scene")
+        s_dur = s.get("estimated_duration") or s.get("duration", "1m 30s")
         s_persp = s.get("camera_perspective", "objective")
-        s_chars = ", ".join(s.get("characters_present", [])) or "None"
-        s_loc = s.get("location", "Main Setting")
+        raw_chars = s.get("characters_present", [])
+        if isinstance(raw_chars, list):
+            s_chars = ", ".join(raw_chars) or "None"
+        else:
+            s_chars = str(raw_chars) or "None"
+        s_loc = s.get("location") or s.get("setting") or "Main Setting"
+        s_dialogue = s.get("dialogue") or s.get("dialogue_or_narration", "")
         s_narr = s.get("narration", "")
         s_prompt = s.get("image_prompt", "")
 
@@ -298,10 +303,21 @@ Reflecting: *{c_expr}*.
 **CHARACTERS:** {s_chars}  
 **LOCATION:** {s_loc}  
 
-**🎙️ Spoken Line (Voiceover):**  
-> *"{s_narr}"*
+"""
+        if s_dialogue and s_dialogue.strip():
+            dialogue_md = "\n> ".join(s_dialogue.strip().split("\n"))
+            md += f"""**🗣️ DIALOGUE / SCRIPT:**  
+> {dialogue_md}
 
-**🖼️ COPY-READY IMAGE PROMPT (Google Flow / Midjourney v6 / Flux):**  
+"""
+        elif s_narr and s_narr.strip():
+            narr_md = "\n> ".join(s_narr.strip().split("\n"))
+            md += f"""**🎙️ Spoken Line (Voiceover):**  
+> {narr_md}
+
+"""
+
+        md += f"""**🖼️ COPY-READY IMAGE PROMPT (Google Flow / Midjourney v6 / Flux):**  
 > {s_prompt}
 
 ---
@@ -416,12 +432,16 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
     for s in scenes:
         s_num = s.get("scene_number", 1)
         s_title = s.get("scene_title", f"Scene {s_num}")
-        s_type = s.get("scene_type", "Action")
-        s_dur = s.get("duration", "5s")
+        s_type = s.get("scene_type", "Cinematic Scene")
+        s_dur = s.get("estimated_duration") or s.get("duration", "1m 30s")
         s_persp = s.get("camera_perspective", "objective")
-        s_chars = ", ".join(s.get("characters_present", [])) or "None"
-        s_loc = s.get("location", "Main Setting")
-        s_dialogue = s.get("dialogue", "")
+        raw_chars = s.get("characters_present", [])
+        if isinstance(raw_chars, list):
+            s_chars = ", ".join(raw_chars) or "None"
+        else:
+            s_chars = str(raw_chars) or "None"
+        s_loc = s.get("location") or s.get("setting") or "Main Setting"
+        s_dialogue = s.get("dialogue") or s.get("dialogue_or_narration", "")
         s_narr = s.get("narration", "")
         s_video = s.get("video_prompt", "")
 
@@ -432,14 +452,15 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
 
 """
         if s_dialogue and s_dialogue.strip():
-            md += f"""**🗣️ DIALOGUE:**  
-> **{s_dialogue}**  
+            dialogue_md = "\n> ".join(s_dialogue.strip().split("\n"))
+            md += f"""**🗣️ DIALOGUE / SCRIPT:**  
+> {dialogue_md}
 
 """
-
-        if s_narr and s_narr.strip():
+        elif s_narr and s_narr.strip():
+            narr_md = "\n> ".join(s_narr.strip().split("\n"))
             md += f"""**🎙️ Spoken Line (Voiceover):**  
-> *"{s_narr}"*
+> {narr_md}
 
 """
 

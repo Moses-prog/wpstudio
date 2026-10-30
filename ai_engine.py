@@ -499,11 +499,11 @@ async def generate_full_story_package(concept: dict, culture: str = "Universal",
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
 
     scene_targets = {
-        "Short": "12 to 16 scenes (fast, complete 2 to 4 minutes story, ceiling 20)",
-        "Medium": "25 to 35 scenes (complete 8 to 12 minutes story, ceiling 50)",
-        "Long": "45 to 60 scenes (extended 20 to 30+ minutes story, ceiling 80)"
+        "Short": "10 to 14 complete dramatic scenes (fast, punchy 3 to 5 minutes YouTube story, ceiling 16)",
+        "Medium": "16 to 24 complete dramatic scenes (fully developed 10 to 15 minutes YouTube story, ceiling 28)",
+        "Long": "25 to 35 complete dramatic scenes (extended 25 to 45+ minutes cinematic YouTube story, ceiling 40)"
     }
-    target_scenes = scene_targets.get(length_tier, "12 to 16 scenes")
+    target_scenes = scene_targets.get(length_tier, "10 to 14 complete dramatic scenes")
 
     char_clause = ""
     if lead_character and isinstance(lead_character, dict):
@@ -594,12 +594,16 @@ Every video prompt MUST be engineered for AI motion generators:
 - [Audio & Negative Constraints]: Append: "No music, instrumentals, ambient audio, or sound effects. Use only the explicitly scripted spoken dialogue, if any. No captions, subtitles, text, slogans, watermarks, or written dialogue."
 
 6. STORY DELIVERY & AUDIO SCRIPTING FORMAT ("{delivery_format.upper()}"):
+CRITICAL FILMMAKING CONTINUITY MANDATE (NO SCATTERED SINGLE-LINE SCENES):
+- A SCENE is defined by one continuous location and dramatic beat (Location from Location Bible).
+- Under NO circumstances split an ongoing conversation across multiple scenes!
+- If multiple characters are present in a location, their complete back-and-forth dialogue exchange, reactions, and conflicts MUST take place together within that SAME scene.
 - If "{delivery_format}" == "Dialogue":
-  The story is driven strictly by spoken conversations between characters like a screenplay. In every scene, script authentic, emotionally charged back-and-forth spoken lines in "dialogue" with speaker names (e.g. 'Marcus: "I told you never to come back here." / Elena: "You don\\'t own this city, Marcus."'). Narration voiceover should be empty string ("").
+  The story is driven strictly by spoken conversations between characters like a screenplay. In every scene, script authentic, emotionally charged back-and-forth spoken lines in "dialogue" with speaker names across multiple turns (e.g. 'Marcus: "I told you never to come back here."\nElena: "You don\'t own this city, Marcus."\nMarcus: "Then why are you shaking, Elena?"'). Narration voiceover should be empty string (""). Never write only one solitary line of dialogue for an entire scene!
 - If "{delivery_format}" == "Narrative":
-  The story is told entirely through third-person or first-person narrator voiceover (optimized for ElevenLabs). In every scene, write gripping, high-retention spoken voiceover in "narration". Characters do NOT speak on-camera lines (set "dialogue" to an empty string "").
+  The story is told entirely through third-person or first-person narrator voiceover (optimized for ElevenLabs). In every scene, write gripping, high-retention spoken voiceover in "narration" (2 to 4 rich sentences that build tension and advance the story). Characters do NOT speak on-camera lines (set "dialogue" to an empty string "").
 - If "{delivery_format}" == "Dialogue / Narrative":
-  Cinematic hybrid format. Every scene contains compelling voiceover narration in "narration" setting tension/atmosphere, PLUS authentic on-camera spoken dialogue lines between characters in "dialogue".
+  Cinematic hybrid format. Every scene contains compelling voiceover narration in "narration" setting tension/atmosphere, PLUS authentic on-camera spoken multi-line dialogue between characters in "dialogue".
 
 7. VIRAL MARKETING MATRIX:
 - 15-20 viral hashtags tailored to the story and genre.
@@ -645,12 +649,12 @@ Return strictly structured JSON:
             "scene_number": 1,
             "scene_title": "Descriptive Scene Title",
             "scene_type": "Establishing / Action / Dialogue / Reaction / Climax / Resolution",
-            "duration": "5s",
+            "duration": "90s",
             "camera_perspective": "objective",
-            "characters_present": ["Character Name"],
+            "characters_present": ["Character Name 1", "Character Name 2"],
             "location": "Location Name from Location Bible",
-            "dialogue": "Speaker: \\"Spoken line\\"",
-            "narration": "Spoken voiceover line for ElevenLabs",
+            "dialogue": "Character 1: \\"First spoken line...\\"\\nCharacter 2: \\"Reply line...\\"\\nCharacter 1: \\"Follow up line...\\"",
+            "narration": "Rich spoken voiceover paragraph for ElevenLabs",
             "image_prompt": "Objective wide establishing shot, eye-level angle, 35mm lens. [Location with lighting, props and depth]. [Realistic spatial staging with exact character placement in room]. [Character likeness in parentheses]. [Specific wardrobe and shoes for each character]. [Specific hairstyle for each character]. [Concrete narrative action taking place]. [Visual filter lock]. No captions, subtitles, slogans, watermarks, written dialogue, cropped legs, or floating text.",
             "video_prompt": "Starting from the exact opening frame at [Location], the camera [motion] on [Character]. [Action sequence]. End state: [Ending pose]. [Wardrobe and hair]. Visual filter lock: [Filter]. No music, instrumentals, ambient audio, or sound effects. Use only the explicitly scripted spoken dialogue, if any. No captions, subtitles, text, slogans, watermarks, or written dialogue."
         }}
@@ -1103,11 +1107,12 @@ Your mission is to adapt the creator's original written story into a complete, s
 
 CRITICAL NON-NEGOTIABLE LAWS:
 1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
-2. NATURAL SCENE LOAD & PACING: Break the story down into a natural sequence of 1 to 80 scenes paced specifically for a {target_duration} video. Shorter targets produce compact scenes; longer targets produce granular shots. NEVER artificially pad or stretch scenes with empty fluff.
-3. TIGHT & GRIPPING DIALOGUE: Spoken lines and narration must be punchy, emotional, and authentic. No robotic or filler lines.
-4. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
-5. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
-6. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
+2. NATURAL SCENE LOAD & PACING: Break the story down into coherent scenes paced specifically for a {target_duration} video.
+3. SCENE CONTINUITY (NO SPLIT-UP CONVERSATIONS): A SCENE is defined by one continuous location and dramatic beat. If two or more characters are talking in that location, their entire conversation and interactions belong together within that SAME scene. Never isolate a single line of reply into a new scene.
+4. TIGHT & COMPLETE SCRIPTING: "dialogue_or_narration" must contain the full spoken exchange or rich narration paragraph for that scene, not just an isolated fragment.
+5. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
+6. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
+7. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
 
 CONFIGURATION:
 - Tone / Genre: {genre} (Pacing and intensity only)
@@ -1139,7 +1144,9 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
             "scene_number": 1,
             "scene_title": "Descriptive Scene Heading",
             "setting": "Interior/Exterior location and time of day",
-            "dialogue_or_narration": "Exact spoken line or narration excerpt for this shot",
+            "estimated_duration": "1m 30s",
+            "characters_present": ["Character Name 1", "Character Name 2"],
+            "dialogue_or_narration": "Complete multi-line screenplay dialogue with character names or full voiceover paragraph for this scene",
             "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera angle, lighting, character details, action, style. No captions, no text, no split screens.",
             "video_prompt": "Cinematic camera movement and character action prompt for Runway/Luma/Pika."
         }}
@@ -1331,14 +1338,26 @@ Your mission is to write a complete, viral YouTube screenplay and production pac
 CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
 1. USE SIMPLE, CLEAR WORDS: Write dialog and narration in easy, natural, conversational words. Avoid big, awkward, or dictionary-sounding words.
 2. RETENTION ENGINE: Start with an explosive hook in Scene 1. Maintain high tension, fast pacing, and deliver an unforgettable twist before the finale.
-3. SCENE BREAKDOWN FOR {target_duration}:
-   - For Short (3–5 Mins): 10 to 14 scenes.
-   - For Standard (8–15 Mins): 18 to 26 scenes.
-   - For Deep Dive (30–60 Mins): 28 to 40 scenes.
-   - For Feature Movie (1–2+ Hours): 45 to 60 scenes.
-4. MIDJOURNEY / FLUX IMAGE PROMPTS: Every scene prompt must be completely standalone. Include shot angle (Wide shot, Close-up, Over-the-shoulder), lighting, characters present with clothes and facial expressions, action, and the art style: {art_treatment}. Strictly NO text, captions, logos, or split screens.
-5. VIDEO MOTION PROMPTS: Specify exact camera movements (slow push-in, low-angle track, drone orbit, subtle handheld shake) and subject movement for Runway Gen-3 / Luma Dream Machine.
-6. 3 HIGH-CTR THUMBNAIL CONCEPTS: Provide 3 high-contrast, clickable thumbnail prompts with 3-5 bold punchy overlay words.
+3. SCENE BREAKDOWN & RUNTIME DEPTH FOR {target_duration}:
+   - For Short (3–5 Mins): 6 to 8 fully developed scenes (each ~30–45s).
+   - For Standard (8–15 Mins): 12 to 16 rich scenes (each ~1–2 mins of dialogue).
+   - For Deep Dive (30–60 Mins): 18 to 26 extended scenes (each ~2–3 mins of dialogue/dramatics).
+   - For Feature Movie (1–2+ Hours): 28 to 36 major cinematic sequence scenes (each ~3–4 mins with extensive multi-character dialogues, dramatic conflicts, and plot twists).
+
+4. CRITICAL SCREENPLAY & SCENE CONTINUITY (NO ISOLATED SINGLE-LINE SCENES):
+   - A SCENE is defined by one continuous location and dramatic beat (e.g. INT. ATLANTA GRAND BALLROOM - NIGHT).
+   - Under NO circumstances split a continuous conversation across multiple scenes!
+   - If two or more characters are present in a scene (e.g. Marcus and his wife Victoria at the wedding), their complete back-and-forth interaction, conversation, and reactions MUST happen together within that SAME scene.
+   - NEVER create a new scene just for another character to reply.
+   - "dialogue_or_narration" MUST contain the FULL multi-turn screenplay conversation for that scene formatted with speaker names, for example:
+     MARCUS: (Whispering, transfixed) That chord... nobody plays that bridge except Keisha. Nobody.
+     VICTORIA: (Tugging his arm firmly) Marcus, honey, you're staring. That little girl is just hired entertainment. Let's get back to our table.
+     MARCUS: You don't understand, Victoria. That song was never published. Keisha only played it for me before she died.
+   - If a scene is narration-based, write a rich, multi-sentence spoken voiceover paragraph (not just one sentence!).
+
+5. MIDJOURNEY / FLUX IMAGE PROMPTS: Every scene prompt must be completely standalone. Include camera lens & shot angle (Objective wide shot, Two-shot, Over-the-shoulder, Dramatic close-up), lighting, all characters present with spatial staging, clothes, facial expressions, concrete action, and the art style: {art_treatment}. Strictly NO text, captions, logos, or split screens.
+6. VIDEO MOTION PROMPTS: Specify exact camera movements (slow push-in, low-angle track, drone orbit, subtle handheld shake) and subject movement for Runway Gen-3 / Luma Dream Machine.
+7. 3 HIGH-CTR THUMBNAIL CONCEPTS: Provide 3 high-contrast, clickable thumbnail prompts with 3-5 bold punchy overlay words.
 {lead_actor_instructions}
 - Tone & Voice: {culture} ({voice_treatment})
 - Visual Filter: {visual_filter} ({filter_treatment})
@@ -1365,7 +1384,9 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
             "scene_number": 1,
             "scene_title": "Descriptive Scene Heading",
             "setting": "INT. or EXT. Location - Time of Day",
-            "dialogue_or_narration": "Spoken voiceover or character dialogue for this scene",
+            "estimated_duration": "2m 30s",
+            "characters_present": ["Character 1", "Character 2"],
+            "dialogue_or_narration": "Full multi-turn screenplay conversation with character names or deep spoken voiceover paragraph",
             "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera lens, lighting, character details, action, style",
             "video_prompt": "Cinematic camera movement and character motion for Runway/Luma/Pika"
         }}

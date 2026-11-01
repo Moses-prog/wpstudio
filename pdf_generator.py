@@ -2,54 +2,58 @@ import os
 import re
 import gc
 from datetime import datetime
-try:
-    import pymupdf as fitz
-except ImportError:
-    import fitz
 from markdown_pdf import MarkdownPdf, Section
+import fitz  # PyMuPDF
 
+# Executive Dark Mode CSS for PDF Generation
 DARK_THEME_CSS = """
+@page {
+    size: A4;
+    margin: 36pt;
+    background-color: #0b0f19;
+}
+
 body {
-    margin: 0;
-    padding: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: #0b0f19;
     color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 9.5pt;
-    line-height: 1.5;
+    line-height: 1.55;
+    font-size: 10pt;
 }
 
 h1 {
     color: #ffffff;
-    font-size: 18pt;
+    font-size: 20pt;
     font-weight: 800;
-    letter-spacing: -0.3px;
-    margin-top: 16pt;
-    margin-bottom: 8pt;
+    margin-top: 10pt;
+    margin-bottom: 6pt;
+    letter-spacing: -0.5pt;
     border-bottom: 1.5pt solid #1e293b;
     padding-bottom: 6pt;
 }
 
 h2 {
-    color: #f1f5f9;
+    color: #38bdf8;
     font-size: 13pt;
     font-weight: 700;
     margin-top: 14pt;
     margin-bottom: 6pt;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
 }
 
 h3 {
-    color: #38bdf8;
+    color: #f8fafc;
     font-size: 11pt;
     font-weight: 700;
-    margin-top: 12pt;
+    margin-top: 10pt;
     margin-bottom: 4pt;
 }
 
 p {
-    margin-top: 4pt;
-    margin-bottom: 6pt;
     color: #cbd5e1;
+    margin-top: 3pt;
+    margin-bottom: 7pt;
 }
 
 strong {
@@ -63,7 +67,7 @@ em {
 
 blockquote {
     background-color: #111827;
-    border-left: 3.5pt solid #0a84ff;
+    border-left: 3.5pt solid #e5a93c;
     color: #f8fafc;
     padding: 8pt 12pt;
     margin: 6pt 0 10pt 0;
@@ -121,7 +125,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "generated_pdfs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def sanitize_filename(name: str) -> str:
-    cleaned = re.sub(r'[^a-zA-Z0-9_\- ]', '', name)
+    cleaned = re.sub(r'[^a-zA-Z0-9_\- ]', '', str(name or "wp_studio"))
     return cleaned.strip().replace(' ', '_')[:35] or "wp_studio"
 
 def format_hashtags(tags: list) -> str:
@@ -129,201 +133,463 @@ def format_hashtags(tags: list) -> str:
         return ""
     formatted = []
     for t in tags:
-        t_clean = t.strip()
+        t_clean = str(t).strip()
+        if not t_clean:
+            continue
         if not t_clean.startswith("#"):
             t_clean = f"#{t_clean}"
         formatted.append(f"`{t_clean}`")
     return " ".join(formatted)
 
-def generate_image_prompts_pdf(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> str:
+
+def _normalize_characters_and_locations(story_data: dict, style: str = "Realistic") -> tuple:
     """
-    Master Production PDF 1: IMAGE PRODUCTION PROMPTS
-    Includes Cover, Viral Hashtags, Posting Window, Creative Brief, Cast Likeness Bible,
-    Location Worldbuilding Bible, and 100% Self-Contained Scene Image Prompts.
+    Guarantees that:
+    1. Every character has a complete Full-Body Head-to-Toe Character Sheet Prompt.
+    2. Every location (especially locations appearing in multiple scenes) has a complete
+       Unoccupied Location Consistency Prompt and a list of scenes where it appears.
     """
-    title = story_data.get("title", "WP Studio Production Package")
-    genre = story_data.get("genre", genre)
+    scenes = story_data.get("scenes", []) or []
+    raw_chars = story_data.get("characters", []) or []
+    raw_locs = story_data.get("locations", []) or []
+
+    # 1. Normalize Characters
+    normalized_chars = []
+    for char in raw_chars:
+        if not isinstance(char, dict):
+            continue
+        c_name = char.get("name", "Character")
+        c_orig = char.get("original_name", "")
+        c_role = char.get("role", "SUPPORTING")
+        c_locked = char.get("locked_visual_description") or ""
+        c_vis = char.get("visual_description") or ""
+        if not c_locked and c_vis:
+            c_locked = (
+                f"Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure "
+                f"from shoes on the floor to top of head, eye-level angle. {c_name}: {c_vis}. "
+                f"Standing in relaxed posture facing camera on a neutral grey seamless studio background, "
+                f"soft studio lighting, {style} cinematic render, sharp focus head-to-toe. "
+                f"No cut off legs, no cut off shoes, no text, no watermarks."
+            )
+        elif not c_locked:
+            c_locked = (
+                f"Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure "
+                f"from shoes on the floor to top of head, eye-level angle. {c_name} ({c_role}), "
+                f"standing in relaxed posture facing camera on a neutral grey seamless studio background, "
+                f"soft studio lighting, {style} cinematic render. No cut off legs, no cut off shoes, no text."
+            )
+        normalized_chars.append({
+            "name": c_name,
+            "original_name": c_orig,
+            "role": c_role,
+            "locked_visual_description": c_locked,
+            "visual_description": c_vis or c_locked,
+            "expression_keywords": char.get("expression_keywords", "Natural, expressive, story-appropriate"),
+            "wardrobe_lock": char.get("wardrobe_lock", ""),
+            "identity_lock_statement": char.get(
+                "identity_lock_statement",
+                f"IDENTITY LOCK: {c_name}'s facial features, hairstyle, skin tone, build, and wardrobe must remain consistent across all scenes."
+            )
+        })
+
+    # 2. Map scene locations to track recurring locations
+    scene_loc_map = {}
+    for s in scenes:
+        if not isinstance(s, dict):
+            continue
+        s_num = s.get("scene_number", 1)
+        loc_label = (s.get("location") or s.get("setting") or "").strip()
+        if not loc_label:
+            continue
+        # Clean INT./EXT. prefix and time-of-day suffix for grouping
+        base_loc = re.sub(r'^(INT\.|EXT\.|INT/EXT\.|INTERIOR|EXTERIOR)\s*', '', loc_label, flags=re.IGNORECASE)
+        base_loc = re.split(r'\s+-\s+(DAY|NIGHT|MORNING|EVENING|DUSK|DAWN|LATER|CONTINUOUS).*$', base_loc, flags=re.IGNORECASE)[0].strip()
+        if not base_loc:
+            base_loc = loc_label
+        key = base_loc.lower()
+        if key not in scene_loc_map:
+            scene_loc_map[key] = {
+                "display_name": base_loc,
+                "scene_nums": [],
+                "sample_prompt": s.get("image_prompt", "")
+            }
+        scene_loc_map[key]["scene_nums"].append(s_num)
+
+    # 3. Normalize Locations (merge AI-provided locations + auto-detected recurring locations)
+    normalized_locs = []
+    seen_loc_keys = set()
+
+    for loc in raw_locs:
+        if not isinstance(loc, dict):
+            continue
+        l_name = (loc.get("name") or "Story Location").strip()
+        l_ref = (loc.get("unoccupied_reference") or loc.get("prompt") or loc.get("description") or "").strip()
+        l_scenes = (loc.get("scenes_used") or "").strip()
+
+        # Match with scene_loc_map if scenes_used not explicitly set
+        matched_nums = []
+        for k, v in scene_loc_map.items():
+            if k in l_name.lower() or l_name.lower() in k:
+                matched_nums.extend(v["scene_nums"])
+                seen_loc_keys.add(k)
+
+        if not l_scenes and matched_nums:
+            unique_nums = sorted(list(set(matched_nums)))
+            l_scenes = ", ".join([f"Scene {n}" for n in unique_nums])
+
+        if not l_ref:
+            l_ref = (
+                f"Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens. "
+                f"{l_name}, realistic architectural layout, natural and practical lighting fixtures, rich environmental textures, "
+                f"foreground and background depth, {style} cinematic style. No people, no text, no watermarks."
+            )
+
+        normalized_locs.append({
+            "name": l_name,
+            "scenes_used": l_scenes or "Multiple Scenes",
+            "is_recurring": len(matched_nums) > 1 or ("," in l_scenes),
+            "unoccupied_reference": l_ref
+        })
+
+    # Add any auto-detected locations from scenes that weren't in raw_locs
+    for k, v in scene_loc_map.items():
+        if k in seen_loc_keys:
+            continue
+        # Include all recurring locations (2+ scenes) or top locations if normalized_locs is empty
+        if len(v["scene_nums"]) >= 2 or len(normalized_locs) < 5:
+            loc_name = v["display_name"]
+            unique_nums = sorted(list(set(v["scene_nums"])))
+            scenes_str = ", ".join([f"Scene {n}" for n in unique_nums])
+            ref_prompt = (
+                f"Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm anamorphic lens. "
+                f"{loc_name}, consistent architectural layout, atmospheric lighting, detailed walls, flooring, and practical props, "
+                f"deep cinematic perspective, {style} render style. Use this master background reference for visual consistency across {scenes_str}. "
+                f"No people, no characters, no text, no watermarks."
+            )
+            normalized_locs.append({
+                "name": loc_name,
+                "scenes_used": scenes_str,
+                "is_recurring": len(unique_nums) > 1,
+                "unoccupied_reference": ref_prompt
+            })
+
+    return normalized_chars, normalized_locs
+
+
+def _extract_scene_script_text(s: dict, delivery_format: str = "Dialogue / Narrative") -> tuple:
+    """
+    Extracts clean (narration_text, dialogue_text, combined_text) for a scene.
+    """
+    narr = (s.get("narration") or "").strip()
+    dial = (s.get("dialogue") or "").strip()
+    comb = (s.get("dialogue_or_narration") or "").strip()
+
+    if not narr and not dial and comb:
+        if "Narrative" in delivery_format and "Dialogue" not in delivery_format:
+            narr = comb
+        elif "Dialogue" in delivery_format and "Narrative" not in delivery_format:
+            dial = comb
+        else:
+            comb_lines = [ln.strip() for ln in comb.split("\n") if ln.strip()]
+            has_speaker = any(":" in ln[:35] for ln in comb_lines)
+            if has_speaker:
+                dial = comb
+            else:
+                narr = comb
+
+    parts = []
+    if narr:
+        parts.append(narr)
+    if dial and dial != narr:
+        parts.append(dial)
+    full_scene_script = "\n\n".join(parts) if parts else comb
+    return narr, dial, full_scene_script
+
+
+def generate_voiceover_script_pdf(
+    story_data: dict,
+    culture="Universal",
+    style="Stylised 3D",
+    genre="Action Thriller",
+    delivery_format="Dialogue / Narrative",
+    lead_character=None,
+    length_tier="Short",
+    timezone="Africa/Lagos"
+) -> str:
+    """
+    Individual Production PDF 1: FULL VOICEOVER & SCREENPLAY SCRIPT PDF
+    Dedicated strictly to the spoken narrator voiceover and character script (zero image/camera prompts mixed in),
+    ready to read or paste directly into ElevenLabs / TTS voiceover generators.
+    """
+    title = story_data.get("title", "WP Studio Screenplay")
+    genre_val = story_data.get("genre", genre)
     delivery = story_data.get("delivery_format", delivery_format)
     logline = story_data.get("logline", story_data.get("hook", ""))
     hook = story_data.get("hook", "")
-    theme = story_data.get("theme_and_takeaway", "High-Retention Visual Storytelling")
     synopsis = story_data.get("synopsis", "")
     hashtags = story_data.get("hashtags", [])
-    posting = story_data.get("posting_schedule", {})
-    if isinstance(posting, dict):
-        posting_text = f"- **TikTok:** {posting.get('tiktok', 'Prime evenings')}\n- **YouTube:** {posting.get('youtube', 'Peak browse hours')}\n- **Instagram:** {posting.get('instagram', 'Peak engagement slots')}"
-    else:
-        posting_text = str(posting)
-
-    lead_section = ""
-    if lead_character and isinstance(lead_character, dict):
-        lead_name = lead_character.get("name", "Protagonist")
-        lead_section = f"\n### 👑 Lead Protagonist (CastLock Continuity)\n**{lead_name}** *(👑 WP CastLock Verified Continuity Anchor)*\n"
-
-    characters = story_data.get("characters", [])
-    locations = story_data.get("locations", [])
-    scenes = story_data.get("scenes", [])
-    filter_lock = story_data.get("visual_filter_lock", f"Cinematic realism, shot on ARRI Alexa, {style} style.")
+    scenes = story_data.get("scenes", []) or []
+    name_changes = story_data.get("name_changes", []) or []
 
     safe_title = sanitize_filename(title)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_filename = f"WP_Studio_Image_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_filename = f"WP_Studio_Voiceover_Script_{safe_title}_{timestamp}.pdf"
     pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
 
     runtime_lookup = {
-        "Short": "~2 to 4 Mins",
-        "Medium": "~8 to 15 Mins",
+        "Short": "~3 to 5 Mins",
+        "Medium": "~10 to 15 Mins",
         "Long": "~1 to 2+ Hours"
     }
-    est_runtime = story_data.get("runtime_detail") or story_data.get("estimated_runtime") or runtime_lookup.get(length_tier, "~2 to 4 Mins")
-
+    est_runtime = (
+        story_data.get("runtime_detail")
+        or story_data.get("target_duration")
+        or story_data.get("estimated_runtime")
+        or runtime_lookup.get(length_tier, "~8 to 15 Mins")
+    )
     channel_name = story_data.get("channel_name") or "WP Studio Production"
     youtube_desc = story_data.get("youtube_description") or story_data.get("video_description") or ""
     if not youtube_desc:
-        youtube_desc = f"{logline}\n\n{synopsis}\n\n🔔 Subscribe to {channel_name} for more cinematic stories!\n\n{format_hashtags(hashtags)}"
+        youtube_desc = f"{logline}\n\n{synopsis}\n\nSubscribe to {channel_name} for more stories!\n\n{format_hashtags(hashtags)}"
 
-    md = f"""# WP STUDIO | AI STORY STUDIO
-### STORY PACKAGE  |  IMAGE PRODUCTION PROMPTS
-# 🎬 {title}
-**{genre.upper()}**
+    md = f"""# WP STUDIO | NARRATOR VOICEOVER & SCREENPLAY SCRIPT
+### INDIVIDUAL SCRIPT PDF  |  READY FOR VOICEOVER & AUDIO GENERATION
+# {title}
+**GENRE:** `{genre_val.upper()}`  |  **FORMAT:** `{delivery}`  |  **RUNTIME:** `{est_runtime}`  |  **SCENES:** `{len(scenes)}`
+
+> *"{logline}"*
+
+---
+"""
+
+    if hook:
+        md += f"""### Opening 5-Second Hook
+> *"{hook}"*
+
+"""
+
+    if name_changes:
+        md += """### Copyright-Safe Remodeled Names & Locations
+"""
+        for nc in name_changes:
+            if isinstance(nc, dict):
+                orig = nc.get("original", "")
+                new_val = nc.get("new", "")
+                nc_type = nc.get("type", "Remodeled")
+                if orig and new_val:
+                    md += f"- **{orig}** changed to **{new_val}** *({nc_type})*\n"
+        md += "\n---\n"
+
+    # Section 1: Continuous Voiceover Script (Copy-Paste Ready for ElevenLabs / TTS)
+    md += """# PART 1: CONTINUOUS FULL VOICEOVER SCRIPT
+*Copy and paste this continuous script directly into ElevenLabs or your voiceover generator, or read it straight through.*
+
+"""
+    continuous_blocks = []
+    for s in scenes:
+        if not isinstance(s, dict):
+            continue
+        _, _, full_text = _extract_scene_script_text(s, delivery)
+        if full_text:
+            continuous_blocks.append(full_text)
+
+    if continuous_blocks:
+        md += "\n\n".join(continuous_blocks) + "\n\n---\n"
+    else:
+        md += "*No spoken script lines found.*\n\n---\n"
+
+    # Section 2: Scene-by-Scene Timed Voiceover & Dialogue Script
+    md += f"""# PART 2: SCENE-BY-SCENE TIMED SCRIPT ({len(scenes)} SCENES)
+*Use this section while editing your video to match each voiceover paragraph to its exact scene number.*
+
+"""
+    for s in scenes:
+        if not isinstance(s, dict):
+            continue
+        s_num = s.get("scene_number", 1)
+        s_title = s.get("scene_title", f"Scene {s_num}")
+        s_dur = s.get("estimated_duration") or s.get("duration", "1m 30s")
+        s_loc = s.get("location") or s.get("setting") or "Main Setting"
+        narr, dial, full_text = _extract_scene_script_text(s, delivery)
+
+        md += f"""### SCENE {s_num}: {s_title}
+**SETTING:** `{s_loc}`  |  **DURATION:** `{s_dur}`
+
+"""
+        if narr:
+            narr_md = "\n> ".join(narr.split("\n"))
+            md += f"""**Narrator Voiceover:**
+> {narr_md}
+
+"""
+        if dial and dial != narr:
+            dial_md = "\n> ".join(dial.split("\n"))
+            md += f"""**Character Dialogue:**
+> {dial_md}
+
+"""
+        if not narr and not dial and full_text:
+            ft_md = "\n> ".join(full_text.split("\n"))
+            md += f"""> {ft_md}
+
+"""
+        md += "---\n"
+
+    # Section 3: YouTube Packaging & Description
+    md += f"""# PART 3: YOUTUBE DESCRIPTION & TAGS
+### Channel
+**{channel_name}**
+
+### Ready-to-Copy YouTube Description
+{youtube_desc}
+
+### Viral Tags
+{format_hashtags(hashtags)}
+
+---
+*Prepared by WP Studio — Individual Voiceover & Screenplay Script PDF.*
+"""
+
+    pdf = MarkdownPdf(toc_level=2)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
+    return pdf_path
+
+
+def generate_image_prompts_pdf(
+    story_data: dict,
+    culture="Universal",
+    style="Stylised 3D",
+    genre="Action Thriller",
+    delivery_format="Dialogue / Narrative",
+    lead_character=None,
+    length_tier="Short",
+    timezone="Africa/Lagos"
+) -> str:
+    """
+    Individual Production PDF 2: CHARACTER SHEETS, LOCATION PROMPTS & SCENE IMAGE PROMPTS
+    Contains:
+    1. Full-Body Character Sheet Prompts (for character consistency)
+    2. Location Consistency Prompts (especially for locations appearing more than once, for realistic movie continuity)
+    3. Scene-by-Scene Image Prompts (standalone copy-paste prompts for Midjourney / Flux / Google Flow)
+    """
+    title = story_data.get("title", "WP Studio Production Package")
+    genre_val = story_data.get("genre", genre)
+    delivery = story_data.get("delivery_format", delivery_format)
+    logline = story_data.get("logline", story_data.get("hook", ""))
+    scenes = story_data.get("scenes", []) or []
+
+    characters, locations = _normalize_characters_and_locations(story_data, style=style)
+
+    safe_title = sanitize_filename(title)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    pdf_filename = f"WP_Studio_Character_Location_Scene_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
+
+    runtime_lookup = {
+        "Short": "~3 to 5 Mins",
+        "Medium": "~10 to 15 Mins",
+        "Long": "~1 to 2+ Hours"
+    }
+    est_runtime = (
+        story_data.get("runtime_detail")
+        or story_data.get("target_duration")
+        or story_data.get("estimated_runtime")
+        or runtime_lookup.get(length_tier, "~8 to 15 Mins")
+    )
+
+    md = f"""# WP STUDIO | CHARACTER, LOCATION & SCENE IMAGE PROMPTS
+### VISUAL CONSISTENCY BIBLE & SHOT-BY-SHOT IMAGE PROMPTS
+# {title}
+**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`
+**CHARACTERS:** `{len(characters)}`  |  **LOCATIONS:** `{len(locations)}`  |  **SCENES:** `{len(scenes)}`
 
 > *"{logline}"*
 
 ---
 
-### 🏷️ Viral Distribution Tags
-{format_hashtags(hashtags)}
-
-### ⏰ Best Time To Post ({timezone})
-{posting_text}
-
-> ⏱️ **ESTIMATED RUNTIME:** `{est_runtime}` &nbsp;&bull;&nbsp; 🎬 **SCENES:** `{len(scenes)}` &nbsp;&bull;&nbsp; 👥 **CHARACTERS:** `{len(characters)}` &nbsp;&bull;&nbsp; 📍 **LOCATIONS:** `{len(locations)}` &nbsp;&bull;&nbsp; 📅 **PRODUCTION DATE:** `{datetime.now().strftime('%B %d, %Y')}`
-
----
-
-# 📖 CREATIVE BRIEF
-### 📺 YouTube Channel
-**{channel_name}**
-
-### 🎬 Story Title
-**{title}**
-
-### 📝 Ready-to-Copy YouTube Video Description
-{youtube_desc}
-
-### Story Delivery & Audio Format
-**{delivery}**
-{lead_section}
-### Theme & Core Takeaway
-**{theme}**
-
-### Executive Synopsis
-{synopsis}
-
-### ⚡ 5-Second Retention Hook
-> *"{hook}"*
-
-### 💡 How To Use This Document
-Every image prompt in this package is **fully self-contained**: copy it directly into your AI image generator (**Google Flow, Midjourney v6, Flux.1, DALL-E 3, Leonardo AI**). Character descriptions and facial structures are locked and repeated verbatim in every scene so faces and builds remain consistent. Add your preferred aspect ratio (`--ar 16:9` or `--ar 9:16`) when pasting into your generator.
-
----
-
-# 👥 CAST & CONSISTENCY
-### Character Bible
-*Locked descriptions below must be reused verbatim in every prompt for visual consistency across AI-generated scenes.*
+# PART 1: CHARACTER SHEET PROMPTS (FULL-BODY CONSISTENCY)
+*Generate these character sheets first so every character keeps the exact same face, skin tone, hair, build, and outfit throughout your movie.*
 
 """
 
-    for char in characters:
-        c_name = char.get("name", "Character")
-        c_role = char.get("role", "SUPPORTING")
-        is_castlock_lead = False
-        if lead_character and isinstance(lead_character, dict):
-            locked_name = lead_character.get("name", "").lower()
-            if locked_name and (locked_name in c_name.lower() or c_name.lower() in locked_name or c_role.upper() == "PROTAGONIST"):
-                is_castlock_lead = True
+    if characters:
+        for idx, char in enumerate(characters, 1):
+            c_name = char.get("name", f"Character {idx}")
+            c_orig = char.get("original_name", "")
+            c_role = char.get("role", "SUPPORTING")
+            c_desc = char.get("locked_visual_description", "")
+            c_lock = char.get("identity_lock_statement", "")
+            orig_tag = f" *(Remodeled from: {c_orig})*" if (c_orig and c_orig.lower() != c_name.lower()) else ""
 
-        lead_badge = " *(👑 WP CastLock Verified Lead)*" if is_castlock_lead else ""
-        c_desc = char.get("locked_visual_description", "")
-        c_expr = char.get("expression_keywords", "Controlled, story-appropriate")
-        c_lock = char.get("identity_lock_statement", f"IDENTITY LOCK: {c_name}'s facial features, hairstyle, skin tone, build, and overall appearance must remain consistent.")
+            md += f"""### CHARACTER {idx}: {c_name}{orig_tag}
+**ROLE:** `{c_role}`
 
-        md += f"""### {c_name}{lead_badge}
-**ROLE:** `{c_role}`  
-**HEAD-TO-TOE FULL BODY CHARACTER REFERENCE PROMPT:**  
-> {c_desc}  
+**COPY-READY CHARACTER SHEET PROMPT:**
+> {c_desc}
 
-**EXPRESSION PROFILE:**  
-Reflecting: *{c_expr}*.  
-
-> **{c_lock}**
+*{c_lock}*
 
 ---
+"""
+    else:
+        md += "*Character details are embedded directly inside each scene prompt below.*\n\n---\n"
+
+    md += """# PART 2: LOCATION CONSISTENCY PROMPTS (RECURRING SETTINGS)
+*Generate these empty location backgrounds first. Every location that appears more than once has a dedicated prompt below so your movie rooms, streets, and buildings look 100% realistic and consistent across all scenes.*
+
 """
 
     if locations:
-        md += """# 🌍 WORLD BUILDING
-### Location Bible
-*Empty, unoccupied reference views establishing setting, lighting, and environmental texture with no people or characters.*
-
-"""
-        for loc in locations:
-            l_name = loc.get("name", "Location")
+        for idx, loc in enumerate(locations, 1):
+            l_name = loc.get("name", f"Location {idx}")
+            l_scenes = loc.get("scenes_used", "Multiple Scenes")
             l_ref = loc.get("unoccupied_reference", "")
-            md += f"""### 📍 {l_name}
-{l_ref}
+            rec_tag = " [RECURRING LOCATION]" if loc.get("is_recurring") else ""
+
+            md += f"""### LOCATION {idx}: {l_name}{rec_tag}
+**APPEARS IN:** `{l_scenes}`
+
+**COPY-READY LOCATION REFERENCE PROMPT:**
+> {l_ref}
 
 ---
 """
+    else:
+        md += "*Location descriptions are embedded directly inside each scene prompt below.*\n\n---\n"
 
-    md += f"""# 🎥 PRODUCTION
-### Scene-by-Scene Image Prompts
-*{len(scenes)} scenes — each prompt is fully self-contained with locked character descriptions, lens choice, spatial staging, and negative prompt filtering.*
+    md += f"""# PART 3: SCENE-BY-SCENE IMAGE PROMPTS ({len(scenes)} SCENES)
+*Each scene prompt below is 100% self-contained with camera angle, recurring location lighting, character likeness in parentheses, wardrobe, and physical action.*
 
 """
 
     for s in scenes:
+        if not isinstance(s, dict):
+            continue
         s_num = s.get("scene_number", 1)
         s_title = s.get("scene_title", f"Scene {s_num}")
-        s_type = s.get("scene_type", "Cinematic Scene")
         s_dur = s.get("estimated_duration") or s.get("duration", "1m 30s")
-        s_persp = s.get("camera_perspective", "objective")
         raw_chars = s.get("characters_present", [])
         if isinstance(raw_chars, list):
             s_chars = ", ".join(raw_chars) or "None"
         else:
             s_chars = str(raw_chars) or "None"
         s_loc = s.get("location") or s.get("setting") or "Main Setting"
-        s_dialogue = s.get("dialogue") or s.get("dialogue_or_narration", "")
-        s_narr = s.get("narration", "")
         s_prompt = s.get("image_prompt", "")
 
-        md += f"""### SC {s_num} — {s_title}
-`{s_type}` | `{s_dur}` | `{s_persp}`  
-**CHARACTERS:** {s_chars}  
-**LOCATION:** {s_loc}  
+        md += f"""### SCENE {s_num} — {s_title}
+**LOCATION:** `{s_loc}`  |  **CHARACTERS:** `{s_chars}`  |  **DURATION:** `{s_dur}`
 
-"""
-        if s_dialogue and s_dialogue.strip():
-            dialogue_md = "\n> ".join(s_dialogue.strip().split("\n"))
-            md += f"""**🗣️ DIALOGUE / SCRIPT:**  
-> {dialogue_md}
-
-"""
-        elif s_narr and s_narr.strip():
-            narr_md = "\n> ".join(s_narr.strip().split("\n"))
-            md += f"""**🎙️ Spoken Line (Voiceover):**  
-> {narr_md}
-
-"""
-
-        md += f"""**🖼️ COPY-READY IMAGE PROMPT (Google Flow / Midjourney v6 / Flux):**  
+**COPY-READY SCENE IMAGE PROMPT (Midjourney / Flux / Google Flow):**
 > {s_prompt}
 
 ---
 """
 
-    md += """*Prepared by WP Studio AI Story Studio — Flagship YouTube Automation Suite.*
+    md += """*Prepared by WP Studio — Individual Character, Location & Scene Image Prompts PDF.*
 """
 
     pdf = MarkdownPdf(toc_level=2)
@@ -334,143 +600,81 @@ Reflecting: *{c_expr}*.
     gc.collect()
     return pdf_path
 
-def generate_video_prompts_pdf(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> str:
+
+def generate_video_prompts_pdf(
+    story_data: dict,
+    culture="Universal",
+    style="Stylised 3D",
+    genre="Action Thriller",
+    delivery_format="Dialogue / Narrative",
+    lead_character=None,
+    length_tier="Short",
+    timezone="Africa/Lagos"
+) -> str:
     """
-    Master Production PDF 2: VIDEO PRODUCTION PROMPTS
-    Engineered specifically for Google Flow / Veo, Kling AI, and Runway Gen-3.
-    Includes Opening Frame Anchors, Physical Motion, End State, Embedded Dialogue, and Audio Constraints.
+    Individual Production PDF 3: VIDEO CAMERA & MOTION PROMPTS
+    Engineered specifically for Google Flow / Veo, Kling AI, Luma, and Runway Gen-3.
     """
     title = story_data.get("title", "WP Studio Production Package")
-    genre = story_data.get("genre", genre)
-    delivery = story_data.get("delivery_format", delivery_format)
+    genre_val = story_data.get("genre", genre)
     logline = story_data.get("logline", story_data.get("hook", ""))
-    theme = story_data.get("theme_and_takeaway", "High-Retention Visual Storytelling")
-    synopsis = story_data.get("synopsis", "")
-    hashtags = story_data.get("hashtags", [])
-    posting = story_data.get("posting_schedule", {})
-    if isinstance(posting, dict):
-        posting_text = f"- **TikTok:** {posting.get('tiktok', 'Prime evenings')}\n- **YouTube:** {posting.get('youtube', 'Peak browse hours')}\n- **Instagram:** {posting.get('instagram', 'Peak engagement slots')}"
-    else:
-        posting_text = str(posting)
-
-    lead_section = ""
-    if lead_character and isinstance(lead_character, dict):
-        lead_name = lead_character.get("name", "Protagonist")
-        lead_section = f"\n### 👑 Lead Protagonist (CastLock Continuity)\n**{lead_name}** *(👑 WP CastLock Verified Continuity Anchor)*\n"
-
-    characters = story_data.get("characters", [])
-    locations = story_data.get("locations", [])
-    scenes = story_data.get("scenes", [])
+    scenes = story_data.get("scenes", []) or []
 
     safe_title = sanitize_filename(title)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_filename = f"WP_Studio_Video_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_filename = f"WP_Studio_Video_Motion_Prompts_{safe_title}_{timestamp}.pdf"
     pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
 
     runtime_lookup = {
-        "Short": "~2 to 4 Mins",
-        "Medium": "~8 to 15 Mins",
+        "Short": "~3 to 5 Mins",
+        "Medium": "~10 to 15 Mins",
         "Long": "~1 to 2+ Hours"
     }
-    est_runtime = story_data.get("runtime_detail") or story_data.get("estimated_runtime") or runtime_lookup.get(length_tier, "~2 to 4 Mins")
+    est_runtime = (
+        story_data.get("runtime_detail")
+        or story_data.get("target_duration")
+        or story_data.get("estimated_runtime")
+        or runtime_lookup.get(length_tier, "~8 to 15 Mins")
+    )
 
-    channel_name = story_data.get("channel_name") or "WP Studio Production"
-    youtube_desc = story_data.get("youtube_description") or story_data.get("video_description") or ""
-    if not youtube_desc:
-        youtube_desc = f"{logline}\n\n{synopsis}\n\n🔔 Subscribe to {channel_name} for more cinematic stories!\n\n{format_hashtags(hashtags)}"
-
-    md = f"""# WP STUDIO | AI STORY STUDIO
-### STORY PACKAGE  |  VIDEO PRODUCTION PROMPTS
-# 🎬 {title}
-**{genre.upper()}**
+    md = f"""# WP STUDIO | VIDEO CAMERA & MOTION PROMPTS
+### SCENE-BY-SCENE ANIMATION & MOTION DIRECTIVES
+# {title}
+**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`  |  **SCENES:** `{len(scenes)}`
 
 > *"{logline}"*
 
 ---
 
-### 🏷️ Viral Distribution Tags
-{format_hashtags(hashtags)}
-
-### ⏰ Best Time To Post ({timezone})
-{posting_text}
-
-> ⏱️ **ESTIMATED RUNTIME:** `{est_runtime}` &nbsp;&bull;&nbsp; 🎬 **SCENES:** `{len(scenes)}` &nbsp;&bull;&nbsp; 👥 **CHARACTERS:** `{len(characters)}` &nbsp;&bull;&nbsp; 📍 **LOCATIONS:** `{len(locations)}` &nbsp;&bull;&nbsp; 📅 **PRODUCTION DATE:** `{datetime.now().strftime('%B %d, %Y')}`
-
----
-
-# 📖 CREATIVE BRIEF
-### 📺 YouTube Channel
-**{channel_name}**
-
-### 🎬 Story Title
-**{title}**
-
-### 📝 Ready-to-Copy YouTube Video Description
-{youtube_desc}
-
-### Story Delivery & Audio Format
-**{delivery}**
-{lead_section}
-### Theme & Core Takeaway
-**{theme}**
-
-### Executive Synopsis
-{synopsis}
-
-### 💡 How To Use This Document
-Every video prompt in this package is **fully self-contained**: copy it directly into your AI video generator (**Google Flow, Kling AI, Runway Gen-3, Luma Dream Machine**). 
-Each prompt begins with an **Opening Frame Anchor**, details **Chronological Physical Motion**, establishes a defined **End State**, and includes **Visual Filter Locks** and **Audio Constraints** to prevent distortion.
-
----
-
-# 🎥 PRODUCTION
-### Scene-by-Scene Video Prompts
-*{len(scenes)} scenes — each prompt is fully self-contained with camera direction, physical movement, end state, and embedded dialogue.*
+# SCENE-BY-SCENE VIDEO MOTION PROMPTS ({len(scenes)} SCENES)
+*Paste each prompt below alongside your generated scene image into Kling AI, Google Flow / Veo, Runway Gen-3, or Luma Dream Machine.*
 
 """
 
     for s in scenes:
+        if not isinstance(s, dict):
+            continue
         s_num = s.get("scene_number", 1)
         s_title = s.get("scene_title", f"Scene {s_num}")
-        s_type = s.get("scene_type", "Cinematic Scene")
         s_dur = s.get("estimated_duration") or s.get("duration", "1m 30s")
-        s_persp = s.get("camera_perspective", "objective")
         raw_chars = s.get("characters_present", [])
         if isinstance(raw_chars, list):
             s_chars = ", ".join(raw_chars) or "None"
         else:
             s_chars = str(raw_chars) or "None"
         s_loc = s.get("location") or s.get("setting") or "Main Setting"
-        s_dialogue = s.get("dialogue") or s.get("dialogue_or_narration", "")
-        s_narr = s.get("narration", "")
         s_video = s.get("video_prompt", "")
 
-        md += f"""### SC {s_num} — {s_title}
-`{s_type}` | `{s_dur}` | `{s_persp}`  
-**CHARACTERS:** {s_chars}  
-**LOCATION:** {s_loc}  
+        md += f"""### SCENE {s_num} — {s_title}
+**LOCATION:** `{s_loc}`  |  **CHARACTERS:** `{s_chars}`  |  **DURATION:** `{s_dur}`
 
-"""
-        if s_dialogue and s_dialogue.strip():
-            dialogue_md = "\n> ".join(s_dialogue.strip().split("\n"))
-            md += f"""**🗣️ DIALOGUE / SCRIPT:**  
-> {dialogue_md}
-
-"""
-        elif s_narr and s_narr.strip():
-            narr_md = "\n> ".join(s_narr.strip().split("\n"))
-            md += f"""**🎙️ Spoken Line (Voiceover):**  
-> {narr_md}
-
-"""
-
-        md += f"""**📹 COPY-READY VIDEO PROMPT (Google Flow / Kling / Runway):**  
+**COPY-READY VIDEO MOTION PROMPT (Kling / Runway / Veo / Flow):**
 > {s_video}
 
 ---
 """
 
-    md += """*Prepared by WP Studio AI Story Studio — Flagship YouTube Automation Suite.*
+    md += """*Prepared by WP Studio — Individual Video Camera & Motion Prompts PDF.*
 """
 
     pdf = MarkdownPdf(toc_level=2)
@@ -480,12 +684,27 @@ Each prompt begins with an **Opening Frame Anchor**, details **Chronological Phy
     del pdf
     gc.collect()
     return pdf_path
+
 
 def generate_dual_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
     """Generates both Master Image Prompts PDF and Master Video Prompts PDF."""
     image_pdf = generate_image_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
     video_pdf = generate_video_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
     return image_pdf, video_pdf
+
+
+def generate_triple_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
+    """
+    Generates all 3 Individual Production PDFs for Creators:
+    1. script_pdf: Full Narrator Voiceover & Screenplay Script PDF (for voiceover generation)
+    2. image_pdf: Character Sheets, Recurring Location Prompts & Scene Image Prompts PDF
+    3. video_pdf: Scene-by-Scene Video Motion Prompts PDF
+    """
+    script_pdf = generate_voiceover_script_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    image_pdf = generate_image_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    video_pdf = generate_video_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    return script_pdf, image_pdf, video_pdf
+
 
 def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
     """Compiles a dedicated 9-Panel 3D Character Model Sheet & Turnaround PDF."""
@@ -504,26 +723,26 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
 
     md = f"""# WP STUDIO | CASTLOCK 3D CHARACTER MODEL SHEET
 ### AAA 3D PRODUCTION SPECIFICATION  |  9-PANEL TURNAROUND SUITE
-# 🎭 {c_name}
+# {c_name}
 **Visual Style:** `{c_style}`  
 **Date:** {datetime.now().strftime('%B %d, %Y')}  
 **Recommended Generation Aspect Ratio:** `{params}`
 
 ---
 
-# 📋 1. Continuity & Anatomical Trait Bible
+# 1. Continuity & Anatomical Trait Bible
 {c_bible}
 
 ---
 
-# 🚀 2. MASTER 9-PANEL 3D TURNAROUND MODEL SHEET PROMPT
+# 2. MASTER 9-PANEL 3D TURNAROUND MODEL SHEET PROMPT
 *Use this master prompt in Midjourney v6, Flux.1, or Google Flow to generate the complete 3x3 reference sheet (all corners, all faces, full body, close-ups, hairstyle, and uniform textures in a single image):*
 
 > {c_master}
 
 ---
 
-# 📸 3. INDIVIDUAL 4K ANGLE PROMPTS
+# 3. INDIVIDUAL 4K ANGLE PROMPTS
 *For generating individual high-resolution single-angle renders:*
 
 ### Panel 1: [FRONT] Full Body Standing
@@ -555,7 +774,7 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
 
 ---
 
-# ⚡ 4. DYNAMIC ACTION PROMPT
+# 4. DYNAMIC ACTION PROMPT
 *Showcase your character in full cinematic action inside their native environment:*
 
 > {c_action}

@@ -555,6 +555,76 @@
             opacity: 0.8;
         }
 
+        .btn-cancel {
+            background: #1c202b;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-cancel:hover {
+            background: #252a38;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-cancel:active {
+            opacity: 0.8;
+        }
+
+        .pdf-delivery-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .btn-pdf-item {
+            background: #181c26;
+            color: var(--text-main);
+            border: 1px solid rgba(229, 169, 60, 0.32);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            text-align: left;
+            transition: background 0.18s, border-color 0.18s;
+        }
+
+        .btn-pdf-item:hover, .btn-pdf-item:active {
+            background: rgba(229, 169, 60, 0.12);
+            border-color: var(--accent, #e5a93c);
+        }
+
+        .btn-pdf-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 5px;
+            background: rgba(229, 169, 60, 0.16);
+            color: var(--accent, #e5a93c);
+            white-space: nowrap;
+        }
+
         .btn-danger {
             background: rgba(255, 69, 58, 0.15);
             color: var(--danger);
@@ -1808,7 +1878,7 @@
             <!-- Step 3: Concepts Container -->
             <div id="story-concepts-section" style="display:none;">
                 <div class="section-label" style="padding-left:0; padding-top:4px;">Generated Story Concepts</div>
-                <div class="form-hint">Tap a concept to select it for complete screenplay and dual PDF generation.</div>
+                <div class="form-hint">Tap a concept to select it for complete screenplay and 3 individual PDF files.</div>
                 <div id="story-concepts-list"></div>
 
                 <div class="form-card" id="story-production-box" style="margin-top:12px;">
@@ -1816,7 +1886,7 @@
                     <div class="form-hint" id="story-production-hint">Selected: Concept 1</div>
                     <button id="btn-produce-story" class="btn-submit" onclick="submitProduceStory()">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                        Produce Screenplay & Dual PDFs
+                        Produce Screenplay & 3 Production PDFs
                     </button>
                 </div>
             </div>
@@ -1839,14 +1909,19 @@
                     <div id="story-result-desc-text" style="font-size:11.5px; color:#cbd5e1; line-height:1.45; max-height:120px; overflow-y:auto; word-break:break-word; white-space:pre-wrap;"></div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="btn-download-bible" onclick="sendPdfToChat(activeJobId, 'bible')" class="btn-submit" style="background:#2c2c2e; border:1px solid var(--border); width:100%; justify-content:center;">
-                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Send Image Prompts PDF to Telegram Chat
+                <div class="pdf-delivery-stack">
+                    <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                    <button type="button" id="btn-download-script" onclick="sendPdfToChat(activeJobId, 'script')" class="btn-pdf-item">
+                        <span>PDF 1: Full Voiceover & Screenplay Script</span>
+                        <span class="btn-pdf-badge">Send Script PDF</span>
                     </button>
-                    <button type="button" id="btn-download-scenes" onclick="sendPdfToChat(activeJobId, 'scene')" class="btn-submit" style="background:#2c2c2e; border:1px solid var(--border); width:100%; justify-content:center;">
-                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Send Video Scene Prompts PDF to Telegram Chat
+                    <button type="button" id="btn-download-bible" onclick="sendPdfToChat(activeJobId, 'bible')" class="btn-pdf-item">
+                        <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                        <span class="btn-pdf-badge">Send Image PDF</span>
+                    </button>
+                    <button type="button" id="btn-download-scenes" onclick="sendPdfToChat(activeJobId, 'scene')" class="btn-pdf-item">
+                        <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                        <span class="btn-pdf-badge">Send Video PDF</span>
                     </button>
                 </div>
             </div>
@@ -1868,13 +1943,13 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Paste your story and we keep your exact character names, locations, and plot. Genre is tone only.</div>
+            <div class="modal-subtitle">Paste any story or script. We remodel character names, locations, and lines for YouTube copyright safety and generate 3 individual PDFs.</div>
         </div>
         <div class="modal-body">
             <!-- Step Indicators -->
             <div class="adapter-step-bar">
                 <div id="step-tab-1" class="step-tab active" onclick="goToAdapterStep(1)">
-                    <span class="step-num">1</span> <span class="step-label">Genre Tone</span>
+                    <span class="step-num">1</span> <span class="step-label">Genre & Setup</span>
                 </div>
                 <div id="step-tab-2" class="step-tab" onclick="goToAdapterStep(2)">
                     <span class="step-num">2</span> <span class="step-label">Visual Filter</span>
@@ -1887,8 +1962,8 @@
             <!-- STEP 1: GENRE TONE & VOICE ACCENT -->
             <div id="adapter-step-1" class="adapter-step-pane">
                 <div class="form-card">
-                    <div class="form-label">1. GENRE (TONE ONLY)</div>
-                    <div class="form-hint" style="margin-bottom:12px;">Tone, pacing, and visual intensity only — does not rename your cast or relocate your plot.</div>
+                    <div class="form-label">1. GENRE TONE</div>
+                    <div class="form-hint" style="margin-bottom:12px;">Sets the emotional tone, tension, and visual mood across your scenes.</div>
                     
                     <div class="pills-grid" id="adapter-genre-pills">
                         <div class="pill-btn active" data-val="Drama" onclick="selectAdapterPill('genre', this)">Drama</div>
@@ -1899,8 +1974,17 @@
                     </div>
 
                     <div style="margin-top:16px;">
+                        <div class="form-label">YOUTUBE COPYRIGHT PROTECTION</div>
+                        <div class="form-hint" style="margin-bottom:10px;">Remodels character names, location names, and phrasing so YouTube never flags your video for copyright.</div>
+                        <div class="pills-grid" id="adapter-remodel-pills" style="grid-template-columns: 1fr 1fr;">
+                            <div class="pill-btn active" data-val="true" onclick="selectAdapterPill('remodel', this)">Remodel Names & Locations (Safe)</div>
+                            <div class="pill-btn" data-val="false" onclick="selectAdapterPill('remodel', this)">Keep Exact Original Names</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;">
                         <div class="form-label">VOICE / ACCENT FLAVOR</div>
-                        <div class="form-hint" style="margin-bottom:10px;">Voice/accent flavor only — does not rename your cast.</div>
+                        <div class="form-hint" style="margin-bottom:10px;">Matches cultural names, settings, and natural voiceover cadence.</div>
                         <div class="pills-grid" id="adapter-voice-pills">
                             <div class="pill-btn active" data-val="African / Nigerian" onclick="selectAdapterPill('voice', this)">African / Nigerian</div>
                             <div class="pill-btn" data-val="Black American" onclick="selectAdapterPill('voice', this)">Black American</div>
@@ -1916,7 +2000,7 @@
                             <div class="pill-btn active" data-val="Short (3–5 Mins)" onclick="selectAdapterPill('duration', this)">Short (3–5 Mins)</div>
                             <div class="pill-btn" data-val="Standard (8–15 Mins)" onclick="selectAdapterPill('duration', this)">YouTube (8–15 Mins)</div>
                             <div class="pill-btn" data-val="Long (30–60 Mins)" onclick="selectAdapterPill('duration', this)">Deep Dive (30–60 Mins)</div>
-                            <div class="pill-btn" data-val="Feature (1–2+ Hours)" onclick="selectAdapterPill('duration', this)">Movie (1–2+ Hours)</div>
+                            <div class="pill-btn" data-val="Feature (1–2+ Hours)" onclick="selectAdapterPill('duration', this)">Movie (1–2+ Hours | 65–80 Scenes)</div>
                         </div>
                     </div>
 
@@ -1995,7 +2079,7 @@
                         <div class="form-label" style="margin-bottom:0;">3. YOUR STORY TEXT</div>
                         <span id="adapter-word-badge" style="font-size:11px; font-weight:600; color:var(--text-muted);">0 / 5,000 words</span>
                     </div>
-                    <div class="form-hint">Paste your original story or script (500–5,000 words). We preserve all characters, events, and dialogue.</div>
+                    <div class="form-hint">Paste your story or script (100–5,000 words). We generate 3 separate PDFs: Narrator Voiceover Script, Character/Location/Image Prompts, and Video Prompts.</div>
                     
                     <textarea id="adapter-story-text" class="form-input" rows="8" placeholder="Paste your complete story here (e.g. 500 to 5,000 words)..." oninput="onAdapterStoryInput()"></textarea>
 
@@ -2018,7 +2102,7 @@
                     <div style="display:flex; gap:10px; margin-top:20px;">
                         <button class="btn-cancel" style="flex:1;" onclick="goToAdapterStep(2)">&larr; Back</button>
                         <button id="btn-adapter-run" class="btn-submit" style="flex:2; margin-top:0;" onclick="submitStoryAdapter()">
-                            Refine into Scenes
+                            Refine into Scenes & 3 PDFs
                         </button>
                     </div>
                 </div>
@@ -2037,23 +2121,58 @@
 
                     <div id="adapter-res-logline" style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:10px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:8px;"></div>
 
+                    <!-- Individual PDF Delivery Stack -->
+                    <div class="pdf-delivery-stack">
+                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                        <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('script')">
+                            <span>PDF 1: Full Voiceover & Screenplay Script</span>
+                            <span class="btn-pdf-badge">Send Script PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('bible')">
+                            <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                            <span class="btn-pdf-badge">Send Image PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('scene')">
+                            <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                            <span class="btn-pdf-badge">Send Video PDF</span>
+                        </button>
+                    </div>
+
                     <!-- Action Bar -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
                         <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px;" onclick="copyAllAdapterPrompts()">
                             Copy All Prompts
                         </button>
                         <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendAdapterToTelegram()">
-                            Send to Telegram
+                            Send All 3 PDFs
                         </button>
                     </div>
 
-                    <button class="btn-cancel" style="width:100%; margin-top:8px; font-size:12px; padding:8px;" onclick="resetStoryAdapter()">
+                    <button class="btn-cancel" style="width:100%; margin-top:8px; font-size:12px; padding:9px;" onclick="resetStoryAdapter()">
                         &larr; Adapt Another Story
                     </button>
                 </div>
 
+                <!-- Remodeled Names Summary -->
+                <div id="adapter-names-container" style="display:none; margin-top:12px;"></div>
+
+                <!-- Character Sheet Prompts Container -->
+                <div id="adapter-characters-wrap" style="display:none; margin-top:14px;">
+                    <div class="section-label" style="margin-bottom:8px;">Character Sheet Prompts (Visual Lock)</div>
+                    <div id="adapter-characters-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Recurring Location Consistency Prompts Container -->
+                <div id="adapter-locations-wrap" style="display:none; margin-top:14px;">
+                    <div class="section-label" style="margin-bottom:8px;">Recurring Location Consistency Prompts</div>
+                    <div id="adapter-locations-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
                 <!-- Scene Cards Container -->
-                <div id="adapter-scenes-container" style="display:flex; flex-direction:column; gap:12px; margin-top:14px;"></div>
+                <div style="margin-top:16px;">
+                    <div class="section-label" style="margin-bottom:8px;">Scene-by-Scene Script & Prompts</div>
+                    <div id="adapter-scenes-container" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -2148,7 +2267,7 @@
                         <div class="pill-btn" data-dur="Short (3–5 Mins)" onclick="setRemixDuration('Short (3–5 Mins)', this)">Short (3–5 Mins)</div>
                         <div class="pill-btn active" data-dur="Standard (8–15 Mins)" onclick="setRemixDuration('Standard (8–15 Mins)', this)">YouTube (8–15 Mins)</div>
                         <div class="pill-btn" data-dur="Deep Dive (30–60 Mins)" onclick="setRemixDuration('Deep Dive (30–60 Mins)', this)">Deep Dive (30–60 Mins)</div>
-                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">Movie (1–2+ Hours | 50-60 Scenes)</div>
+                        <div class="pill-btn" data-dur="Feature Movie (1–2+ Hours)" onclick="setRemixDuration('Feature Movie (1–2+ Hours)', this)">Movie (1–2+ Hours | 65–80 Scenes)</div>
                     </div>
                 </div>
 
@@ -2236,7 +2355,7 @@
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn-cancel" style="flex:1;" onclick="goToRemixStep(1)">&larr; Back</button>
                         <button id="btn-remix-produce" class="btn-submit" style="flex:2; margin-top:0;" onclick="submitRemixProduce()">
-                            Produce Screenplay (30 Credits)
+                            Produce Screenplay & 3 PDFs (30 Credits)
                         </button>
                     </div>
                 </div>
@@ -2257,17 +2376,34 @@
                     <div id="remix-res-logline" style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:10px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:8px;"></div>
                     <div id="remix-res-synopsis" style="font-size:12px; color:var(--text-main); margin-top:8px; line-height:1.45; max-height:110px; overflow-y:auto; padding:8px 10px; background:rgba(255,255,255,0.02); border-radius:8px;"></div>
 
+                    <!-- Individual PDF Delivery Stack -->
+                    <div class="pdf-delivery-stack">
+                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                        <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('script')">
+                            <span>PDF 1: Full Voiceover & Screenplay Script</span>
+                            <span class="btn-pdf-badge">Send Script PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('bible')">
+                            <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                            <span class="btn-pdf-badge">Send Image PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('scene')">
+                            <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                            <span class="btn-pdf-badge">Send Video PDF</span>
+                        </button>
+                    </div>
+
                     <!-- Action Bar -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
                         <button class="btn-submit" style="margin-top:0; font-size:12px; padding:10px;" onclick="copyRemixAllPrompts()">
                             Copy All Prompts
                         </button>
                         <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendRemixToTelegram()">
-                            Send to Telegram
+                            Send All 3 PDFs
                         </button>
                     </div>
 
-                    <button class="btn-cancel" style="width:100%; margin-top:8px; font-size:12px; padding:8px;" onclick="resetRemixcraft()">
+                    <button class="btn-cancel" style="width:100%; margin-top:8px; font-size:12px; padding:9px;" onclick="resetRemixcraft()">
                         &larr; Remodel Another Video
                     </button>
                 </div>
@@ -2276,6 +2412,18 @@
                 <div style="margin-top:14px;">
                     <div class="section-label" style="margin-bottom:8px;">3 High-CTR YouTube Thumbnail Concepts</div>
                     <div id="remix-thumbs-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Character Sheet Prompts -->
+                <div id="remix-characters-wrap" style="display:none; margin-top:14px;">
+                    <div class="section-label" style="margin-bottom:8px;">Character Sheet Prompts (Visual Lock)</div>
+                    <div id="remix-characters-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Recurring Location Consistency Prompts -->
+                <div id="remix-locations-wrap" style="display:none; margin-top:14px;">
+                    <div class="section-label" style="margin-bottom:8px;">Recurring Location Consistency Prompts</div>
+                    <div id="remix-locations-container" style="display:flex; flex-direction:column; gap:10px;"></div>
                 </div>
 
                 <!-- Shot-by-Shot Scene Cards -->
@@ -3838,9 +3986,10 @@
                                 ${isCompleted ? 'Open & Review Script' : 'Continue Where You Stopped'}
                             </button>
 
-                            <div style="display:flex; gap:6px;">
-                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Image PDF</button>` : ''}
-                                ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Video PDF</button>` : ''}
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                ${isCompleted ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'script');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Script PDF</button>` : ''}
+                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Image PDF</button>` : ''}
+                                ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Video PDF</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -3959,10 +4108,11 @@
 
             // 7. Handle Completed PDF Results Section
             const resultSec = document.getElementById('story-result-section');
+            const scriptBtn = document.getElementById('btn-download-script');
             const bibleBtn = document.getElementById('btn-download-bible');
             const sceneBtn = document.getElementById('btn-download-scenes');
 
-            if (job.status === 'completed' || job.story_bible_pdf || job.scene_prompts_pdf) {
+            if (job.status === 'completed' || job.story_bible_pdf || job.scene_prompts_pdf || job.full_story_json) {
                 if (resultSec) resultSec.style.display = 'block';
                 const resultTitle = document.getElementById('story-result-title');
                 if (resultTitle) {
@@ -3992,6 +4142,10 @@
                     } else {
                         descBox.style.display = 'none';
                     }
+                }
+                if (scriptBtn) {
+                    scriptBtn.style.display = 'flex';
+                    scriptBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'script');
                 }
                 if (bibleBtn) {
                     bibleBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
@@ -4120,6 +4274,8 @@
                     showToast(d.error || 'Failed to generate concepts', false);
                     const section = document.getElementById('story-concepts-section');
                     const list = document.getElementById('story-concepts-list');
+                    const prodBox = document.getElementById('story-production-box');
+                    if (prodBox) prodBox.style.display = 'none';
                     if (section && list) {
                         section.style.display = 'block';
                         list.innerHTML = `
@@ -4143,13 +4299,16 @@
         function renderStoryConcepts(shouldScroll = false) {
             const section = document.getElementById('story-concepts-section');
             const list = document.getElementById('story-concepts-list');
+            const prodBox = document.getElementById('story-production-box');
             if (!section || !list) return;
 
             section.style.display = 'block';
             if (!Array.isArray(currentConcepts) || currentConcepts.length === 0) {
+                if (prodBox) prodBox.style.display = 'none';
                 list.innerHTML = '<div class="form-hint" style="text-align:center; padding:15px;">No concepts returned. Please try again.</div>';
                 return;
             }
+            if (prodBox) prodBox.style.display = 'block';
 
             let html = '';
 
@@ -4237,9 +4396,9 @@
                 [
                     { at: 5, text: `Setting main character and outline for "${conceptTitle}"...` },
                     { at: 22, text: "Writing all story scenes and dialogue..." },
-                    { at: 52, text: "Formatting image prompts for Midjourney & Flux..." },
-                    { at: 75, text: "Formatting video scene prompts..." },
-                    { at: 90, text: "Creating Image & Video PDF files..." }
+                    { at: 52, text: "Formatting Character Sheet, Location & Scene Image Prompts..." },
+                    { at: 75, text: "Formatting Video Camera Motion Prompts..." },
+                    { at: 90, text: "Creating 3 Individual PDF Files (Voiceover Script, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -4266,8 +4425,8 @@
                     throw new Error("Server temporarily busy or restarting. Please try again in a few seconds.");
                 }
                 if (d.success) {
-                    await AIProgressTracker.complete("Screenplay Produced & Sent to Chat!");
-                    showToast("Screenplay Produced & PDFs sent to Telegram chat!", true);
+                    await AIProgressTracker.complete("Screenplay Produced & 3 PDFs Sent to Chat!");
+                    showToast("Screenplay Produced & all 3 PDFs sent to Telegram chat!", true);
                     const resSection = document.getElementById('story-result-section');
                     if (resSection) {
                         resSection.style.display = 'block';
@@ -4304,6 +4463,11 @@
                     }
 
                     const newJobId = d.job_id || activeJobId;
+                    const btnScript = document.getElementById('btn-download-script');
+                    if (btnScript) {
+                        btnScript.style.display = 'flex';
+                        btnScript.onclick = () => sendPdfToChat(newJobId, 'script');
+                    }
                     const btnBible = document.getElementById('btn-download-bible');
                     if (btnBible) {
                         btnBible.style.display = 'flex';
@@ -4331,7 +4495,7 @@
                 showToast(err.message || 'Error during story production', false);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & Dual PDFs';
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & 3 Production PDFs';
             }
         }
 
@@ -5079,6 +5243,7 @@
         // =====================================================================
         let adapterState = {
             genre: 'Drama',
+            remodel: true,
             voice: 'African / Nigerian',
             duration: 'Short (3–5 Mins)',
             delivery: 'Dialogue / Narrative',
@@ -5097,8 +5262,12 @@
             el.classList.add('active');
             const val = el.getAttribute('data-val');
             if (type === 'genre') adapterState.genre = val;
+            if (type === 'remodel') adapterState.remodel = (val === 'true');
             if (type === 'voice') adapterState.voice = val;
-            if (type === 'duration') adapterState.duration = val;
+            if (type === 'duration') {
+                adapterState.duration = val;
+                onAdapterStoryInput();
+            }
             if (type === 'delivery') adapterState.delivery = val;
             if (type === 'art') adapterState.art = val;
         }
@@ -5140,6 +5309,21 @@
             if (mBody) mBody.scrollTop = 0;
         }
 
+        function getTargetScenesEstimate(durationStr, words) {
+            const d = (durationStr || '').toLowerCase();
+            if (d.includes('feature') || d.includes('1–2') || d.includes('1-2') || d.includes('movie')) {
+                return { min: 65, max: 80, est: 70, label: '65–80 scenes (Full Movie)' };
+            }
+            if (d.includes('long') || d.includes('30–60') || d.includes('30-60') || d.includes('deep dive')) {
+                return { min: 40, max: 55, est: 45, label: '40–55 scenes (Deep Dive)' };
+            }
+            if (d.includes('standard') || d.includes('8–15') || d.includes('8-15') || d.includes('youtube')) {
+                return { min: 18, max: 28, est: 22, label: '18–28 scenes (YouTube)' };
+            }
+            const wScenes = words > 0 ? Math.min(14, Math.max(8, Math.round(words / 60))) : 10;
+            return { min: 8, max: 14, est: wScenes, label: `${wScenes} scenes (Short)` };
+        }
+
         function onAdapterStoryInput() {
             const textarea = document.getElementById('adapter-story-text');
             const text = textarea ? textarea.value.trim() : '';
@@ -5149,18 +5333,18 @@
             const badge = document.getElementById('adapter-word-badge');
             if (badge) {
                 badge.innerText = `${words.toLocaleString()} / 5,000 words`;
-                badge.style.color = (words >= 500 && words <= 5000) ? '#30d158' : (words > 5000 ? '#ff453a' : 'var(--text-muted)');
+                badge.style.color = (words >= 100 && words <= 5000) ? '#30d158' : (words > 5000 ? '#ff453a' : 'var(--text-muted)');
             }
 
-            // Pacing estimate: ~55-65 words per visual scene
-            const estScenes = words > 0 ? Math.min(80, Math.max(5, Math.round(words / 60))) : 0;
+            const plan = getTargetScenesEstimate(adapterState.duration, words);
+            const estScenes = plan.est;
             const extraScenes = Math.max(0, estScenes - 40);
             const isVip = currentUser && (parseInt(currentUser.credits || 0) >= 999999 || currentUser.tier === 'VIP' || currentUser.is_admin);
             const totalCost = isVip ? 0 : (15 + extraScenes);
 
             const scenesEl = document.getElementById('adapter-plan-scenes');
             if (scenesEl) {
-                scenesEl.innerText = words > 0 ? `${estScenes} scenes` : `0 scenes (Paste text)`;
+                scenesEl.innerText = plan.label;
             }
 
             const priceEl = document.getElementById('adapter-plan-price');
@@ -5186,8 +5370,8 @@
             const text = textarea ? textarea.value.trim() : '';
             const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
-            if (words < 100) {
-                showToast('Please paste at least 500 words (or minimum 100 words) for a story breakdown.', false);
+            if (words < 50) {
+                showToast('Please paste at least 100 words for a story breakdown.', false);
                 return;
             }
 
@@ -5197,8 +5381,8 @@
             }
 
             const isVip = currentUser && (parseInt(currentUser.credits || 0) >= 999999 || currentUser.tier === 'VIP' || currentUser.is_admin);
-            const estScenes = Math.min(80, Math.max(5, Math.round(words / 60)));
-            const extraScenes = Math.max(0, estScenes - 40);
+            const plan = getTargetScenesEstimate(adapterState.duration, words);
+            const extraScenes = Math.max(0, plan.est - 40);
             const expectedCost = isVip ? 0 : (15 + extraScenes);
 
             if (!isVip && currentUser && (currentUser.credits || 0) < expectedCost) {
@@ -5210,14 +5394,14 @@
             if (btn) btn.disabled = true;
 
             AIProgressTracker.start(
-                "Adapting Story into Scenes",
-                16,
+                "Adapting Story & Building 3 PDFs",
+                20,
                 [
-                    { at: 3, text: "Reading original story narrative & characters..." },
+                    { at: 3, text: adapterState.remodel ? "Remodeling character names & locations for copyright safety..." : "Reading original story narrative & characters..." },
                     { at: 25, text: `Locking visual filter: ${adapterState.filter} grade...` },
-                    { at: 45, text: `Applying ${adapterState.art} art rendering style...` },
-                    { at: 70, text: `Structuring shot-by-shot scenes with ${adapterState.voice} flavor...` },
-                    { at: 90, text: "Polishing image prompts & camera motion directives..." }
+                    { at: 45, text: `Building Character Sheet & Recurring Location prompts...` },
+                    { at: 70, text: `Structuring ${plan.label} with ${adapterState.voice} flavor...` },
+                    { at: 90, text: "Creating 3 Individual PDFs (Voiceover Script, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -5228,6 +5412,7 @@
                     body: JSON.stringify({
                         story_text: text,
                         genre: adapterState.genre,
+                        remodel_names: adapterState.remodel !== false,
                         cinematic_filter: adapterState.filter,
                         art_style: adapterState.art,
                         voice_accent: adapterState.voice,
@@ -5251,7 +5436,7 @@
                     return;
                 }
 
-                await AIProgressTracker.complete("Story scenes successfully produced!");
+                await AIProgressTracker.complete("Story Scenes & 3 PDFs Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 adapterState.data = d.data;
@@ -5263,11 +5448,126 @@
                 }
 
                 renderAdapterResults(d.data);
+                showToast('3 Individual PDFs sent to your Telegram chat!', true);
             } catch (err) {
                 console.error("Story adapter execution error:", err);
                 AIProgressTracker.fail(err.message || 'Error executing story adaptation');
             } finally {
                 if (btn) btn.disabled = false;
+            }
+        }
+
+        function buildNormalizedLocations(data, artStyle) {
+            const scenes = data.scenes || [];
+            const rawLocs = Array.isArray(data.locations) ? data.locations : [];
+            const locUsage = {};
+            scenes.forEach((sc, idx) => {
+                const sNum = sc.scene_number || (idx + 1);
+                const setting = String(sc.setting || '').trim();
+                if (!setting) return;
+                if (!locUsage[setting]) locUsage[setting] = [];
+                locUsage[setting].push(`Scene ${sNum}`);
+            });
+
+            const results = [];
+            const seen = new Set();
+            rawLocs.forEach(loc => {
+                if (!loc || typeof loc !== 'object') return;
+                const name = String(loc.name || loc.setting || '').trim();
+                if (!name) return;
+                seen.add(name.toLowerCase());
+                let used = loc.scenes_used || '';
+                if (Array.isArray(used)) used = used.join(', ');
+                if (!used) {
+                    const matched = [];
+                    Object.keys(locUsage).forEach(k => {
+                        if (name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase())) {
+                            matched.push(...locUsage[k]);
+                        }
+                    });
+                    used = matched.length ? matched.join(', ') : 'Multiple Scenes';
+                }
+                const desc = String(loc.locked_environment_description || loc.visual_description || loc.description || '').trim() ||
+                    `Wide establishing shot of ${name}, rich architectural details, natural lighting, unoccupied background reference plate, ${artStyle || 'Realistic'} style, 8k resolution --ar 16:9`;
+                results.push({ name, scenes_used: used, prompt: desc });
+            });
+
+            Object.keys(locUsage).forEach(setting => {
+                if (!seen.has(setting.toLowerCase())) {
+                    results.push({
+                        name: setting,
+                        scenes_used: locUsage[setting].join(', '),
+                        prompt: `Wide establishing shot of ${setting}, consistent architectural layout, atmospheric lighting, unoccupied background reference plate for scene continuity, ${artStyle || 'Realistic'} style, 8k resolution --ar 16:9`
+                    });
+                }
+            });
+            return results;
+        }
+
+        function renderCharactersAndLocationsUI(data, charsWrapId, charsContId, locsWrapId, locsContId, artStyle) {
+            const charsWrap = document.getElementById(charsWrapId);
+            const charsCont = document.getElementById(charsContId);
+            const chars = Array.isArray(data.characters) ? data.characters : [];
+            if (charsWrap && charsCont) {
+                charsCont.innerHTML = '';
+                if (chars.length > 0) {
+                    charsWrap.style.display = 'block';
+                    chars.forEach(c => {
+                        const cName = escapeHtml(c.name || 'Character');
+                        const cRole = escapeHtml(c.role || 'Cast');
+                        const rawPrompt = c.locked_visual_description || c.visual_description || c.description ||
+                            `Full-body character reference portrait of ${c.name || 'Character'}, ${artStyle || 'Realistic'} style, 8k resolution --ar 16:9`;
+                        const promptEsc = escapeHtml(rawPrompt);
+                        const card = document.createElement('div');
+                        card.className = 'scene-card-item';
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:13px; font-weight:700; color:var(--text-main);">${cName}</span>
+                                <span class="chip" style="font-size:10px;">${cRole}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Character Sheet Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${promptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${promptEsc}</div>
+                        `;
+                        charsCont.appendChild(card);
+                    });
+                } else {
+                    charsWrap.style.display = 'none';
+                }
+            }
+
+            const locsWrap = document.getElementById(locsWrapId);
+            const locsCont = document.getElementById(locsContId);
+            const normLocs = buildNormalizedLocations(data, artStyle);
+            if (locsWrap && locsCont) {
+                locsCont.innerHTML = '';
+                if (normLocs.length > 0) {
+                    locsWrap.style.display = 'block';
+                    normLocs.forEach((loc, idx) => {
+                        const lName = escapeHtml(loc.name || `Location ${idx + 1}`);
+                        const lUsed = escapeHtml(loc.scenes_used || 'Recurring');
+                        const promptEsc = escapeHtml(loc.prompt || '');
+                        const isRecurring = (loc.scenes_used || '').includes(',');
+                        const card = document.createElement('div');
+                        card.className = 'scene-card-item';
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span style="font-size:13px; font-weight:700; color:var(--text-main);">LOCATION ${idx + 1}: ${lName}</span>
+                                <span class="chip ${isRecurring ? 'active' : ''}" style="font-size:10px;">Appears in: ${lUsed}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Location Reference Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyAdapterPrompt(this, \`${promptEsc.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${promptEsc}</div>
+                        `;
+                        locsCont.appendChild(card);
+                    });
+                } else {
+                    locsWrap.style.display = 'none';
+                }
             }
         }
 
@@ -5283,7 +5583,7 @@
             const metaEl = document.getElementById('adapter-res-meta');
             const scCount = data.scenes ? data.scenes.length : 0;
             if (metaEl) {
-                metaEl.innerText = `${scCount} Planned Scenes • ${data.genre || adapterState.genre} • ${data.cinematic_filter || adapterState.filter} Look • ${data.art_style || adapterState.art}`;
+                metaEl.innerText = `${scCount} Scenes • ${data.genre || adapterState.genre} • ${data.cinematic_filter || adapterState.filter} Look • ${data.art_style || adapterState.art}`;
             }
 
             const loglineEl = document.getElementById('adapter-res-logline');
@@ -5295,6 +5595,38 @@
                     loglineEl.style.display = 'none';
                 }
             }
+
+            // Render Remodeled Names & Locations Card if present
+            const namesCont = document.getElementById('adapter-names-container');
+            if (namesCont) {
+                const changes = Array.isArray(data.name_changes) ? data.name_changes : [];
+                if (changes.length > 0) {
+                    namesCont.style.display = 'block';
+                    const badges = changes.map(ch => {
+                        const orig = escapeHtml(ch.original || '');
+                        const rem = escapeHtml(ch.remodeled || '');
+                        return `<span class="chip" style="font-size:10.5px; padding:4px 8px;">${orig} &rarr; <strong style="color:var(--accent, #e5a93c);">${rem}</strong></span>`;
+                    }).join(' ');
+                    namesCont.innerHTML = `
+                        <div class="form-card" style="padding:12px;">
+                            <div style="font-size:11px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; margin-bottom:6px;">Copyright-Safe Name & Location Remodeling</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">${badges}</div>
+                        </div>
+                    `;
+                } else {
+                    namesCont.style.display = 'none';
+                }
+            }
+
+            // Render Character Sheet Prompts & Recurring Location Consistency Prompts
+            renderCharactersAndLocationsUI(
+                data,
+                'adapter-characters-wrap',
+                'adapter-characters-container',
+                'adapter-locations-wrap',
+                'adapter-locations-container',
+                data.art_style || adapterState.art
+            );
 
             const container = document.getElementById('adapter-scenes-container');
             if (!container) return;
@@ -5309,8 +5641,8 @@
                 const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
                 const sDur = s.estimated_duration || s.duration || '';
                 const sDurChip = sDur ? `<span class="chip" style="font-size:10px;">${escapeHtml(sDur)}</span>` : `<span class="chip" style="font-size:10px;">SCENE ${sNum}</span>`;
-                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600; margin-top:2px;">📍 Setting: ${escapeHtml(s.setting)}</div>` : '';
-                const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">👥 Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
+                const sSetting = s.setting ? `<div style="font-size:11px; color:#e5a93c; font-weight:600; margin-top:2px;">Setting: ${escapeHtml(s.setting)}</div>` : '';
+                const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
 
                 let sDialogue = '';
                 if (s.dialogue_or_narration) {
@@ -5371,7 +5703,7 @@
             try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
             navigator.clipboard.writeText(text).then(() => {
                 const orig = btn.innerText;
-                btn.innerText = '✓ Copied!';
+                btn.innerText = 'Copied!';
                 btn.style.background = '#30d158';
                 btn.style.color = '#000';
                 setTimeout(() => {
@@ -5405,23 +5737,55 @@
             });
         }
 
+        async function sendAdapterPdf(pdfType) {
+            if (!adapterState.data || !adapterState.scenes || adapterState.scenes.length === 0) {
+                showToast('No scenes found to deliver', false);
+                return;
+            }
+            try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
+            const labelMap = {
+                script: 'PDF 1 (Voiceover & Screenplay Script)',
+                bible: 'PDF 2 (Character, Location & Image Prompts)',
+                scene: 'PDF 3 (Video Motion Prompts)'
+            };
+            showToast(`Sending ${labelMap[pdfType] || 'PDF'} to your Telegram chat...`, true);
+            try {
+                const payload = Object.assign({}, adapterState.data, { pdf_type: pdfType });
+                const res = await fetch('/api/story_adapter/send_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                    showToast(`${labelMap[pdfType] || 'PDF'} delivered to your Telegram chat!`, true);
+                } else {
+                    showToast(d.error || 'Failed to send PDF to Telegram', false);
+                }
+            } catch(e) {
+                showToast('Network error sending PDF to Telegram', false);
+            }
+        }
+
         async function sendAdapterToTelegram() {
             if (!adapterState.data || !adapterState.scenes || adapterState.scenes.length === 0) {
                 showToast('No scenes found to deliver', false);
                 return;
             }
             try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
-            showToast('Sending full breakdown to your Telegram chat...', true);
+            showToast('Sending all 3 individual PDFs to your Telegram chat...', true);
             try {
+                const payload = Object.assign({}, adapterState.data, { pdf_type: 'all' });
                 const res = await fetch('/api/story_adapter/send_to_telegram', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify(adapterState.data)
+                    body: JSON.stringify(payload)
                 });
                 const d = await res.json();
                 if (d.success) {
                     try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
-                    showTelegramAlert('All scene prompts sent directly to your Telegram chat!');
+                    showTelegramAlert('All 3 individual PDFs (Voiceover Script, Character/Location/Image Prompts, and Video Motion Prompts) have been sent to your Telegram chat!');
                 } else {
                     showToast(d.error || 'Failed to send to Telegram', false);
                 }
@@ -5693,9 +6057,9 @@
                 [
                     { at: 3, text: `Writing screenplay based on "${remixState.selectedConcept.title}"...` },
                     { at: 25, text: `Adapting dialogue with ${remixState.culture} tone...` },
-                    { at: 50, text: `Crafting Midjourney prompts with ${remixState.artStyle} look...` },
+                    { at: 50, text: `Building Character Sheet & Recurring Location prompts...` },
                     { at: 75, text: "Generating 3 high-CTR YouTube thumbnail concepts..." },
-                    { at: 92, text: "Finalizing scene bible & PDF documents..." }
+                    { at: 92, text: "Creating 3 Individual PDFs (Voiceover Script, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -5721,7 +6085,7 @@
                     return;
                 }
 
-                await AIProgressTracker.complete("Remixcraft Package Ready!");
+                await AIProgressTracker.complete("Remixcraft Package & 3 PDFs Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 remixState.package = d.package;
@@ -5733,6 +6097,7 @@
 
                 renderRemixPackage(d.package);
                 goToRemixStep(3);
+                showToast('3 Individual PDFs sent to your Telegram chat!', true);
             } catch (err) {
                 console.error("Remix produce error:", err);
                 AIProgressTracker.fail(err.message || 'Error producing screenplay');
@@ -5790,6 +6155,16 @@
                 });
             }
 
+            // Render Character Sheet Prompts & Recurring Location Consistency Prompts
+            renderCharactersAndLocationsUI(
+                pkg,
+                'remix-characters-wrap',
+                'remix-characters-container',
+                'remix-locations-wrap',
+                'remix-locations-container',
+                pkg.art_style || remixState.artStyle
+            );
+
             // Render Scenes
             const scenesContainer = document.getElementById('remix-scenes-container');
             if (scenesContainer) {
@@ -5803,8 +6178,8 @@
                     const sTitle = escapeHtml(s.scene_title || `Scene ${sNum}`);
                     const sDur = s.estimated_duration || s.duration || '';
                     const sDurChip = sDur ? `<span class="chip" style="font-size:10px;">${escapeHtml(sDur)}</span>` : `<span class="chip" style="font-size:10px;">SCENE ${sNum}</span>`;
-                    const sSetting = s.setting ? `<div style="font-size:11px; color:var(--accent, #e5a93c); font-weight:600; margin-top:2px;">📍 Setting: ${escapeHtml(s.setting)}</div>` : '';
-                    const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">👥 Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
+                    const sSetting = s.setting ? `<div style="font-size:11px; color:var(--accent, #e5a93c); font-weight:600; margin-top:2px;">Setting: ${escapeHtml(s.setting)}</div>` : '';
+                    const sChars = (s.characters_present && s.characters_present.length) ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Cast: ${escapeHtml(Array.isArray(s.characters_present) ? s.characters_present.join(', ') : s.characters_present)}</div>` : '';
 
                     let sDialogue = '';
                     if (s.dialogue_or_narration) {
@@ -5865,7 +6240,7 @@
             try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
             navigator.clipboard.writeText(text).then(() => {
                 const orig = btn.innerText;
-                btn.innerText = '✓ Copied!';
+                btn.innerText = 'Copied!';
                 btn.style.background = '#30d158';
                 btn.style.color = '#000';
                 setTimeout(() => {
@@ -5898,19 +6273,46 @@
             });
         }
 
+        async function sendRemixPdf(pdfType) {
+            if (!remixState.package) return;
+            const labelMap = {
+                script: 'PDF 1 (Voiceover & Screenplay Script)',
+                bible: 'PDF 2 (Character, Location & Image Prompts)',
+                scene: 'PDF 3 (Video Motion Prompts)'
+            };
+            showToast(`Sending ${labelMap[pdfType] || 'PDF'} to your Telegram chat...`, true);
+            try {
+                const res = await fetch('/api/remixcraft/send_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ package: remixState.package, pdf_type: pdfType })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(`${labelMap[pdfType] || 'PDF'} delivered directly to your Telegram chat!`, true);
+                    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                } else {
+                    showToast(d.error || 'Failed to send PDF to Telegram', false);
+                }
+            } catch (err) {
+                console.error("Send Remix PDF error:", err);
+                showToast('Network error delivering PDF to Telegram', false);
+            }
+        }
+
         async function sendRemixToTelegram() {
             if (!remixState.package) return;
-            showToast('Sending Remixcraft package to your Telegram chat...', true);
+            showToast('Sending all 3 individual PDFs to your Telegram chat...', true);
 
             try {
                 const res = await fetch('/api/remixcraft/send_to_telegram', {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ package: remixState.package })
+                    body: JSON.stringify({ package: remixState.package, pdf_type: 'all' })
                 });
                 const d = await res.json();
                 if (d.success) {
-                    showToast('✓ Package delivered directly to your Telegram chat!', true);
+                    showToast('All 3 individual PDFs delivered directly to your Telegram chat!', true);
                     try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
                 } else {
                     showToast(d.error || 'Failed to send package to Telegram', false);

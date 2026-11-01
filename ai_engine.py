@@ -527,11 +527,11 @@ async def generate_full_story_package(concept: dict, culture: str = "Universal",
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
 
     scene_targets = {
-        "Short": "8 to 12 complete dramatic scenes (fast, punchy 3 to 5 minutes YouTube story, ceiling 15)",
-        "Medium": "18 to 26 complete dramatic scenes (fully developed 10 to 15 minutes YouTube story, ceiling 30)",
-        "Long": "50 to 60 deep cinematic sequence scenes (complete 1 to 2 hour feature movie screenplay, each scene fully developed with substantial multi-character dialogues, dramatic tension, detailed blocking, and cinematic camera directives, ceiling 65)"
+        "Short": "10 to 14 complete dramatic scenes (fast, punchy 3 to 5 minutes YouTube story, ceiling 15)",
+        "Medium": "22 to 30 complete dramatic scenes (fully developed 10 to 15 minutes YouTube story, ceiling 32)",
+        "Long": "65 to 85 deep cinematic sequence scenes (MINIMUM 60 SCENES REQUIRED — do NOT stop at 35 or 40 scenes! Complete 1 to 2+ hour feature movie screenplay structured across Act 1, Act 2A, Midpoint Twist, Act 2B, and Act 3 Finale, each scene fully developed with substantial multi-character dialogues, dramatic tension, detailed blocking, and camera directives)"
     }
-    target_scenes = scene_targets.get(length_tier, "8 to 12 complete dramatic scenes")
+    target_scenes = scene_targets.get(length_tier, "10 to 14 complete dramatic scenes")
 
     char_clause = ""
     if lead_character and isinstance(lead_character, dict):
@@ -588,8 +588,12 @@ CORE ARCHITECTURE REQUIREMENTS:
 1. VISUAL FILTER LOCK:
 Define a master camera profile & lighting style tag locking the aesthetic (e.g. "Photorealistic cinematic live-action treatment with real human characters. Cinematic realism, high contrast, warm earth tones, fine film grain, deep shadows, shot on ARRI Alexa.").
 
-2. WORLD BUILDING (LOCATION BIBLE):
-Provide 3 to 5 distinct story locations. For each location, provide an "Empty, unoccupied reference view with no people or characters" detailing architecture, ground, lighting, practical props, material textures, and depth.
+2. WORLD BUILDING (LOCATION CONSISTENCY BIBLE — CRITICAL FOR RECURRING LOCATIONS):
+Identify EVERY major location in the story (especially locations that appear in more than one scene!).
+For each location, provide:
+- "name": Exact Location Name used in the scenes.
+- "scenes_used": Which scenes take place here (e.g. "Scenes 1, 4, 8, 15").
+- "unoccupied_reference": A complete, copy-paste Midjourney / Flux / Google Flow Location Reference Prompt starting with "Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens..." detailing exact room/exterior architecture, walls, flooring, lighting fixtures, color palette, practical props, material textures, and foreground/background depth so every scene in this location looks 100% consistent and realistic.
 
 3. CAST & CONSISTENCY (CHARACTER BIBLE) — CRITICAL: COMPLETE FULL-BODY HEAD-TO-TOE STANDING REFERENCES:
 For each character (Protagonist, Antagonist, Supporting):
@@ -661,7 +665,8 @@ Return strictly structured JSON:
     "locations": [
         {{
             "name": "Location Name (e.g. Vance Manhattan Penthouse - Grand Foyer & Living Salon)",
-            "unoccupied_reference": "Empty, unoccupied reference view with no people or characters. A modern luxury penthouse with floor-to-ceiling glass windows overlooking the Manhattan skyline... practical props, textures, foreground and background depth."
+            "scenes_used": "Scenes 1, 4, 9, 14",
+            "unoccupied_reference": "Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens. A modern luxury penthouse with floor-to-ceiling glass windows overlooking the Manhattan skyline, polished dark walnut floors, warm recessed amber ceiling lights, plush cream leather sofa, glass coffee table, realistic architectural textures, cinematic depth. No people, no text, no watermarks."
         }}
     ],
     "characters": [
@@ -1075,23 +1080,18 @@ async def adapt_story_to_scenes(
     voice_accent: str = "African / Nigerian",
     target_duration: str = "Standard (8–15 Mins)",
     delivery_format: str = "Dialogue / Narrative",
+    remodel_names: bool = True,
     user_api_key: str = None,
     model_name: str = None,
     user_keys: dict = None
 ) -> dict:
     """
     Story Adapter (Script to Scenes):
-    Faithfully adapts a user's original written story or screenplay (500–5,000 words) into 
-    exact, shot-by-shot cinematic scene prompts (1–80 scenes).
-    
-    STRICT GOVERNING RULES:
-    1. ZERO PLOT/CHARACTER ALTERATIONS: Retains all original character names, relationships,
-       locations, chronology, narrative pacing, dialogue, and ending 100% faithful to the source.
-    2. SCENE SEGMENTATION: Natural pacing into 1-80 coherent scenes tailored to target duration.
-    3. CINEMATIC VISUAL FILTER: Locks consistent color grading, lighting, and camera treatment.
-    4. ART STYLE: Realistic 8K photorealism or 3D Animated Pixar/Disney.
-    5. VOICE FLAVOR: Infuses dialogue tags / narration pacing with the chosen accent flavor.
-    6. DELIVERY FORMAT: Prioritizes character dialogue, narrator voiceover, or a balanced blend.
+    Adapts a written story or script into shot-by-shot cinematic scene prompts,
+    complete with Character Sheet Prompts, Recurring Location Consistency Prompts,
+    and clean Voiceover/Dialogue scripting.
+    By default (remodel_names=True), remodels all character names, location names,
+    and phrasing for 100% YouTube copyright safety while keeping the core story arc intact.
     """
     model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
 
@@ -1125,27 +1125,59 @@ async def adapt_story_to_scenes(
 
     # Delivery format treatment
     if "Dialogue" in delivery_format and "Narrative" not in delivery_format:
-        delivery_treatment = "DIALOGUE FOCUSED: Prioritize character dialogue and spoken character interactions for each scene."
+        delivery_treatment = "DIALOGUE FOCUSED: Prioritize spoken character dialogue interactions for each scene. Populate 'dialogue' with the full multi-turn conversation and leave 'narration' empty."
     elif "Narrative" in delivery_format and "Dialogue" not in delivery_format:
-        delivery_treatment = "NARRATIVE / VOICE-OVER FOCUSED: Prioritize rich voiceover narration and descriptive storytelling lines for each scene (ideal for faceless YouTube narrators)."
+        delivery_treatment = "NARRATIVE / VOICE-OVER FOCUSED: Write a rich, continuous narrator voiceover script across 'narration' in every scene (ideal for ElevenLabs / faceless YouTube narrators). Leave 'dialogue' empty."
     else:
-        delivery_treatment = "BALANCED DIALOGUE & NARRATION: Deliver a balanced blend of spoken character dialogue and narrator voiceover lines across scenes."
+        delivery_treatment = "BALANCED DIALOGUE & NARRATION: Deliver both gripping narrator voiceover in 'narration' AND spoken character lines in 'dialogue' for each scene."
+
+    if remodel_names:
+        copyright_law = f"""1. 100% YOUTUBE COPYRIGHT-SAFE REMODELING (CHANGE ALL NAMES & LOCATIONS):
+   - You MUST change EVERY character's name (first and last name) and EVERY location/city/venue/company name in the story to fresh, realistic names that fit the {voice_accent} cultural setting.
+   - NEVER keep the original character names or original location names from the pasted text!
+   - Rephrase all sentences, narration, and dialogue in simple, natural, everyday words so YouTube will NEVER flag the video for copyright or reused content.
+   - Keep the core plot, emotional twists, character relationships, dramatic conflict, and ending 100% intact!"""
+    else:
+        copyright_law = """1. FAITHFUL CHARACTER & PLOT CONTINUITY:
+   - Keep the user's character names, relationships, locations, and storyline intact while adapting it into full cinematic scenes."""
+
+    if "Feature" in target_duration or "1–2" in target_duration or "1-2" in target_duration or "Hour" in target_duration:
+        scene_load_rule = "MINIMUM 60 TO 80 SCENES REQUIRED (Feature Movie 1–2+ Hours): Do NOT stop at 30 or 40 scenes! Expand and pace the story into 65 to 80 deep, richly developed cinematic scenes with full multi-line dialogue or rich multi-sentence voiceover narration in every single scene."
+    elif "Long" in target_duration or "30–60" in target_duration or "30-60" in target_duration:
+        scene_load_rule = "35 to 48 extended scenes (Deep Dive 30–60 Mins) with full dialogue and rich narration."
+    elif "Standard" in target_duration or "8–15" in target_duration or "8-15" in target_duration:
+        scene_load_rule = "20 to 30 complete scenes (YouTube Standard 8–15 Mins) with full dialogue and rich narration."
+    else:
+        scene_load_rule = "10 to 15 complete scenes (Short 3–5 Mins) with punchy pacing."
 
     system_instruction = f"""
 You are the Master Storyboard Director & Visual Prompt Engineer at WP Studio.
-Your mission is to adapt the creator's original written story into a complete, shot-by-shot cinematic production breakdown.
+Your mission is to adapt and remodel the creator's pasted story into a complete, copyright-safe, shot-by-shot cinematic production package.
 
 CRITICAL NON-NEGOTIABLE LAWS:
-1. GOSPEL FAITHFULNESS: Do NOT invent new characters, do NOT change names, do NOT change relationships, locations, plot events, sequence, or the ending. The source story is 100% sacred.
-2. NATURAL SCENE LOAD & PACING: Break the story down into coherent, substantial scenes paced specifically for a {target_duration} video (Short: 8 to 12 scenes; Standard: 18 to 26 scenes; Deep Dive: 30 to 42 scenes; Feature Movie 1-2+ Hours: 50 to 60 deep, richly developed sequence scenes with full dialogue and no cut-short scenes).
-3. SCENE CONTINUITY (NO SPLIT-UP CONVERSATIONS): A SCENE is defined by one continuous location and dramatic beat. If two or more characters are talking in that location, their entire conversation and interactions belong together within that SAME scene. Never isolate a single line of reply into a new scene.
-4. TIGHT & COMPLETE SCRIPTING: "dialogue_or_narration" must contain the full spoken exchange or rich narration paragraph for that scene, not just an isolated fragment.
-5. VISUAL LOOK LOCK: Every image prompt must strictly adhere to the chosen Cinematic Filter and Art Style.
-6. IMAGE PROMPTS (MIDJOURNEY / FLUX): Each prompt must be ultra-descriptive, specifying shot size (Wide shot, Medium shot, Close-up), camera lens (35mm, 50mm, 85mm), lighting, characters present with facial consistency and clothing, exact physical action, and render style. No text, captions, or watermarks.
-7. VIDEO MOTION PROMPTS: Provide precise camera movement (e.g. slow push in, low-angle gimbal track, crane tilt) and subject action for video AI (Runway Gen-3, Luma Dream Machine, Pika).
+{copyright_law}
+2. NATURAL SCENE LOAD & PACING FOR {target_duration}:
+   {scene_load_rule}
+3. RECURRING LOCATION CONSISTENCY PROMPTS ("locations" array):
+   - Every location that appears in the story (especially locations that appear more than once!) MUST be listed in the "locations" Bible with an "unoccupied_reference" prompt:
+     "Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens, [exact architectural layout, walls, lighting, colors, furniture/props, textures, and mood]. {art_treatment}. No people, no text, no watermarks."
+   - Also list which scenes use that location in "scenes_used" (e.g. "Scenes 1, 3, 7, 12").
+4. FULL-BODY CHARACTER SHEET PROMPTS ("characters" array):
+   - Every character MUST have a complete head-to-toe full-body standing character sheet prompt in "locked_visual_description":
+     "Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure from shoes on the floor to top of head, eye-level angle. [New Name] has [face shape], [skin tone], [eyes], [hairstyle], [body build]. Standing in relaxed posture facing camera, wearing [exact signature outfit and shoes touching the floor]. Neutral grey seamless studio background, soft studio lighting, {art_treatment}. No cut off legs, no cut off shoes, no text."
+5. SCENE CONTINUITY (NO SPLIT-UP CONVERSATIONS):
+   - A SCENE is defined by one continuous location and dramatic beat. If two or more characters are talking in that location, their entire conversation belongs together within that SAME scene.
+6. CLEAN SEPARATE VOICEOVER & DIALOGUE SCRIPTING:
+   - Write in simple, natural, everyday words.
+   - Populate "narration" with the clean narrator voiceover paragraph for that scene.
+   - Populate "dialogue" with the clean spoken character conversation for that scene.
+   - Populate "dialogue_or_narration" with the complete spoken script of that scene ready to read or generate voiceover.
+7. SELF-CONTAINED SCENE IMAGE PROMPTS & VIDEO MOTION PROMPTS:
+   - Each "image_prompt" must specify shot size, camera lens, the exact location details, every character present with their facial/hair/outfit details in parentheses, concrete physical action, and {art_treatment} + {filter_treatment}. No text or watermarks.
+   - Each "video_prompt" must specify camera movement and physical action from opening frame to end state.
 
 CONFIGURATION:
-- Tone / Genre: {genre} (Pacing and intensity only)
+- Tone / Genre: {genre}
 - Cinematic Filter: {cinematic_filter} ({filter_treatment})
 - Art Style: {art_style} ({art_treatment})
 - Voice / Accent Flavor: {voice_accent} ({voice_treatment})
@@ -1154,31 +1186,52 @@ CONFIGURATION:
 
 OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
 {{
-    "title": "Title of the Story",
-    "logline": "Compelling 1-sentence logline summarizing the source story",
-    "total_scenes": 24,
+    "title": "Fresh, High-CTR Copyright-Safe Title of the Story",
+    "logline": "Compelling 1-sentence logline summarizing the remodeled story",
+    "synopsis": "2-paragraph summary of the complete story arc",
+    "total_scenes": 30,
     "genre": "{genre}",
     "cinematic_filter": "{cinematic_filter}",
     "art_style": "{art_style}",
     "voice_accent": "{voice_accent}",
     "delivery_format": "{delivery_format}",
+    "name_changes": [
+        {{
+            "original": "Original Name or Location",
+            "new": "New Copyright-Safe Name or Location",
+            "type": "Character / Location"
+        }}
+    ],
+    "locations": [
+        {{
+            "name": "Remodeled Location Name (e.g. Sterling Grand Ballroom)",
+            "scenes_used": "Scenes 1, 2, 5, 11",
+            "unoccupied_reference": "Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens, grand high-ceiling ballroom with crystal chandeliers, warm golden lighting, polished marble floor, velvet drapes... {art_treatment}. No people, no text, no watermarks."
+        }}
+    ],
     "characters": [
         {{
-            "name": "Character Name",
-            "role": "Role (e.g. Protagonist / Antagonist / Mentor)",
-            "visual_description": "Precise facial features, skin tone, hair, signature wardrobe for prompt consistency"
+            "name": "Remodeled Character Name",
+            "original_name": "Original Character Name",
+            "role": "Protagonist / Antagonist / Supporting",
+            "visual_description": "Concise summary of face, skin tone, hair, build, and signature outfit",
+            "locked_visual_description": "Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure from shoes on the floor to top of head, eye-level angle. [Character Name] has [face, skin tone, eyes, hair, build], wearing [complete signature outfit and footwear]. Neutral grey studio background, soft studio lighting, {art_treatment}. No cut off legs, no cut off shoes, no text.",
+            "wardrobe_lock": "Exact signature outfit and footwear"
         }}
     ],
     "scenes": [
         {{
             "scene_number": 1,
             "scene_title": "Descriptive Scene Heading",
-            "setting": "Interior/Exterior location and time of day",
+            "setting": "Location Name from Location Bible - Time of Day",
+            "location": "Location Name from Location Bible",
             "estimated_duration": "1m 30s",
             "characters_present": ["Character Name 1", "Character Name 2"],
-            "dialogue_or_narration": "Complete multi-line screenplay dialogue with character names or full voiceover paragraph for this scene",
-            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera angle, lighting, character details, action, style. No captions, no text, no split screens.",
-            "video_prompt": "Cinematic camera movement and character action prompt for Runway/Luma/Pika."
+            "narration": "Clean narrator voiceover paragraph for this scene (for ElevenLabs / narrator voiceover)",
+            "dialogue": "Character 1: \\"Spoken line...\\"\\nCharacter 2: \\"Reply line...\\"",
+            "dialogue_or_narration": "Complete narrator voiceover and/or character dialogue for this scene",
+            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera angle, lighting, recurring location details, character biometric likeness in parentheses, wardrobe, action, style. No captions, no text.",
+            "video_prompt": "Starting from the exact opening frame at [Location], camera movement and character physical action prompt for Kling/Runway/Veo. End state: [concluding pose]."
         }}
     ]
 }}
@@ -1187,13 +1240,13 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
     prompt = f"""CREATOR'S SOURCE STORY:
 {story_text}
 
-Adapt this exact story into chronological scene-by-scene prompts following all the rules above."""
+Adapt and remodel this story into chronological scene-by-scene prompts, full-body character sheet prompts, and recurring location consistency prompts following all rules above."""
 
     raw_response = generate_ai_completion(
         preferred_model=model,
         system_instruction=system_instruction,
         prompt=prompt,
-        temperature=0.6,
+        temperature=0.65,
         json_mode=True,
         user_keys=user_keys,
         user_api_key=user_api_key
@@ -1369,10 +1422,17 @@ CRITICAL RULES FOR HIGH-RETENTION, INTERESTING STORIES:
 1. USE SIMPLE, CLEAR WORDS: Write dialog and narration in easy, natural, conversational words. Avoid big, awkward, or dictionary-sounding words.
 2. RETENTION ENGINE: Start with an explosive hook in Scene 1. Maintain high tension, fast pacing, and deliver an unforgettable twist before the finale.
 3. SCENE BREAKDOWN & RUNTIME DEPTH FOR {target_duration}:
-   - For Short (3–5 Mins): 8 to 12 fully developed scenes (each ~30–45s).
-   - For Standard (8–15 Mins): 18 to 26 rich scenes (each ~1–2 mins of dialogue).
-   - For Deep Dive (30–60 Mins): 30 to 42 extended scenes (each ~2–3 mins of dialogue/dramatics).
-   - For Feature Movie (1–2+ Hours): 50 to 60 deep, major cinematic sequence scenes (each ~2–3 mins with substantial multi-character dialogues, dramatic conflicts, plot twists, emotional stakes, and full sequence progression. Absolutely NO cut-short or rushed scenes!).
+   - For Short (3–5 Mins): 10 to 14 fully developed scenes (each ~30–45s).
+   - For Standard (8–15 Mins): 20 to 30 rich scenes (each ~1–2 mins of dialogue).
+   - For Deep Dive (30–60 Mins): 35 to 48 extended scenes (each ~2–3 mins of dialogue/dramatics).
+   - For Feature Movie (1–2+ Hours): MINIMUM 60 TO 80 DEEP SCENES REQUIRED (do NOT stop at 35 or 40 scenes! Write 65 to 80 major cinematic sequence scenes, each ~2–3 mins with substantial multi-character dialogues, dramatic conflicts, plot twists, emotional stakes, and full sequence progression. Absolutely NO cut-short or rushed scenes!).
+
+4. RECURRING LOCATION CONSISTENCY PROMPTS ("locations" array):
+   - Identify every location in the story (especially locations that appear more than once!).
+   - Provide an "unoccupied_reference" prompt for each location ("Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens...") and list "scenes_used" (e.g. "Scenes 1, 3, 8") so the creator can generate consistent location backgrounds.
+
+5. FULL-BODY CHARACTER SHEET PROMPTS ("characters" array):
+   - Provide a full-body head-to-toe character reference prompt in "locked_visual_description" for every character so their face, hair, skin tone, and outfit stay consistent.
 
 4. CRITICAL SCREENPLAY & SCENE CONTINUITY (NO ISOLATED SINGLE-LINE SCENES):
    - A SCENE is defined by one continuous location and dramatic beat (e.g. INT. ATLANTA GRAND BALLROOM - NIGHT).
@@ -1402,11 +1462,19 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
     "target_duration": "{target_duration}",
     "art_style": "{art_style}",
     "visual_filter": "{visual_filter}",
+    "locations": [
+        {{
+            "name": "Location Name (e.g. Lekki Waterfront Villa - Living Room)",
+            "scenes_used": "Scenes 1, 4, 9, 15",
+            "unoccupied_reference": "Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens, [detailed architecture, walls, floor, lighting, props, colors, and atmosphere]. {art_treatment}. No people, no text, no watermarks."
+        }}
+    ],
     "characters": [
         {{
             "name": "Character Name",
             "role": "Role (e.g. Lead Protagonist, Antagonist, Loyal Friend)",
-            "visual_description": "Detailed description of their face, skin tone, hair, and clothing for visual consistency"
+            "visual_description": "Detailed description of their face, skin tone, hair, and clothing for visual consistency",
+            "locked_visual_description": "Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure from shoes on the floor to top of head, eye-level angle. [Character Name] has [face, skin tone, eyes, hair, build], wearing [complete signature outfit and footwear]. Neutral grey studio background, soft studio lighting, {art_treatment}. No cut off legs, no cut off shoes, no text."
         }}
     ],
     "scenes": [
@@ -1414,10 +1482,13 @@ OUTPUT SCHEMA: Return ONLY valid JSON with this exact structure:
             "scene_number": 1,
             "scene_title": "Descriptive Scene Heading",
             "setting": "INT. or EXT. Location - Time of Day",
+            "location": "Location Name from Location Bible",
             "estimated_duration": "2m 30s",
             "characters_present": ["Character 1", "Character 2"],
+            "narration": "Clean narrator voiceover paragraph for this scene",
+            "dialogue": "Character 1: \\"Spoken line...\\"\\nCharacter 2: \\"Reply line...\\"",
             "dialogue_or_narration": "Full multi-turn screenplay conversation with character names or deep spoken voiceover paragraph",
-            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera lens, lighting, character details, action, style",
+            "image_prompt": "Ultra-detailed Midjourney/Flux prompt with camera lens, lighting, location details, character biometric likeness in parentheses, action, style",
             "video_prompt": "Cinematic camera movement and character motion for Runway/Luma/Pika"
         }}
     ],

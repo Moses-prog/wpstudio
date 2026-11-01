@@ -1377,9 +1377,9 @@ async def main():
                     model_name=model
                 )
 
-                # 3. Generate Dual PDFs
+                # 3. Generate 5 Individual Production PDFs
                 import pdf_generator
-                bible_path, scene_path = pdf_generator.generate_dual_pdfs(
+                script_path, char_path, loc_path, bible_path, scene_path = pdf_generator.generate_all_production_pdfs(
                     story_data=story_data,
                     culture=state["culture"],
                     style=state["style"],
@@ -1391,10 +1391,17 @@ async def main():
                 )
                 gc.collect()
 
+                if script_path:
+                    story_data["script_pdf"] = script_path
+                if char_path:
+                    story_data["char_pdf"] = char_path
+                if loc_path:
+                    story_data["loc_pdf"] = loc_path
+
                 # 4. Save to Database
                 if "job_id" in state:
                     database.update_job_completion(state["job_id"], json.dumps(story_data), bible_path, scene_path)
-                database.log_story(user_id, story_data.get("title", "Story"), state["source_title"], state["style"], state["genre"], tier, bible_path)
+                database.log_story(user_id, story_data.get("title", "Story"), state["source_title"], state["style"], state["genre"], tier, bible_path or script_path)
 
                 title = story_data.get("title", "Story Blueprint")
                 hook = story_data.get("hook", "")
@@ -1403,38 +1410,58 @@ async def main():
                 chars_cnt = len(story_data.get("characters", []))
 
                 summary_text = (
-                    f"🎉 **WP StoryCraft Production Complete!**\n\n"
-                    f"🎬 **Title:** `{title}`\n\n"
-                    f"⚡ **Spoken Hook:**\n"
+                    f"**WP StoryCraft Production Complete!**\n\n"
+                    f"**Title:** `{title}`\n\n"
+                    f"**Spoken Hook:**\n"
                     f"> *\"{hook}\"*\n\n"
-                    f"📊 **Production Stats:**\n"
-                    f"• {scenes_cnt} Scene Visual Prompts (Midjourney + Kling)\n"
+                    f"**Production Stats:**\n"
+                    f"• {scenes_cnt} Scene Visual Prompts\n"
                     f"• {chars_cnt} Character Likeness Continuity Anchors\n"
                     f"• 3 Click-Engineered Viral Thumbnails\n\n"
-                    f"⏰ **YouTube Upload Window ({state['timezone']}):**\n"
+                    f"**YouTube Upload Window ({state['timezone']}):**\n"
                     f"{posting}\n\n"
-                    f"📥 **Downloading your Dual Production PDFs below:**"
+                    f"**Downloading your 5 Individual Production PDFs below:**"
                 )
                 await status_msg.edit(summary_text)
 
-                # Send Dual PDFs
-                await client.send_file(
-                    event.chat_id,
-                    bible_path,
-                    caption=f"🖼️ **PDF 1: Image Production Prompts (Midjourney / Flux / Google Flow)**\n\n*{title} — {scenes_cnt} Self-Contained Scenes*",
-                )
+                # Send 5 Individual PDFs
+                if script_path and os.path.exists(script_path):
+                    await client.send_file(
+                        event.chat_id,
+                        script_path,
+                        caption=f"**PDF 1: Full Voiceover & Screenplay Script**\n\n*{title}*\nReady for narrator voiceover recording.",
+                    )
+                if char_path and os.path.exists(char_path):
+                    await client.send_file(
+                        event.chat_id,
+                        char_path,
+                        caption=f"**PDF 2: Character Sheet Prompts**\n\n*{title}*\nFull-body character consistency prompts.",
+                    )
+                if loc_path and os.path.exists(loc_path):
+                    await client.send_file(
+                        event.chat_id,
+                        loc_path,
+                        caption=f"**PDF 3: Recurring Location Consistency Prompts**\n\n*{title}*\nMaster reference prompts for locations that appear more than once.",
+                    )
+                if bible_path and os.path.exists(bible_path):
+                    await client.send_file(
+                        event.chat_id,
+                        bible_path,
+                        caption=f"**PDF 4: Scene-by-Scene Image Prompts**\n\n*{title} — {scenes_cnt} Self-Contained Scenes*",
+                    )
                 job_id = state.get("job_id")
                 finish_buttons = []
                 if job_id:
-                    finish_buttons.append([Button.inline("🖼️ Preview Scene 1 Frame (1 Cr)", f"sc_render_sc_{job_id}_1".encode())])
-                finish_buttons.append([Button.inline("🎬 Start New StoryCraft", b"menu_story"), Button.inline("🔙 Main Menu", b"menu_main")])
+                    finish_buttons.append([Button.inline("Preview Scene 1 Frame (1 Cr)", f"sc_render_sc_{job_id}_1".encode())])
+                finish_buttons.append([Button.inline("Start New StoryCraft", b"menu_story"), Button.inline("Main Menu", b"menu_main")])
 
-                await client.send_file(
-                    event.chat_id,
-                    scene_path,
-                    caption=f"📹 **PDF 2: Video Production Prompts (Google Flow / Kling / Runway)**\n\n*{title} — Camera Direction & End States*",
-                    buttons=finish_buttons
-                )
+                if scene_path and os.path.exists(scene_path):
+                    await client.send_file(
+                        event.chat_id,
+                        scene_path,
+                        caption=f"**PDF 5: Scene Video Camera Motion Prompts**\n\n*{title} — Camera Direction & End States*",
+                        buttons=finish_buttons
+                    )
 
                 USER_STATES.pop(user_id, None)
 

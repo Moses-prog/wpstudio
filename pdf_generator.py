@@ -192,8 +192,19 @@ def _normalize_characters_and_locations(story_data: dict, style: str = "Realisti
             )
         })
 
-    # 2. Map scene locations to track recurring locations
+    # 2. Map scene locations to track recurring locations (locations appearing more than once)
     scene_loc_map = {}
+    stop_words = {"the", "a", "an", "in", "at", "of", "on", "to", "and", "room", "area", "interior", "exterior", "int", "ext", "day", "night", "evening", "morning"}
+
+    def _clean_base_loc(raw_label: str) -> str:
+        cleaned = re.sub(r'^(INT\.|EXT\.|INT/EXT\.|INTERIOR|EXTERIOR)\s*[-:]?\s*', '', raw_label, flags=re.IGNORECASE)
+        cleaned = re.split(r'\s*[-—–]\s*(DAY|NIGHT|MORNING|EVENING|DUSK|DAWN|LATER|CONTINUOUS|AFTERNOON|SUNSET|MIDNIGHT).*$', cleaned, flags=re.IGNORECASE)[0].strip()
+        return cleaned or raw_label.strip()
+
+    def _loc_tokens(label: str) -> set:
+        words = re.findall(r'[a-z0-9]+', label.lower())
+        return {w for w in words if len(w) > 2 and w not in stop_words}
+
     for s in scenes:
         if not isinstance(s, dict):
             continue
@@ -201,19 +212,33 @@ def _normalize_characters_and_locations(story_data: dict, style: str = "Realisti
         loc_label = (s.get("location") or s.get("setting") or "").strip()
         if not loc_label:
             continue
-        # Clean INT./EXT. prefix and time-of-day suffix for grouping
-        base_loc = re.sub(r'^(INT\.|EXT\.|INT/EXT\.|INTERIOR|EXTERIOR)\s*', '', loc_label, flags=re.IGNORECASE)
-        base_loc = re.split(r'\s+-\s+(DAY|NIGHT|MORNING|EVENING|DUSK|DAWN|LATER|CONTINUOUS).*$', base_loc, flags=re.IGNORECASE)[0].strip()
-        if not base_loc:
-            base_loc = loc_label
-        key = base_loc.lower()
-        if key not in scene_loc_map:
-            scene_loc_map[key] = {
+        base_loc = _clean_base_loc(loc_label)
+        key = re.sub(r'^the\s+', '', base_loc.lower()).strip()
+        tokens = _loc_tokens(base_loc)
+
+        # Check if this location matches an already-seen location key by exact key or strong token overlap
+        matched_key = None
+        if key in scene_loc_map:
+            matched_key = key
+        else:
+            for existing_k, existing_v in scene_loc_map.items():
+                if key in existing_k or existing_k in key:
+                    matched_key = existing_k
+                    break
+                existing_tokens = existing_v["tokens"]
+                if tokens and existing_tokens and len(tokens & existing_tokens) >= 2:
+                    matched_key = existing_k
+                    break
+
+        target_key = matched_key or key
+        if target_key not in scene_loc_map:
+            scene_loc_map[target_key] = {
                 "display_name": base_loc,
                 "scene_nums": [],
+                "tokens": tokens,
                 "sample_prompt": s.get("image_prompt", "")
             }
-        scene_loc_map[key]["scene_nums"].append(s_num)
+        scene_loc_map[target_key]["scene_nums"].append(s_num)
 
     # 3. Normalize Locations (merge AI-provided locations + auto-detected recurring locations)
     normalized_locs = []
@@ -222,56 +247,80 @@ def _normalize_characters_and_locations(story_data: dict, style: str = "Realisti
     for loc in raw_locs:
         if not isinstance(loc, dict):
             continue
-        l_name = (loc.get("name") or "Story Location").strip()
-        l_ref = (loc.get("unoccupied_reference") or loc.get("prompt") or loc.get("description") or "").strip()
-        l_scenes = (loc.get("scenes_used") or "").strip()
+        l_name = (loc.get("name") or loc.get("setting") or "Story Location").strip()
+        l_ref = (
+            loc.get("unoccupied_reference")
+            or loc.get("locked_environment_description")
+            or loc.get("visual_description")
+            or loc.get("prompt")
+            or loc.get("description")
+            or ""
+        ).strip()
+        raw_used = loc.get("scenes_used") or ""
+        if isinstance(raw_used, list):
+            l_scenes = ", ".join([str(x) for x in raw_used])
+        else:
+            l_scenes = str(raw_used).strip()
 
-        # Match with scene_loc_map if scenes_used not explicitly set
+        # Match with scene_loc_map
         matched_nums = []
+        l_tokens = _loc_tokens(l_name)
         for k, v in scene_loc_map.items():
-            if k in l_name.lower() or l_name.lower() in k:
+            if k in l_name.lower() or l_name.lower() in k or (l_tokens and v["tokens"] and len(l_tokens & v["tokens"]) >= 2):
                 matched_nums.extend(v["scene_nums"])
                 seen_loc_keys.add(k)
 
-        if not l_scenes and matched_nums:
-            unique_nums = sorted(list(set(matched_nums)))
+        unique_nums = sorted(list(set(matched_nums)))
+        if unique_nums:
             l_scenes = ", ".join([f"Scene {n}" for n in unique_nums])
+            count = len(unique_nums)
+        else:
+            # Count scenes mentioned in l_scenes string
+            found_nums = re.findall(r'\d+', l_scenes)
+            count = len(set(found_nums)) if found_nums else (2 if "," in l_scenes else 1)
 
         if not l_ref:
             l_ref = (
-                f"Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm lens. "
-                f"{l_name}, realistic architectural layout, natural and practical lighting fixtures, rich environmental textures, "
-                f"foreground and background depth, {style} cinematic style. No people, no text, no watermarks."
+                f"Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm anamorphic lens. "
+                f"{l_name}, consistent architectural layout, natural and practical lighting fixtures, rich environmental textures, "
+                f"foreground and background depth, {style} cinematic style. Use this background reference across {l_scenes or 'all matching scenes'} "
+                f"so the movie environment looks realistic and identical. No people, no text, no watermarks."
             )
 
         normalized_locs.append({
             "name": l_name,
             "scenes_used": l_scenes or "Multiple Scenes",
-            "is_recurring": len(matched_nums) > 1 or ("," in l_scenes),
+            "appearance_count": count,
+            "is_recurring": count >= 2 or ("," in l_scenes),
             "unoccupied_reference": l_ref
         })
 
-    # Add any auto-detected locations from scenes that weren't in raw_locs
+    # Add all auto-detected locations from scenes that weren't in raw_locs
     for k, v in scene_loc_map.items():
         if k in seen_loc_keys:
             continue
-        # Include all recurring locations (2+ scenes) or top locations if normalized_locs is empty
-        if len(v["scene_nums"]) >= 2 or len(normalized_locs) < 5:
+        unique_nums = sorted(list(set(v["scene_nums"])))
+        count = len(unique_nums)
+        # Always include every location that appears more than once (count >= 2), plus top single locations
+        if count >= 2 or len(normalized_locs) < 8:
             loc_name = v["display_name"]
-            unique_nums = sorted(list(set(v["scene_nums"])))
             scenes_str = ", ".join([f"Scene {n}" for n in unique_nums])
             ref_prompt = (
                 f"Empty, unoccupied reference view with no people or characters. Wide establishing shot, 24mm anamorphic lens. "
                 f"{loc_name}, consistent architectural layout, atmospheric lighting, detailed walls, flooring, and practical props, "
-                f"deep cinematic perspective, {style} render style. Use this master background reference for visual consistency across {scenes_str}. "
+                f"deep cinematic perspective, {style} render style. Master location reference for visual consistency across {scenes_str}. "
                 f"No people, no characters, no text, no watermarks."
             )
             normalized_locs.append({
                 "name": loc_name,
                 "scenes_used": scenes_str,
-                "is_recurring": len(unique_nums) > 1,
+                "appearance_count": count,
+                "is_recurring": count >= 2,
                 "unoccupied_reference": ref_prompt
             })
+
+    # Sort so recurring locations (appearing more than once) come first, ordered by appearance_count descending
+    normalized_locs.sort(key=lambda x: (1 if x.get("is_recurring") else 0, x.get("appearance_count", 1)), reverse=True)
 
     return normalized_chars, normalized_locs
 
@@ -459,7 +508,7 @@ def generate_voiceover_script_pdf(
     return pdf_path
 
 
-def generate_image_prompts_pdf(
+def generate_character_prompts_pdf(
     story_data: dict,
     culture="Universal",
     style="Stylised 3D",
@@ -470,23 +519,19 @@ def generate_image_prompts_pdf(
     timezone="Africa/Lagos"
 ) -> str:
     """
-    Individual Production PDF 2: CHARACTER SHEETS, LOCATION PROMPTS & SCENE IMAGE PROMPTS
-    Contains:
-    1. Full-Body Character Sheet Prompts (for character consistency)
-    2. Location Consistency Prompts (especially for locations appearing more than once, for realistic movie continuity)
-    3. Scene-by-Scene Image Prompts (standalone copy-paste prompts for Midjourney / Flux / Google Flow)
+    Individual Production PDF: CHARACTER SHEET PROMPTS PDF
+    Dedicated strictly to full-body character reference prompts so every character looks identical across the movie.
     """
     title = story_data.get("title", "WP Studio Production Package")
     genre_val = story_data.get("genre", genre)
-    delivery = story_data.get("delivery_format", delivery_format)
     logline = story_data.get("logline", story_data.get("hook", ""))
     scenes = story_data.get("scenes", []) or []
 
-    characters, locations = _normalize_characters_and_locations(story_data, style=style)
+    characters, _ = _normalize_characters_and_locations(story_data, style=style)
 
     safe_title = sanitize_filename(title)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_filename = f"WP_Studio_Character_Location_Scene_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_filename = f"WP_Studio_Character_Sheet_Prompts_{safe_title}_{timestamp}.pdf"
     pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
 
     runtime_lookup = {
@@ -501,17 +546,16 @@ def generate_image_prompts_pdf(
         or runtime_lookup.get(length_tier, "~8 to 15 Mins")
     )
 
-    md = f"""# WP STUDIO | CHARACTER, LOCATION & SCENE IMAGE PROMPTS
-### VISUAL CONSISTENCY BIBLE & SHOT-BY-SHOT IMAGE PROMPTS
+    md = f"""# WP STUDIO | CHARACTER SHEET PROMPTS
+### INDIVIDUAL CHARACTER CONSISTENCY BIBLE  |  FULL-BODY VISUAL LOCK
 # {title}
-**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`
-**CHARACTERS:** `{len(characters)}`  |  **LOCATIONS:** `{len(locations)}`  |  **SCENES:** `{len(scenes)}`
+**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`  |  **CHARACTERS:** `{len(characters)}`
 
 > *"{logline}"*
 
 ---
 
-# PART 1: CHARACTER SHEET PROMPTS (FULL-BODY CONSISTENCY)
+# CHARACTER SHEET PROMPTS ({len(characters)} CHARACTERS)
 *Generate these character sheets first so every character keeps the exact same face, skin tone, hair, build, and outfit throughout your movie.*
 
 """
@@ -525,8 +569,20 @@ def generate_image_prompts_pdf(
             c_lock = char.get("identity_lock_statement", "")
             orig_tag = f" *(Remodeled from: {c_orig})*" if (c_orig and c_orig.lower() != c_name.lower()) else ""
 
+            # Find scenes where this character appears
+            char_scenes = []
+            for s in scenes:
+                if not isinstance(s, dict):
+                    continue
+                s_num = s.get("scene_number", 1)
+                raw_cp = s.get("characters_present", [])
+                cp_str = ", ".join(raw_cp) if isinstance(raw_cp, list) else str(raw_cp)
+                if c_name.lower() in cp_str.lower() or c_name.split()[0].lower() in cp_str.lower():
+                    char_scenes.append(f"Scene {s_num}")
+            scenes_tag = ", ".join(char_scenes) if char_scenes else "Main Cast"
+
             md += f"""### CHARACTER {idx}: {c_name}{orig_tag}
-**ROLE:** `{c_role}`
+**ROLE:** `{c_role}`  |  **APPEARS IN:** `{scenes_tag}`
 
 **COPY-READY CHARACTER SHEET PROMPT:**
 > {c_desc}
@@ -536,32 +592,175 @@ def generate_image_prompts_pdf(
 ---
 """
     else:
-        md += "*Character details are embedded directly inside each scene prompt below.*\n\n---\n"
+        md += "*No separate character list found.*\n\n---\n"
 
-    md += """# PART 2: LOCATION CONSISTENCY PROMPTS (RECURRING SETTINGS)
-*Generate these empty location backgrounds first. Every location that appears more than once has a dedicated prompt below so your movie rooms, streets, and buildings look 100% realistic and consistent across all scenes.*
+    md += """*Prepared by WP Studio — Individual Character Sheet Prompts PDF.*
+"""
+
+    pdf = MarkdownPdf(toc_level=2)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
+    return pdf_path
+
+
+def generate_location_prompts_pdf(
+    story_data: dict,
+    culture="Universal",
+    style="Stylised 3D",
+    genre="Action Thriller",
+    delivery_format="Dialogue / Narrative",
+    lead_character=None,
+    length_tier="Short",
+    timezone="Africa/Lagos"
+) -> str:
+    """
+    Individual Production PDF: RECURRING LOCATION CONSISTENCY PROMPTS PDF
+    Dedicated strictly to location generation prompts—especially locations that appear more than once—so the
+    creator can generate master background plates and keep rooms, houses, offices, and streets 100% consistent.
+    """
+    title = story_data.get("title", "WP Studio Production Package")
+    genre_val = story_data.get("genre", genre)
+    logline = story_data.get("logline", story_data.get("hook", ""))
+    scenes = story_data.get("scenes", []) or []
+
+    _, locations = _normalize_characters_and_locations(story_data, style=style)
+
+    recurring_locs = [loc for loc in locations if loc.get("is_recurring") or loc.get("appearance_count", 1) >= 2]
+    single_locs = [loc for loc in locations if loc not in recurring_locs]
+
+    safe_title = sanitize_filename(title)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    pdf_filename = f"WP_Studio_Location_Consistency_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
+
+    runtime_lookup = {
+        "Short": "~3 to 5 Mins",
+        "Medium": "~10 to 15 Mins",
+        "Long": "~1 to 2+ Hours"
+    }
+    est_runtime = (
+        story_data.get("runtime_detail")
+        or story_data.get("target_duration")
+        or story_data.get("estimated_runtime")
+        or runtime_lookup.get(length_tier, "~8 to 15 Mins")
+    )
+
+    md = f"""# WP STUDIO | RECURRING LOCATION CONSISTENCY PROMPTS
+### INDIVIDUAL LOCATION REFERENCE BIBLE  |  REALISTIC MOVIE ENVIRONMENT CONTINUITY
+# {title}
+**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`
+**RECURRING LOCATIONS (2+ SCENES):** `{len(recurring_locs)}`  |  **TOTAL LOCATIONS:** `{len(locations)}`  |  **SCENES:** `{len(scenes)}`
+
+> *"{logline}"*
+
+---
+
+# PART 1: RECURRING LOCATIONS (APPEAR MORE THAN ONCE)
+*These locations appear in multiple scenes across your story. Generate these unoccupied location reference backgrounds first so the room layout, furniture, lighting, and architecture stay 100% realistic and identical every time the story returns to that setting.*
 
 """
 
-    if locations:
-        for idx, loc in enumerate(locations, 1):
-            l_name = loc.get("name", f"Location {idx}")
+    if recurring_locs:
+        for idx, loc in enumerate(recurring_locs, 1):
+            l_name = loc.get("name", f"Recurring Location {idx}")
             l_scenes = loc.get("scenes_used", "Multiple Scenes")
+            l_count = loc.get("appearance_count", 2)
             l_ref = loc.get("unoccupied_reference", "")
-            rec_tag = " [RECURRING LOCATION]" if loc.get("is_recurring") else ""
 
-            md += f"""### LOCATION {idx}: {l_name}{rec_tag}
-**APPEARS IN:** `{l_scenes}`
+            md += f"""### RECURRING LOCATION {idx}: {l_name} (Appears in {l_count} Scenes)
+**SCENES USING THIS LOCATION:** `{l_scenes}`
+
+**COPY-READY LOCATION REFERENCE PROMPT (Unoccupied Master Background):**
+> {l_ref}
+
+---
+"""
+    else:
+        md += "*All story locations are listed below with their scene numbers and master reference prompts.*\n\n---\n"
+
+    if single_locs:
+        md += f"""# PART 2: ADDITIONAL STORY LOCATIONS ({len(single_locs)} LOCATIONS)
+*Single-scene settings with complete environmental reference prompts for visual consistency.*
+
+"""
+        for idx, loc in enumerate(single_locs, 1):
+            l_name = loc.get("name", f"Location {idx}")
+            l_scenes = loc.get("scenes_used", "Scene")
+            l_ref = loc.get("unoccupied_reference", "")
+
+            md += f"""### LOCATION {idx}: {l_name}
+**SCENE:** `{l_scenes}`
 
 **COPY-READY LOCATION REFERENCE PROMPT:**
 > {l_ref}
 
 ---
 """
-    else:
-        md += "*Location descriptions are embedded directly inside each scene prompt below.*\n\n---\n"
 
-    md += f"""# PART 3: SCENE-BY-SCENE IMAGE PROMPTS ({len(scenes)} SCENES)
+    md += """*Prepared by WP Studio — Individual Recurring Location Consistency Prompts PDF.*
+"""
+
+    pdf = MarkdownPdf(toc_level=2)
+    pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf.save(pdf_path)
+    apply_dark_theme(pdf_path)
+    del pdf
+    gc.collect()
+    return pdf_path
+
+
+def generate_image_prompts_pdf(
+    story_data: dict,
+    culture="Universal",
+    style="Stylised 3D",
+    genre="Action Thriller",
+    delivery_format="Dialogue / Narrative",
+    lead_character=None,
+    length_tier="Short",
+    timezone="Africa/Lagos"
+) -> str:
+    """
+    Individual Production PDF: SCENE-BY-SCENE IMAGE PROMPTS PDF
+    Contains standalone copy-paste scene image prompts for Midjourney / Flux / Google Flow,
+    plus a quick reference summary of characters and recurring locations.
+    """
+    title = story_data.get("title", "WP Studio Production Package")
+    genre_val = story_data.get("genre", genre)
+    logline = story_data.get("logline", story_data.get("hook", ""))
+    scenes = story_data.get("scenes", []) or []
+
+    characters, locations = _normalize_characters_and_locations(story_data, style=style)
+
+    safe_title = sanitize_filename(title)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    pdf_filename = f"WP_Studio_Scene_Image_Prompts_{safe_title}_{timestamp}.pdf"
+    pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
+
+    runtime_lookup = {
+        "Short": "~3 to 5 Mins",
+        "Medium": "~10 to 15 Mins",
+        "Long": "~1 to 2+ Hours"
+    }
+    est_runtime = (
+        story_data.get("runtime_detail")
+        or story_data.get("target_duration")
+        or story_data.get("estimated_runtime")
+        or runtime_lookup.get(length_tier, "~8 to 15 Mins")
+    )
+
+    md = f"""# WP STUDIO | SCENE-BY-SCENE IMAGE PROMPTS
+### INDIVIDUAL SCENE IMAGE PROMPTS PDF  |  SHOT-BY-SHOT VISUAL STORYBOARD
+# {title}
+**GENRE:** `{genre_val.upper()}`  |  **STYLE:** `{style}`  |  **RUNTIME:** `{est_runtime}`  |  **SCENES:** `{len(scenes)}`
+
+> *"{logline}"*
+
+---
+
+# SCENE-BY-SCENE IMAGE PROMPTS ({len(scenes)} SCENES)
 *Each scene prompt below is 100% self-contained with camera angle, recurring location lighting, character likeness in parentheses, wardrobe, and physical action.*
 
 """
@@ -589,7 +788,7 @@ def generate_image_prompts_pdf(
 ---
 """
 
-    md += """*Prepared by WP Studio — Individual Character, Location & Scene Image Prompts PDF.*
+    md += """*Prepared by WP Studio — Individual Scene-by-Scene Image Prompts PDF.*
 """
 
     pdf = MarkdownPdf(toc_level=2)
@@ -612,7 +811,7 @@ def generate_video_prompts_pdf(
     timezone="Africa/Lagos"
 ) -> str:
     """
-    Individual Production PDF 3: VIDEO CAMERA & MOTION PROMPTS
+    Individual Production PDF: VIDEO CAMERA & MOTION PROMPTS
     Engineered specifically for Google Flow / Veo, Kling AI, Luma, and Runway Gen-3.
     """
     title = story_data.get("title", "WP Studio Production Package")
@@ -695,15 +894,30 @@ def generate_dual_pdfs(story_data: dict, culture="Universal", style="Stylised 3D
 
 def generate_triple_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
     """
-    Generates all 3 Individual Production PDFs for Creators:
-    1. script_pdf: Full Narrator Voiceover & Screenplay Script PDF (for voiceover generation)
-    2. image_pdf: Character Sheets, Recurring Location Prompts & Scene Image Prompts PDF
-    3. video_pdf: Scene-by-Scene Video Motion Prompts PDF
+    Generates 3 PDFs (Script, Scene Image, Video). For full 5 individual PDFs including Character & Location PDFs,
+    use generate_all_production_pdfs.
     """
     script_pdf = generate_voiceover_script_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
     image_pdf = generate_image_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
     video_pdf = generate_video_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
     return script_pdf, image_pdf, video_pdf
+
+
+def generate_all_production_pdfs(story_data: dict, culture="Universal", style="Stylised 3D", genre="Action Thriller", delivery_format="Dialogue / Narrative", lead_character=None, length_tier="Short", timezone="Africa/Lagos") -> tuple:
+    """
+    Generates all 5 Individual Production PDFs for Creators:
+    1. script_pdf: Full Narrator Voiceover & Screenplay Script PDF (for voiceover recording)
+    2. char_pdf: Character Sheet Prompts PDF (full-body visual consistency lock)
+    3. loc_pdf: Recurring Location Consistency Prompts PDF (locations appearing 2+ times + all settings)
+    4. image_pdf: Scene-by-Scene Image Prompts PDF
+    5. video_pdf: Scene-by-Scene Video Motion Prompts PDF
+    """
+    script_pdf = generate_voiceover_script_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    char_pdf = generate_character_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    loc_pdf = generate_location_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    image_pdf = generate_image_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    video_pdf = generate_video_prompts_pdf(story_data, culture, style, genre, delivery_format, lead_character, length_tier, timezone)
+    return script_pdf, char_pdf, loc_pdf, image_pdf, video_pdf
 
 
 def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:

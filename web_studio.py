@@ -1106,12 +1106,14 @@ def api_story_generate():
         print(f"[STORY PRODUCTION ERROR] {e}")
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
-    # Generate Triple Production PDFs (1: Voiceover Script, 2: Character/Location/Scene Image Prompts, 3: Video Motion Prompts)
+    # Generate 5 Individual Production PDFs (1: Voiceover Script, 2: Character Sheet Prompts, 3: Recurring Location Prompts, 4: Scene Image Prompts, 5: Video Motion Prompts)
     script_pdf = ""
+    char_pdf = ""
+    loc_pdf = ""
     bible_pdf = ""
     scene_pdf = ""
     try:
-        script_pdf, bible_pdf, scene_pdf = pdf_generator.generate_triple_pdfs(
+        script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = pdf_generator.generate_all_production_pdfs(
             story_data=full_story,
             culture=job.get("culture", "Universal"),
             style=job.get("style", "Stylised 3D"),
@@ -1134,6 +1136,10 @@ def api_story_generate():
 
     if script_pdf:
         full_story["script_pdf"] = script_pdf
+    if char_pdf:
+        full_story["char_pdf"] = char_pdf
+    if loc_pdf:
+        full_story["loc_pdf"] = loc_pdf
 
     database.update_job_completion(int(job_id), json.dumps(full_story), bible_pdf, scene_pdf)
     database.log_story(
@@ -1149,9 +1155,11 @@ def api_story_generate():
     if actual_cost > 0:
         database.deduct_credits(user_id, actual_cost)
 
-    # Deliver all 3 individual PDFs directly into the user's Telegram chat
+    # Deliver all 5 individual PDFs directly into the user's Telegram chat
     story_title = full_story.get("title", chosen_concept.get("title", "WP Studio Story"))
     sent_script = False
+    sent_char = False
+    sent_loc = False
     sent_bible = False
     sent_scene = False
     if script_pdf and os.path.exists(script_pdf):
@@ -1160,17 +1168,29 @@ def api_story_generate():
             file_path=script_pdf,
             caption=f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{story_title}</i>\nReady for narrator voiceover recording."
         )
+    if char_pdf and os.path.exists(char_pdf):
+        sent_char = send_telegram_document(
+            user_id=user_id,
+            file_path=char_pdf,
+            caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body character consistency prompts."
+        )
+    if loc_pdf and os.path.exists(loc_pdf):
+        sent_loc = send_telegram_document(
+            user_id=user_id,
+            file_path=loc_pdf,
+            caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster reference prompts for locations that appear more than once."
+        )
     if bible_pdf and os.path.exists(bible_pdf):
         sent_bible = send_telegram_document(
             user_id=user_id,
             file_path=bible_pdf,
-            caption=f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{story_title}</i>"
+            caption=f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{story_title}</i>"
         )
     if scene_pdf and os.path.exists(scene_pdf):
         sent_scene = send_telegram_document(
             user_id=user_id,
             file_path=scene_pdf,
-            caption=f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
+            caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
         )
 
     refreshed_user = database.get_user(user_id)
@@ -1180,9 +1200,11 @@ def api_story_generate():
         "story": full_story,
         "job_id": int(job_id),
         "has_script": bool(script_pdf and os.path.exists(script_pdf)),
+        "has_char": bool(char_pdf and os.path.exists(char_pdf)),
+        "has_loc": bool(loc_pdf and os.path.exists(loc_pdf)),
         "has_bible": bool(bible_pdf and os.path.exists(bible_pdf)),
         "has_scene": bool(scene_pdf and os.path.exists(scene_pdf)),
-        "sent_to_telegram": (sent_script or sent_bible or sent_scene),
+        "sent_to_telegram": (sent_script or sent_char or sent_loc or sent_bible or sent_scene),
         "credits": refreshed_user.get("credits", 0)
     })
 
@@ -1218,19 +1240,25 @@ def api_send_pdf_to_telegram():
             full_story = None
 
     script_path = full_story.get("script_pdf") if isinstance(full_story, dict) else None
+    char_path = full_story.get("char_pdf") if isinstance(full_story, dict) else None
+    loc_path = full_story.get("loc_pdf") if isinstance(full_story, dict) else None
     bible_path = job.get("story_bible_pdf")
     scene_path = job.get("scene_prompts_pdf")
 
     need_script = (pdf_type in ["script", "all"])
-    need_bible = (pdf_type in ["bible", "both", "all"])
-    need_scene = (pdf_type in ["scene", "both", "all"])
+    need_char = (pdf_type in ["character", "char", "all"])
+    need_loc = (pdf_type in ["location", "loc", "all"])
+    need_bible = (pdf_type in ["bible", "image", "both", "all"])
+    need_scene = (pdf_type in ["scene", "video", "both", "all"])
 
     script_missing = need_script and (not script_path or not os.path.exists(script_path))
+    char_missing = need_char and (not char_path or not os.path.exists(char_path))
+    loc_missing = need_loc and (not loc_path or not os.path.exists(loc_path))
     bible_missing = need_bible and (not bible_path or not os.path.exists(bible_path))
     scene_missing = need_scene and (not scene_path or not os.path.exists(scene_path))
 
     # If container restarted and PDF files are not on disk, reconstruct them on the fly from full_story_json!
-    if (script_missing or bible_missing or scene_missing) and isinstance(full_story, dict):
+    if (script_missing or char_missing or loc_missing or bible_missing or scene_missing) and isinstance(full_story, dict):
         try:
             culture_val = job.get("culture") or full_story.get("culture") or full_story.get("voice_accent") or "Universal"
             style_val = job.get("style") or full_story.get("art_style") or "Realistic"
@@ -1249,6 +1277,28 @@ def api_send_pdf_to_telegram():
                     timezone="Africa/Lagos"
                 )
                 full_story["script_pdf"] = script_path
+            if char_missing:
+                char_path = pdf_generator.generate_character_prompts_pdf(
+                    story_data=full_story,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format=delivery_val,
+                    length_tier=tier_val,
+                    timezone="Africa/Lagos"
+                )
+                full_story["char_pdf"] = char_path
+            if loc_missing:
+                loc_path = pdf_generator.generate_location_prompts_pdf(
+                    story_data=full_story,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format=delivery_val,
+                    length_tier=tier_val,
+                    timezone="Africa/Lagos"
+                )
+                full_story["loc_pdf"] = loc_path
             if bible_missing:
                 bible_path = pdf_generator.generate_image_prompts_pdf(
                     story_data=full_story,
@@ -1278,11 +1328,17 @@ def api_send_pdf_to_telegram():
     if need_script and script_path and os.path.exists(script_path):
         files_to_send.append((script_path, f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{story_title}</i>\nReady for narrator voiceover recording."))
 
+    if need_char and char_path and os.path.exists(char_path):
+        files_to_send.append((char_path, f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body character consistency prompts."))
+
+    if need_loc and loc_path and os.path.exists(loc_path):
+        files_to_send.append((loc_path, f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster reference prompts for locations that appear more than once."))
+
     if need_bible and bible_path and os.path.exists(bible_path):
-        files_to_send.append((bible_path, f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{story_title}</i>"))
+        files_to_send.append((bible_path, f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{story_title}</i>"))
 
     if need_scene and scene_path and os.path.exists(scene_path):
-        files_to_send.append((scene_path, f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"))
+        files_to_send.append((scene_path, f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"))
 
     if not files_to_send:
         return jsonify({"success": False, "error": "PDF files could not be found or built for this screenplay."}), 404
@@ -1547,10 +1603,10 @@ def api_story_adapter_generate():
 
         story_title = adapted_data.get("title", "Adapted Story")
 
-        # Generate Triple Production PDFs
-        script_pdf, bible_pdf, scene_pdf = "", "", ""
+        # Generate 5 Individual Production PDFs
+        script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = "", "", "", "", ""
         try:
-            script_pdf, bible_pdf, scene_pdf = pdf_generator.generate_triple_pdfs(
+            script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = pdf_generator.generate_all_production_pdfs(
                 story_data=adapted_data,
                 culture=voice_accent,
                 style=art_style,
@@ -1561,6 +1617,10 @@ def api_story_adapter_generate():
             )
             if script_pdf:
                 adapted_data["script_pdf"] = script_pdf
+            if char_pdf:
+                adapted_data["char_pdf"] = char_pdf
+            if loc_pdf:
+                adapted_data["loc_pdf"] = loc_pdf
         except Exception as pdf_err:
             print(f"[STORY ADAPTER PDF ERROR] {pdf_err}")
 
@@ -1581,24 +1641,36 @@ def api_story_adapter_generate():
         )
         database.update_job_completion(int(job_id), json.dumps(adapted_data), bible_pdf, scene_pdf)
 
-        # Deliver all 3 individual PDFs directly to Telegram chat
+        # Deliver all 5 individual PDFs directly to Telegram chat
         if script_pdf and os.path.exists(script_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=script_pdf,
                 caption=f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{story_title}</i>\nReady for narrator voiceover recording."
             )
+        if char_pdf and os.path.exists(char_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=char_pdf,
+                caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body character consistency prompts."
+            )
+        if loc_pdf and os.path.exists(loc_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=loc_pdf,
+                caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster reference prompts for locations that appear more than once."
+            )
         if bible_pdf and os.path.exists(bible_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=bible_pdf,
-                caption=f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{story_title}</i>"
+                caption=f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{story_title}</i>"
             )
         if scene_pdf and os.path.exists(scene_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=scene_pdf,
-                caption=f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
+                caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
             )
 
         refreshed_user = database.get_user(user_id)
@@ -1643,8 +1715,8 @@ def api_story_adapter_send_to_telegram():
     delivery_val = data.get("delivery_format", "Dialogue / Narrative")
     tier_val = data.get("target_duration", f"{len(scenes)} Scenes")
 
-    # Individual PDF request ("script", "bible", or "scene")
-    if pdf_type in ["script", "bible", "scene"]:
+    # Individual PDF request ("script", "character", "location", "bible", or "scene")
+    if pdf_type in ["script", "character", "char", "location", "loc", "bible", "image", "scene", "video"]:
         try:
             if pdf_type == "script":
                 fpath = pdf_generator.generate_voiceover_script_pdf(
@@ -1656,7 +1728,27 @@ def api_story_adapter_send_to_telegram():
                     length_tier=tier_val
                 )
                 caption = f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{title}</i>\nReady for narrator voiceover recording."
-            elif pdf_type == "bible":
+            elif pdf_type in ["character", "char"]:
+                fpath = pdf_generator.generate_character_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format=delivery_val,
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body character consistency prompts."
+            elif pdf_type in ["location", "loc"]:
+                fpath = pdf_generator.generate_location_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format=delivery_val,
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations that appear more than once."
+            elif pdf_type in ["bible", "image"]:
                 fpath = pdf_generator.generate_image_prompts_pdf(
                     story_data=story_payload,
                     culture=culture_val,
@@ -1665,7 +1757,7 @@ def api_story_adapter_send_to_telegram():
                     delivery_format=delivery_val,
                     length_tier=tier_val
                 )
-                caption = f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{title}</i>"
+                caption = f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{title}</i>"
             else:
                 fpath = pdf_generator.generate_video_prompts_pdf(
                     story_data=story_payload,
@@ -1675,7 +1767,7 @@ def api_story_adapter_send_to_telegram():
                     delivery_format=delivery_val,
                     length_tier=tier_val
                 )
-                caption = f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{title}</i>"
+                caption = f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>"
 
             if fpath and os.path.exists(fpath) and send_telegram_document(user_id, fpath, caption):
                 return jsonify({"success": True, "message": "PDF sent directly to your Telegram chat!"})
@@ -1695,9 +1787,9 @@ def api_story_adapter_send_to_telegram():
     header_msg += "\n<b>--------------------</b>"
     send_telegram_message(user_id, header_msg)
 
-    # Send all 3 individual PDFs
+    # Send all 5 individual PDFs
     try:
-        sc_pdf, b_pdf, s_pdf = pdf_generator.generate_triple_pdfs(
+        sc_pdf, ch_pdf, lo_pdf, b_pdf, s_pdf = pdf_generator.generate_all_production_pdfs(
             story_data=story_payload,
             culture=culture_val,
             style=style_val,
@@ -1707,14 +1799,18 @@ def api_story_adapter_send_to_telegram():
         )
         if sc_pdf and os.path.exists(sc_pdf):
             send_telegram_document(user_id, sc_pdf, caption=f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{title}</i>\nReady for narrator voiceover recording.")
+        if ch_pdf and os.path.exists(ch_pdf):
+            send_telegram_document(user_id, ch_pdf, caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body character consistency prompts.")
+        if lo_pdf and os.path.exists(lo_pdf):
+            send_telegram_document(user_id, lo_pdf, caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations that appear more than once.")
         if b_pdf and os.path.exists(b_pdf):
-            send_telegram_document(user_id, b_pdf, caption=f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, b_pdf, caption=f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{title}</i>")
         if s_pdf and os.path.exists(s_pdf):
-            send_telegram_document(user_id, s_pdf, caption=f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, s_pdf, caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>")
     except Exception as pdf_e:
-        print(f"[STORY ADAPTER TRIPLE PDF ERROR] {pdf_e}")
+        print(f"[STORY ADAPTER ALL PDF ERROR] {pdf_e}")
 
-    return jsonify({"success": True, "message": f"All 3 individual PDFs ({len(scenes)} scenes) sent directly to your Telegram chat!"})
+    return jsonify({"success": True, "message": f"All 5 individual PDFs ({len(scenes)} scenes) sent directly to your Telegram chat!"})
 
 
 # =====================================================================
@@ -1892,9 +1988,9 @@ def api_remixcraft_produce():
             database.deduct_credits(user_id, cost)
 
         story_title = package.get("title", selected_concept.get("title", "Remixcraft"))
-        script_pdf, bible_pdf, scene_pdf = "", "", ""
+        script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = "", "", "", "", ""
         try:
-            script_pdf, bible_pdf, scene_pdf = pdf_generator.generate_triple_pdfs(
+            script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = pdf_generator.generate_all_production_pdfs(
                 story_data=package,
                 culture=culture,
                 style=art_style,
@@ -1906,6 +2002,10 @@ def api_remixcraft_produce():
             )
             if script_pdf:
                 package["script_pdf"] = script_pdf
+            if char_pdf:
+                package["char_pdf"] = char_pdf
+            if loc_pdf:
+                package["loc_pdf"] = loc_pdf
         except Exception as pdf_err:
             print(f"[REMIXCRAFT PRODUCE PDF ERROR] {pdf_err}")
 
@@ -1926,24 +2026,36 @@ def api_remixcraft_produce():
         )
         database.update_job_completion(int(job_id), json.dumps(package), bible_pdf, scene_pdf)
 
-        # Automatically deliver all 3 individual PDFs to Telegram chat
+        # Automatically deliver all 5 individual PDFs to Telegram chat
         if script_pdf and os.path.exists(script_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=script_pdf,
                 caption=f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{story_title}</i>\nReady for narrator voiceover recording."
             )
+        if char_pdf and os.path.exists(char_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=char_pdf,
+                caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body character consistency prompts."
+            )
+        if loc_pdf and os.path.exists(loc_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=loc_pdf,
+                caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster reference prompts for locations that appear more than once."
+            )
         if bible_pdf and os.path.exists(bible_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=bible_pdf,
-                caption=f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{story_title}</i>"
+                caption=f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{story_title}</i>"
             )
         if scene_pdf and os.path.exists(scene_pdf):
             send_telegram_document(
                 user_id=user_id,
                 file_path=scene_pdf,
-                caption=f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
+                caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>"
             )
 
         refreshed_user = database.get_user(user_id)
@@ -1992,7 +2104,7 @@ def api_remixcraft_send_to_telegram():
     style_val = pkg.get("art_style", "Realistic")
     tier_val = pkg.get("target_duration", "Standard")
 
-    if pdf_type in ["script", "bible", "scene"]:
+    if pdf_type in ["script", "character", "char", "location", "loc", "bible", "image", "scene", "video"]:
         try:
             if pdf_type == "script":
                 fpath = pdf_generator.generate_voiceover_script_pdf(
@@ -2003,7 +2115,25 @@ def api_remixcraft_send_to_telegram():
                     length_tier=tier_val
                 )
                 caption = f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{title}</i>\nReady for narrator voiceover recording."
-            elif pdf_type == "bible":
+            elif pdf_type in ["character", "char"]:
+                fpath = pdf_generator.generate_character_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre="Remixcraft",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body character consistency prompts."
+            elif pdf_type in ["location", "loc"]:
+                fpath = pdf_generator.generate_location_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre="Remixcraft",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations that appear more than once."
+            elif pdf_type in ["bible", "image"]:
                 fpath = pdf_generator.generate_image_prompts_pdf(
                     story_data=story_payload,
                     culture=culture_val,
@@ -2011,7 +2141,7 @@ def api_remixcraft_send_to_telegram():
                     genre="Remixcraft",
                     length_tier=tier_val
                 )
-                caption = f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{title}</i>"
+                caption = f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{title}</i>"
             else:
                 fpath = pdf_generator.generate_video_prompts_pdf(
                     story_data=story_payload,
@@ -2020,7 +2150,7 @@ def api_remixcraft_send_to_telegram():
                     genre="Remixcraft",
                     length_tier=tier_val
                 )
-                caption = f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{title}</i>"
+                caption = f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>"
 
             if fpath and os.path.exists(fpath) and send_telegram_document(user_id, fpath, caption):
                 return jsonify({"success": True, "message": "PDF sent directly to your Telegram chat!"})
@@ -2048,9 +2178,9 @@ def api_remixcraft_send_to_telegram():
     header += "\n<b>--------------------</b>"
     send_telegram_message(user_id, header)
 
-    # Generate and send Triple Individual PDFs
+    # Generate and send 5 Individual PDFs
     try:
-        sc_pdf, b_pdf, s_pdf = pdf_generator.generate_triple_pdfs(
+        sc_pdf, ch_pdf, lo_pdf, b_pdf, s_pdf = pdf_generator.generate_all_production_pdfs(
             story_payload,
             culture=culture_val,
             style=style_val,
@@ -2059,14 +2189,18 @@ def api_remixcraft_send_to_telegram():
         )
         if sc_pdf and os.path.exists(sc_pdf):
             send_telegram_document(user_id, sc_pdf, caption=f"<b>PDF 1: Full Voiceover & Screenplay Script</b>\n<i>{title}</i>\nReady for narrator voiceover recording.")
+        if ch_pdf and os.path.exists(ch_pdf):
+            send_telegram_document(user_id, ch_pdf, caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body character consistency prompts.")
+        if lo_pdf and os.path.exists(lo_pdf):
+            send_telegram_document(user_id, lo_pdf, caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations that appear more than once.")
         if b_pdf and os.path.exists(b_pdf):
-            send_telegram_document(user_id, b_pdf, caption=f"<b>PDF 2: Character Sheet, Location & Scene Image Prompts</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, b_pdf, caption=f"<b>PDF 4: Scene-by-Scene Image Prompts</b>\n<i>{title}</i>")
         if s_pdf and os.path.exists(s_pdf):
-            send_telegram_document(user_id, s_pdf, caption=f"<b>PDF 3: Scene Video Motion Prompts</b>\n<i>{title}</i>")
+            send_telegram_document(user_id, s_pdf, caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>")
     except Exception as pdf_e:
         print(f"[REMIXCRAFT PDF ERROR] {pdf_e}")
 
-    return jsonify({"success": True, "message": "All 3 individual PDFs sent directly to your Telegram chat!"})
+    return jsonify({"success": True, "message": "All 5 individual PDFs sent directly to your Telegram chat!"})
 
 
 @app.route('/api/render_frame', methods=['POST'])

@@ -1770,7 +1770,7 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Generate 10 adaptive story concepts and produce complete dual PDFs</div>
+            <div class="modal-subtitle">Generate 10 adaptive story concepts and produce 5 individual production PDFs</div>
         </div>
         <div class="modal-body">
             <!-- Step 1: Input -->
@@ -1878,7 +1878,7 @@
             <!-- Step 3: Concepts Container -->
             <div id="story-concepts-section" style="display:none;">
                 <div class="section-label" style="padding-left:0; padding-top:4px;">Generated Story Concepts</div>
-                <div class="form-hint">Tap a concept to select it for complete screenplay and 3 individual PDF files.</div>
+                <div class="form-hint">Tap a concept to select it for complete screenplay and 5 individual PDF files.</div>
                 <div id="story-concepts-list"></div>
 
                 <div class="form-card" id="story-production-box" style="margin-top:12px;">
@@ -1886,7 +1886,7 @@
                     <div class="form-hint" id="story-production-hint">Selected: Concept 1</div>
                     <button id="btn-produce-story" class="btn-submit" onclick="submitProduceStory()">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                        Produce Screenplay & 3 Production PDFs
+                        Produce Screenplay & 5 Production PDFs
                     </button>
                 </div>
             </div>
@@ -1910,17 +1910,25 @@
                 </div>
 
                 <div class="pdf-delivery-stack">
-                    <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                    <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">5 Individual Production PDFs (Telegram Chat):</div>
                     <button type="button" id="btn-download-script" onclick="sendPdfToChat(activeJobId, 'script')" class="btn-pdf-item">
                         <span>PDF 1: Full Voiceover & Screenplay Script</span>
                         <span class="btn-pdf-badge">Send Script PDF</span>
                     </button>
+                    <button type="button" id="btn-download-character" onclick="sendPdfToChat(activeJobId, 'character')" class="btn-pdf-item">
+                        <span>PDF 2: Character Sheet Prompts</span>
+                        <span class="btn-pdf-badge">Send Character PDF</span>
+                    </button>
+                    <button type="button" id="btn-download-location" onclick="sendPdfToChat(activeJobId, 'location')" class="btn-pdf-item">
+                        <span>PDF 3: Recurring Location Consistency Prompts</span>
+                        <span class="btn-pdf-badge">Send Location PDF</span>
+                    </button>
                     <button type="button" id="btn-download-bible" onclick="sendPdfToChat(activeJobId, 'bible')" class="btn-pdf-item">
-                        <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                        <span>PDF 4: Scene-by-Scene Image Prompts</span>
                         <span class="btn-pdf-badge">Send Image PDF</span>
                     </button>
                     <button type="button" id="btn-download-scenes" onclick="sendPdfToChat(activeJobId, 'scene')" class="btn-pdf-item">
-                        <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                        <span>PDF 5: Scene Video Camera Motion Prompts</span>
                         <span class="btn-pdf-badge">Send Video PDF</span>
                     </button>
                 </div>
@@ -1943,7 +1951,7 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div class="modal-subtitle">Paste any story or script. We remodel character names, locations, and lines for YouTube copyright safety and generate 3 individual PDFs.</div>
+            <div class="modal-subtitle">Paste any story or script. We remodel character names, locations, and lines for YouTube copyright safety and generate 5 individual PDFs.</div>
         </div>
         <div class="modal-body">
             <!-- Step Indicators -->
@@ -2123,17 +2131,25 @@
 
                     <!-- Individual PDF Delivery Stack -->
                     <div class="pdf-delivery-stack">
-                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">5 Individual Production PDFs (Telegram Chat):</div>
                         <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('script')">
                             <span>PDF 1: Full Voiceover & Screenplay Script</span>
                             <span class="btn-pdf-badge">Send Script PDF</span>
                         </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('character')">
+                            <span>PDF 2: Character Sheet Prompts</span>
+                            <span class="btn-pdf-badge">Send Character PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('location')">
+                            <span>PDF 3: Recurring Location Consistency Prompts</span>
+                            <span class="btn-pdf-badge">Send Location PDF</span>
+                        </button>
                         <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('bible')">
-                            <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                            <span>PDF 4: Scene-by-Scene Image Prompts</span>
                             <span class="btn-pdf-badge">Send Image PDF</span>
                         </button>
                         <button type="button" class="btn-pdf-item" onclick="sendAdapterPdf('scene')">
-                            <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                            <span>PDF 5: Scene Video Camera Motion Prompts</span>
                             <span class="btn-pdf-badge">Send Video PDF</span>
                         </button>
                     </div>
@@ -2144,7 +2160,7 @@
                             Copy All Prompts
                         </button>
                         <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendAdapterToTelegram()">
-                            Send All 3 PDFs
+                            Send All 5 PDFs
                         </button>
                     </div>
 
@@ -2378,17 +2394,25 @@
 
                     <!-- Individual PDF Delivery Stack -->
                     <div class="pdf-delivery-stack">
-                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">Individual Production PDFs (Telegram Chat):</div>
+                        <div style="font-size:10px; font-weight:700; color:var(--accent, #e5a93c); text-transform:uppercase; letter-spacing:0.5px;">5 Individual Production PDFs (Telegram Chat):</div>
                         <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('script')">
                             <span>PDF 1: Full Voiceover & Screenplay Script</span>
                             <span class="btn-pdf-badge">Send Script PDF</span>
                         </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('character')">
+                            <span>PDF 2: Character Sheet Prompts</span>
+                            <span class="btn-pdf-badge">Send Character PDF</span>
+                        </button>
+                        <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('location')">
+                            <span>PDF 3: Recurring Location Consistency Prompts</span>
+                            <span class="btn-pdf-badge">Send Location PDF</span>
+                        </button>
                         <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('bible')">
-                            <span>PDF 2: Character Sheet, Location & Image Prompts</span>
+                            <span>PDF 4: Scene-by-Scene Image Prompts</span>
                             <span class="btn-pdf-badge">Send Image PDF</span>
                         </button>
                         <button type="button" class="btn-pdf-item" onclick="sendRemixPdf('scene')">
-                            <span>PDF 3: Scene Video Camera Motion Prompts</span>
+                            <span>PDF 5: Scene Video Camera Motion Prompts</span>
                             <span class="btn-pdf-badge">Send Video PDF</span>
                         </button>
                     </div>
@@ -2399,7 +2423,7 @@
                             Copy All Prompts
                         </button>
                         <button class="btn-secondary" style="margin-top:0; font-size:12px; padding:10px; justify-content:center;" onclick="sendRemixToTelegram()">
-                            Send All 3 PDFs
+                            Send All 5 PDFs
                         </button>
                     </div>
 
@@ -3988,6 +4012,8 @@
 
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                 ${isCompleted ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'script');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Script PDF</button>` : ''}
+                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'character');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Character PDF</button>` : ''}
+                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'location');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Location PDF</button>` : ''}
                                 ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Image PDF</button>` : ''}
                                 ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Video PDF</button>` : ''}
                             </div>
@@ -4109,6 +4135,8 @@
             // 7. Handle Completed PDF Results Section
             const resultSec = document.getElementById('story-result-section');
             const scriptBtn = document.getElementById('btn-download-script');
+            const charBtn = document.getElementById('btn-download-character');
+            const locBtn = document.getElementById('btn-download-location');
             const bibleBtn = document.getElementById('btn-download-bible');
             const sceneBtn = document.getElementById('btn-download-scenes');
 
@@ -4146,6 +4174,14 @@
                 if (scriptBtn) {
                     scriptBtn.style.display = 'flex';
                     scriptBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'script');
+                }
+                if (charBtn) {
+                    charBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
+                    charBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'character');
+                }
+                if (locBtn) {
+                    locBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
+                    locBtn.onclick = () => sendPdfToChat(job.job_id || job.id, 'location');
                 }
                 if (bibleBtn) {
                     bibleBtn.style.display = (job.story_bible_pdf || job.status === 'completed' || job.full_story_json) ? 'flex' : 'none';
@@ -4396,9 +4432,9 @@
                 [
                     { at: 5, text: `Setting main character and outline for "${conceptTitle}"...` },
                     { at: 22, text: "Writing all story scenes and dialogue..." },
-                    { at: 52, text: "Formatting Character Sheet, Location & Scene Image Prompts..." },
+                    { at: 52, text: "Building Character Sheet & Recurring Location consistency prompts..." },
                     { at: 75, text: "Formatting Video Camera Motion Prompts..." },
-                    { at: 90, text: "Creating 3 Individual PDF Files (Voiceover Script, Image Prompts, Video Prompts)..." }
+                    { at: 90, text: "Creating 5 Individual PDF Files (Voiceover Script, Character Sheet, Recurring Locations, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -4425,8 +4461,8 @@
                     throw new Error("Server temporarily busy or restarting. Please try again in a few seconds.");
                 }
                 if (d.success) {
-                    await AIProgressTracker.complete("Screenplay Produced & 3 PDFs Sent to Chat!");
-                    showToast("Screenplay Produced & all 3 PDFs sent to Telegram chat!", true);
+                    await AIProgressTracker.complete("Screenplay Produced & 5 PDFs Sent to Chat!");
+                    showToast("Screenplay Produced & all 5 PDFs sent to Telegram chat!", true);
                     const resSection = document.getElementById('story-result-section');
                     if (resSection) {
                         resSection.style.display = 'block';
@@ -4468,6 +4504,16 @@
                         btnScript.style.display = 'flex';
                         btnScript.onclick = () => sendPdfToChat(newJobId, 'script');
                     }
+                    const btnChar = document.getElementById('btn-download-character');
+                    if (btnChar) {
+                        btnChar.style.display = 'flex';
+                        btnChar.onclick = () => sendPdfToChat(newJobId, 'character');
+                    }
+                    const btnLoc = document.getElementById('btn-download-location');
+                    if (btnLoc) {
+                        btnLoc.style.display = 'flex';
+                        btnLoc.onclick = () => sendPdfToChat(newJobId, 'location');
+                    }
                     const btnBible = document.getElementById('btn-download-bible');
                     if (btnBible) {
                         btnBible.style.display = 'flex';
@@ -4495,7 +4541,7 @@
                 showToast(err.message || 'Error during story production', false);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & 3 Production PDFs';
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Produce Screenplay & 5 Production PDFs';
             }
         }
 
@@ -5394,14 +5440,14 @@
             if (btn) btn.disabled = true;
 
             AIProgressTracker.start(
-                "Adapting Story & Building 3 PDFs",
+                "Adapting Story & Building 5 PDFs",
                 20,
                 [
                     { at: 3, text: adapterState.remodel ? "Remodeling character names & locations for copyright safety..." : "Reading original story narrative & characters..." },
                     { at: 25, text: `Locking visual filter: ${adapterState.filter} grade...` },
                     { at: 45, text: `Building Character Sheet & Recurring Location prompts...` },
                     { at: 70, text: `Structuring ${plan.label} with ${adapterState.voice} flavor...` },
-                    { at: 90, text: "Creating 3 Individual PDFs (Voiceover Script, Image Prompts, Video Prompts)..." }
+                    { at: 90, text: "Creating 5 Individual PDFs (Voiceover Script, Character Sheet, Recurring Locations, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -5436,7 +5482,7 @@
                     return;
                 }
 
-                await AIProgressTracker.complete("Story Scenes & 3 PDFs Ready!");
+                await AIProgressTracker.complete("Story Scenes & 5 PDFs Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 adapterState.data = d.data;
@@ -5448,7 +5494,7 @@
                 }
 
                 renderAdapterResults(d.data);
-                showToast('3 Individual PDFs sent to your Telegram chat!', true);
+                showToast('5 Individual PDFs sent to your Telegram chat!', true);
             } catch (err) {
                 console.error("Story adapter execution error:", err);
                 AIProgressTracker.fail(err.message || 'Error executing story adaptation');
@@ -5745,8 +5791,10 @@
             try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
             const labelMap = {
                 script: 'PDF 1 (Voiceover & Screenplay Script)',
-                bible: 'PDF 2 (Character, Location & Image Prompts)',
-                scene: 'PDF 3 (Video Motion Prompts)'
+                character: 'PDF 2 (Character Sheet Prompts)',
+                location: 'PDF 3 (Recurring Location Consistency Prompts)',
+                bible: 'PDF 4 (Scene-by-Scene Image Prompts)',
+                scene: 'PDF 5 (Scene Video Motion Prompts)'
             };
             showToast(`Sending ${labelMap[pdfType] || 'PDF'} to your Telegram chat...`, true);
             try {
@@ -5774,7 +5822,7 @@
                 return;
             }
             try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
-            showToast('Sending all 3 individual PDFs to your Telegram chat...', true);
+            showToast('Sending all 5 individual PDFs to your Telegram chat...', true);
             try {
                 const payload = Object.assign({}, adapterState.data, { pdf_type: 'all' });
                 const res = await fetch('/api/story_adapter/send_to_telegram', {
@@ -5785,7 +5833,7 @@
                 const d = await res.json();
                 if (d.success) {
                     try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
-                    showTelegramAlert('All 3 individual PDFs (Voiceover Script, Character/Location/Image Prompts, and Video Motion Prompts) have been sent to your Telegram chat!');
+                    showTelegramAlert('All 5 individual PDFs (Voiceover Script, Character Sheet Prompts, Recurring Location Prompts, Scene Image Prompts, and Video Motion Prompts) have been sent to your Telegram chat!');
                 } else {
                     showToast(d.error || 'Failed to send to Telegram', false);
                 }
@@ -6059,7 +6107,7 @@
                     { at: 25, text: `Adapting dialogue with ${remixState.culture} tone...` },
                     { at: 50, text: `Building Character Sheet & Recurring Location prompts...` },
                     { at: 75, text: "Generating 3 high-CTR YouTube thumbnail concepts..." },
-                    { at: 92, text: "Creating 3 Individual PDFs (Voiceover Script, Image Prompts, Video Prompts)..." }
+                    { at: 92, text: "Creating 5 Individual PDFs (Voiceover Script, Character Sheet, Recurring Locations, Image Prompts, Video Prompts)..." }
                 ]
             );
 
@@ -6085,7 +6133,7 @@
                     return;
                 }
 
-                await AIProgressTracker.complete("Remixcraft Package & 3 PDFs Ready!");
+                await AIProgressTracker.complete("Remixcraft Package & 5 PDFs Ready!");
                 try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
 
                 remixState.package = d.package;
@@ -6097,7 +6145,7 @@
 
                 renderRemixPackage(d.package);
                 goToRemixStep(3);
-                showToast('3 Individual PDFs sent to your Telegram chat!', true);
+                showToast('5 Individual PDFs sent to your Telegram chat!', true);
             } catch (err) {
                 console.error("Remix produce error:", err);
                 AIProgressTracker.fail(err.message || 'Error producing screenplay');
@@ -6277,8 +6325,10 @@
             if (!remixState.package) return;
             const labelMap = {
                 script: 'PDF 1 (Voiceover & Screenplay Script)',
-                bible: 'PDF 2 (Character, Location & Image Prompts)',
-                scene: 'PDF 3 (Video Motion Prompts)'
+                character: 'PDF 2 (Character Sheet Prompts)',
+                location: 'PDF 3 (Recurring Location Consistency Prompts)',
+                bible: 'PDF 4 (Scene-by-Scene Image Prompts)',
+                scene: 'PDF 5 (Scene Video Motion Prompts)'
             };
             showToast(`Sending ${labelMap[pdfType] || 'PDF'} to your Telegram chat...`, true);
             try {
@@ -6302,7 +6352,7 @@
 
         async function sendRemixToTelegram() {
             if (!remixState.package) return;
-            showToast('Sending all 3 individual PDFs to your Telegram chat...', true);
+            showToast('Sending all 5 individual PDFs to your Telegram chat...', true);
 
             try {
                 const res = await fetch('/api/remixcraft/send_to_telegram', {
@@ -6312,7 +6362,7 @@
                 });
                 const d = await res.json();
                 if (d.success) {
-                    showToast('All 3 individual PDFs delivered directly to your Telegram chat!', true);
+                    showToast('All 5 individual PDFs delivered directly to your Telegram chat!', true);
                     try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
                 } else {
                     showToast(d.error || 'Failed to send package to Telegram', false);

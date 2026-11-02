@@ -769,16 +769,16 @@
             line-height: 1.45;
         }
 
-        /* Real-Time Loading & Progress HUD Overlay - 100% WP Relay Design */
+        /* Real-Time Loading & Progress HUD Overlay - Luxury Studio Glass Design */
         .progress-hud-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(4, 4, 7, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             z-index: 99999;
             display: none;
             opacity: 0;
@@ -805,62 +805,59 @@
         .progress-hud-card {
             width: 100%;
             max-width: 326px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 20px 18px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+            background: linear-gradient(180deg, rgba(22, 22, 28, 0.97) 0%, rgba(14, 14, 18, 0.99) 100%);
+            border: 1px solid rgba(229, 169, 60, 0.3);
+            border-radius: 20px;
+            padding: 22px 20px 18px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(229, 169, 60, 0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             position: relative;
-            animation: hudPopIn 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+            animation: hudPopIn 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         @keyframes hudPopIn {
-            0% { transform: scale(0.96); opacity: 0; }
+            0% { transform: scale(0.94); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
 
         .hud-circle-wrap {
             position: relative;
-            width: 108px;
-            height: 108px;
-            margin: 8px auto 14px;
+            width: 112px;
+            height: 112px;
+            margin: 10px auto 14px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .hud-circle-svg {
-            width: 108px;
-            height: 108px;
+            width: 112px;
+            height: 112px;
             transform: rotate(-90deg);
+            filter: drop-shadow(0 0 10px rgba(229, 169, 60, 0.25));
         }
 
         .hud-circle-bg {
-            stroke: var(--border-color);
-            stroke-width: 4.5;
+            stroke: rgba(255, 255, 255, 0.08);
+            stroke-width: 5;
             fill: none;
         }
 
         .hud-circle-bar {
-            stroke: var(--accent);
-            stroke-width: 4.5;
+            stroke: url(#hudGrad);
+            stroke-width: 5;
             stroke-linecap: round;
             fill: none;
             stroke-dasharray: 264;
             stroke-dashoffset: 264;
-            transition: stroke-dashoffset 0.12s linear, stroke 0.3s ease;
+            transition: stroke-dashoffset 0.14s ease-out;
         }
 
         .hud-percent-text {
             position: absolute;
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--text-main);
-            font-family: -apple-system-monospaced, "SF Mono", Menlo, monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -872,12 +869,17 @@
             display: flex;
             align-items: baseline;
             justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            letter-spacing: -0.5px;
         }
 
         .hud-percent-symbol {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--accent);
+            color: #e5a93c;
             margin-left: 2px;
         }
 
@@ -885,30 +887,38 @@
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: var(--text-muted);
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.5);
             margin-top: 4px;
         }
 
         .hud-linear-track {
             width: 100%;
-            height: 4px;
-            background: var(--border-color);
-            border-radius: 2px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .hud-linear-bar {
             height: 100%;
             width: 0%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.12s linear, background-color 0.3s ease;
+            background: linear-gradient(90deg, #e5a93c 0%, #ffe399 50%, #e5a93c 100%);
+            background-size: 200% 100%;
+            animation: hudGoldShimmer 2s linear infinite;
+            border-radius: 999px;
+            transition: width 0.15s ease-out;
+        }
+
+        @keyframes hudGoldShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .hud-linear-bar.completed {
-            background: var(--success);
+            background: #30d158;
+            animation: none;
         }
 
         .hud-status-box {
@@ -920,27 +930,28 @@
             font-size: 12px;
             color: var(--text-main);
             line-height: 1.4;
-            min-height: 38px;
+            min-height: 42px;
             text-align: left;
-            background: rgba(125, 125, 125, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 9px 12px;
             box-sizing: border-box;
         }
 
         .hud-live-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: var(--accent);
+            background: #e5a93c;
+            box-shadow: 0 0 10px #e5a93c;
             flex-shrink: 0;
             animation: hudDotPulse 1.4s ease-in-out infinite;
         }
 
         @keyframes hudDotPulse {
             0% { transform: scale(0.9); opacity: 0.6; }
-            50% { transform: scale(1.25); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 1; }
             100% { transform: scale(0.9); opacity: 0.6; }
         }
 
@@ -1607,7 +1618,7 @@
         </div>
 
         <div class="list-item" onclick="openModal('tooncraft')">
-            <div class="icon-box" style="background: rgba(229, 169, 60, 0.15); color: #e5a93c;">
+            <div class="icon-box">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
             </div>
             <div class="item-text">
@@ -3409,27 +3420,34 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- REAL-TIME AI PROGRESS & TIME TRACKER HUD (100% WP RELAY DESIGN)       -->
+    <!-- REAL-TIME AI PROGRESS & TIME TRACKER HUD (LUXURY STUDIO GLASS DESIGN)    -->
     <!-- ===================================================================== -->
     <div id="ai-progress-hud" class="progress-hud-overlay" onclick="AIProgressTracker.stop()">
         <div class="progress-hud-card" onclick="event.stopPropagation()">
-            <button type="button" onclick="AIProgressTracker.stop()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:6px; line-height:1;" title="Close" aria-label="Close">
-                <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; stroke-width:2; fill:none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button type="button" onclick="AIProgressTracker.stop()" style="position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:50%; width:26px; height:26px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;" title="Close" aria-label="Close">
+                <svg viewBox="0 0 24 24" style="width:13px; height:13px; stroke:currentColor; stroke-width:2.2; fill:none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
+            
             <!-- Top Badges -->
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-right:20px;">
-                <div class="badge pro" id="hud-op-title" style="font-size:11px; letter-spacing:0.5px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-right:26px;">
+                <div class="badge pro" id="hud-op-title" style="font-size:11px; letter-spacing:0.5px; border-color:rgba(229,169,60,0.4);">
                     <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                    <span>GENERATING CONCEPTS</span>
+                    <span>AI STUDIO PIPELINE</span>
                 </div>
-                <div class="chip" id="hud-engine-chip" style="font-size:10px;">
-                    <span>LIVE PIPELINE</span>
+                <div class="chip" id="hud-engine-chip" style="font-size:10px; background:rgba(255,255,255,0.06);">
+                    <span>GEMINI 3.8</span>
                 </div>
             </div>
 
-            <!-- Clean Circular Progress Meter -->
+            <!-- Gradient Circular Progress Meter -->
             <div class="hud-circle-wrap">
                 <svg class="hud-circle-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="hudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffd97d"></stop>
+                            <stop offset="100%" stop-color="#e5a93c"></stop>
+                        </linearGradient>
+                    </defs>
                     <circle class="hud-circle-bg" cx="50" cy="50" r="42"></circle>
                     <circle id="hud-circle-meter" class="hud-circle-bar" cx="50" cy="50" r="42"></circle>
                 </svg>
@@ -3446,23 +3464,18 @@
                 <div id="hud-bar-fill" class="hud-linear-bar"></div>
             </div>
 
-            <!-- WP Relay Metrics Grid -->
-            <div class="stats-grid" style="margin: 0 0 12px; width:100%; gap:8px;">
-                <div class="stat-card" style="padding:8px 10px; cursor:default; text-align:center;">
-                    <div class="stat-label" style="font-size:10px;">Elapsed Time</div>
-                    <div class="stat-value" id="hud-timer-value" style="font-size:14px; margin-top:2px; font-family:-apple-system-monospaced, 'SF Mono', monospace;">00:00.0s</div>
-                </div>
-                <div class="stat-card" style="padding:8px 10px; cursor:default; text-align:center;">
-                    <div class="stat-label" style="font-size:10px;">Processing Rate</div>
-                    <div class="stat-value" id="hud-latency-value" style="font-size:14px; margin-top:2px; color:var(--success); font-family:-apple-system-monospaced, 'SF Mono', monospace;">0.0%/s</div>
-                </div>
-            </div>
-
-            <!-- Dynamic Status Box -->
+            <!-- Dynamic Status Message Box -->
             <div class="hud-status-box" id="hud-status-box">
                 <div class="hud-live-dot" id="hud-live-dot"></div>
-                <span id="hud-status-text" style="flex:1; text-align:left;">Connecting to screenplay engine...</span>
+                <span id="hud-status-text" style="flex:1; text-align:left; font-weight:500;">Connecting to AI screenplay engine...</span>
             </div>
+
+            <!-- Clean Studio Footer Row (Replaces Clunky Telemetry Cards) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:12px; font-size:11px; color:var(--text-muted); padding:0 2px;">
+                <span>Elapsed: <strong id="hud-timer-value" style="color:var(--text-main); font-family:-apple-system-monospaced, 'SF Mono', monospace;">00:00s</strong></span>
+                <span id="hud-latency-value" style="color:#e5a93c; font-weight:600;">Processing Live</span>
+            </div>
+            <div style="font-size:10px; color:rgba(255,255,255,0.38); margin-top:8px;">Please keep this screen open while AI assets are generated</div>
         </div>
     </div>
 
@@ -3567,31 +3580,27 @@
                 this.updateDisplay(0, this.stages[0].text, 1, this.stages.length);
 
                 const timerEl = document.getElementById('hud-timer-value');
-                if (timerEl) timerEl.innerText = "00:00.0s";
+                if (timerEl) timerEl.innerText = "00:00s";
 
-                // Real Stopwatch Timer (50ms interval)
+                // Clean Studio Stopwatch Timer
                 this.timerId = setInterval(() => {
                     const elapsedMs = Date.now() - this.startTime;
                     const sec = Math.floor(elapsedMs / 1000);
-                    const tenths = Math.floor((elapsedMs % 1000) / 100);
                     const mins = Math.floor(sec / 60);
                     const s = sec % 60;
-                    const timeStr = `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}s`;
+                    const timeStr = `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}s`;
                     const tEl = document.getElementById('hud-timer-value');
                     if (tEl) tEl.innerText = timeStr;
 
-                    // Real-time Computed Velocity Rate
                     const rateEl = document.getElementById('hud-latency-value');
                     if (rateEl) {
-                        const elapsedSec = elapsedMs / 1000;
-                        if (elapsedSec > 0.3) {
-                            const rate = (this.currentPercent / elapsedSec).toFixed(1);
-                            rateEl.innerText = `${rate}%/s`;
+                        if (this.currentPercent >= 95) {
+                            rateEl.innerText = "Finalizing Assets";
                         } else {
-                            rateEl.innerText = "CALIBRATING";
+                            rateEl.innerText = "Processing Live";
                         }
                     }
-                }, 50);
+                }, 100);
 
                 // Steady, Honest Linear-Stage Progression
                 // Progress tracks elapsed time smoothly without aggressive artificial 95% freeze!
@@ -6851,10 +6860,10 @@
             try {
                 const res = await fetch('/api/tooncraft/cost', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         length_tier: tooncraftState.lengthTier,
-                        model_name: userProfile?.selected_model
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
                 const d = await res.json();
@@ -6895,12 +6904,25 @@
             const toneEl = document.getElementById('toon-select-tone');
             if (toneEl) tooncraftState.tone = toneEl.value;
 
-            showToast('Producing 3D Kids Cartoon & 5 Production PDFs...', true);
+            // Start Modern Luxury Studio Progress Tracker
+            AIProgressTracker.start(
+                "ToonCraft Studio",
+                25,
+                [
+                    { at: 0, text: "Connecting to 3D Kids Animation Engine..." },
+                    { at: 18, text: "Designing 3D Pixar character cast & visual locks..." },
+                    { at: 42, text: "Crafting ≤15s scenes, nursery rhymes & dance cues..." },
+                    { at: 68, text: "Formulating Octane 3D & camera motion prompts..." },
+                    { at: 86, text: "Compiling 5 individual production PDFs..." },
+                    { at: 94, text: "Delivering PDFs directly to Telegram..." }
+                ],
+                "TOONCRAFT 3D"
+            );
 
             try {
                 const res = await fetch('/api/tooncraft/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         length_tier: tooncraftState.lengthTier,
                         topic_mode: tooncraftState.topicMode,
@@ -6912,13 +6934,13 @@
                         has_songs: tooncraftState.hasSongs,
                         has_dance: tooncraftState.hasDance,
                         has_interactive: tooncraftState.hasInteractive,
-                        model_name: userProfile?.selected_model
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
 
                 const data = await res.json();
                 if (!data.success) {
-                    showToast(data.error || 'Failed to generate cartoon package', false);
+                    AIProgressTracker.fail(data.error || 'Failed to generate cartoon package');
                     if (btn) {
                         btn.disabled = false;
                         btn.innerText = 'Generate Kids Cartoon';
@@ -6926,14 +6948,22 @@
                     return;
                 }
 
+                await AIProgressTracker.complete("ToonCraft Package & 5 PDFs Ready!");
+                try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+
                 tooncraftState.currentPackage = data.data;
+
+                if (currentUser && typeof data.user_balance !== 'undefined') {
+                    currentUser.credits = data.user_balance;
+                    renderDashboard();
+                }
+
                 renderTooncraftResults(data.data);
                 goToTooncraftStep(5);
                 showToast('ToonCraft Package & 5 PDFs Delivered to Telegram!', true);
-                fetchUserProfile();
             } catch (err) {
                 console.error('submitTooncraft error:', err);
-                showToast('Network error while generating cartoon package.', false);
+                AIProgressTracker.fail(err.message || 'Error generating cartoon package');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -7156,7 +7186,7 @@
             try {
                 const res = await fetch('/api/tooncraft/send_to_telegram', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         title: tooncraftState.currentPackage.title,
                         logline: tooncraftState.currentPackage.logline,
@@ -7189,7 +7219,7 @@
             try {
                 const res = await fetch('/api/tooncraft/send_to_telegram', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         title: tooncraftState.currentPackage.title,
                         logline: tooncraftState.currentPackage.logline,

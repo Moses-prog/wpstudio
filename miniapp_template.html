@@ -951,80 +951,155 @@
             filter: drop-shadow(0 0 6px rgba(48, 209, 88, 0.6));
         }
 
-        /* Milestone Checklist */
+        /* Milestone Checklist with Liquid Water Flow Animation (Left to Right) */
         .hud-stages-list {
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 8px;
             width: 100%;
             margin-bottom: 14px;
         }
 
         .hud-stage-item {
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 7px 10px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.2s ease;
+            border-radius: 11px;
+            background: rgba(8, 9, 13, 0.98); /* Distinctly darker resting background */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            min-height: 40px;
+        }
+
+        /* The Water / Liquid Track & Fill Layer (Underneath content) */
+        .hud-water-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: inherit;
+            z-index: 1;
+        }
+
+        .hud-water-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(229, 169, 60, 0.18) 0%, rgba(229, 169, 60, 0.38) 75%, rgba(255, 217, 125, 0.58) 100%);
+            border-radius: inherit;
+            transition: width 0.06s linear;
+        }
+
+        /* Fluid Wave Crest on the leading right edge of the water */
+        .hud-water-crest {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 16px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 60%, #ffd97d 100%);
+            filter: drop-shadow(0 0 8px rgba(229, 169, 60, 0.9));
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
         .hud-stage-item.active {
-            background: rgba(229, 169, 60, 0.08);
-            border-color: rgba(229, 169, 60, 0.25);
+            border-color: rgba(229, 169, 60, 0.45);
+            box-shadow: 0 0 16px rgba(229, 169, 60, 0.18), inset 0 0 12px rgba(229, 169, 60, 0.06);
+        }
+
+        .hud-stage-item.active .hud-water-crest {
+            opacity: 1;
+            animation: hudWaveRhythm 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes hudWaveRhythm {
+            0% { transform: scaleX(0.85); filter: drop-shadow(0 0 4px rgba(229, 169, 60, 0.7)); }
+            100% { transform: scaleX(1.3); filter: drop-shadow(0 0 10px rgba(255, 217, 125, 1)); }
         }
 
         .hud-stage-item.completed {
-            background: rgba(48, 209, 88, 0.06);
-            border-color: rgba(48, 209, 88, 0.18);
+            border-color: rgba(48, 209, 88, 0.35);
+            box-shadow: 0 0 14px rgba(48, 209, 88, 0.12);
+        }
+
+        .hud-stage-item.completed .hud-water-fill {
+            width: 100% !important;
+            background: rgba(48, 209, 88, 0.14) !important;
+            transition: background 0.3s ease;
+        }
+
+        .hud-stage-item.completed .hud-water-crest {
+            opacity: 0;
+        }
+
+        /* Card Content Layer (Sits on top of the liquid fill) */
+        .hud-stage-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 12px;
+            box-sizing: border-box;
         }
 
         .hud-stage-icon {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             font-size: 9px;
+            transition: all 0.25s ease;
         }
 
         .hud-stage-item.pending .hud-stage-icon {
-            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
             color: transparent;
         }
 
         .hud-stage-item.active .hud-stage-icon {
             border: 1.5px solid #e5a93c;
-            background: rgba(229, 169, 60, 0.2);
+            background: rgba(229, 169, 60, 0.25);
             color: #e5a93c;
-            box-shadow: 0 0 8px rgba(229, 169, 60, 0.4);
+            box-shadow: 0 0 8px rgba(229, 169, 60, 0.6);
         }
 
         .hud-stage-item.completed .hud-stage-icon {
             border: 1.5px solid #30d158;
             background: #30d158;
-            color: #000;
+            color: #000000;
+            box-shadow: 0 0 8px rgba(48, 209, 88, 0.5);
         }
 
         .hud-stage-label {
             font-size: 11.5px;
             font-weight: 500;
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.45);
             flex: 1;
             text-align: left;
+            transition: color 0.25s ease;
         }
 
         .hud-stage-item.active .hud-stage-label {
             color: #ffffff;
             font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
         }
 
         .hud-stage-item.completed .hud-stage-label {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.82);
         }
 
         .hud-stage-status-chip {
@@ -1032,6 +1107,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            transition: color 0.25s ease;
         }
 
         .hud-stage-item.pending .hud-stage-status-chip {
@@ -1040,10 +1116,12 @@
 
         .hud-stage-item.active .hud-stage-status-chip {
             color: #e5a93c;
+            text-shadow: 0 0 6px rgba(229, 169, 60, 0.6);
         }
 
         .hud-stage-item.completed .hud-stage-status-chip {
             color: #30d158;
+            text-shadow: 0 0 6px rgba(48, 209, 88, 0.5);
         }
 
         .hud-footer-row {
@@ -3702,7 +3780,7 @@
                 this.estimatedDurationSec = Math.max(8, estimatedDurationSec || 20);
                 this.startTime = Date.now();
                 this.currentStageIdx = 0;
-                this.renderStagesList(0);
+                this.renderStagesList();
 
                 const timerEl = document.getElementById('hud-timer-value');
                 if (timerEl) timerEl.innerText = "00:00s";
@@ -3713,7 +3791,7 @@
                     latencyEl.style.color = "#e5a93c";
                 }
 
-                // Honest live stopwatch timer (no fake 97% halting!)
+                // Fluid Water-Filling Animation Loop (every 30ms for silky-smooth left-to-right water flow)
                 this.timerId = setInterval(() => {
                     const elapsedMs = Date.now() - this.startTime;
                     const sec = Math.floor(elapsedMs / 1000);
@@ -3723,52 +3801,95 @@
                     const tEl = document.getElementById('hud-timer-value');
                     if (tEl) tEl.innerText = timeStr;
 
-                    // Progress through stages organically across the estimated duration
                     const totalStages = this.stages.length;
-                    const stageIntervalSec = Math.max(3.5, this.estimatedDurationSec / totalStages);
-                    const expectedStageIdx = Math.min(totalStages - 1, Math.floor(sec / stageIntervalSec));
-                    if (expectedStageIdx !== this.currentStageIdx) {
-                        this.currentStageIdx = expectedStageIdx;
-                        this.renderStagesList(this.currentStageIdx);
+                    const totalDurationMs = this.estimatedDurationSec * 1000;
+                    const stageDurationMs = totalDurationMs / totalStages;
+
+                    const rawProgress = elapsedMs / stageDurationMs;
+                    const activeIdx = Math.min(totalStages - 1, Math.floor(rawProgress));
+                    const stageFraction = Math.min(1.0, rawProgress - activeIdx);
+
+                    if (activeIdx !== this.currentStageIdx) {
+                        this.currentStageIdx = activeIdx;
+                        const activeStage = this.stages[activeIdx] || this.stages[0];
+                        const statusEl = document.getElementById('hud-status-text');
+                        if (statusEl && activeStage) {
+                            statusEl.innerText = activeStage.desc || "Generating high-fidelity studio assets...";
+                        }
                     }
-                }, 100);
+
+                    // Animate each card's water fill from left to right
+                    for (let i = 0; i < totalStages; i++) {
+                        const card = document.getElementById(`hud-stage-card-${i}`);
+                        const fill = document.getElementById(`hud-water-fill-${i}`);
+                        const chip = document.getElementById(`hud-stage-chip-${i}`);
+                        const icon = document.getElementById(`hud-stage-icon-${i}`);
+                        if (!card || !fill) continue;
+
+                        if (i < activeIdx) {
+                            // Completed cards: water fully covers card, settled into "Done"
+                            if (!card.classList.contains('completed')) {
+                                card.className = 'hud-stage-item completed';
+                                fill.style.width = '100%';
+                                if (chip) chip.innerText = 'Done';
+                                if (icon) icon.innerHTML = '<svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                            }
+                        } else if (i === activeIdx) {
+                            // Active card: Water moves from left to right across darker background
+                            if (!card.classList.contains('active')) {
+                                card.className = 'hud-stage-item active';
+                                if (chip) chip.innerText = 'Active';
+                                if (icon) icon.innerHTML = '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>';
+                            }
+                            // Smooth percentage fill from left to right
+                            const currentPct = Math.min(100, Math.max(0, Math.round(stageFraction * 100)));
+                            fill.style.width = `${currentPct}%`;
+
+                            if (currentPct >= 99 && activeIdx < totalStages - 1) {
+                                if (chip) chip.innerText = 'Done';
+                            }
+                        } else {
+                            // Upcoming cards: Queued in deep darker background resting state
+                            if (!card.classList.contains('pending')) {
+                                card.className = 'hud-stage-item pending';
+                                fill.style.width = '0%';
+                                if (chip) chip.innerText = 'Queued';
+                                if (icon) icon.innerHTML = '';
+                            }
+                        }
+                    }
+                }, 30);
             },
 
-            renderStagesList(activeIdx) {
+            renderStagesList() {
                 const listEl = document.getElementById('hud-stages-list');
                 const statusEl = document.getElementById('hud-status-text');
                 if (!listEl) return;
 
-                const activeStage = this.stages[activeIdx] || this.stages[0];
-                if (statusEl) {
-                    statusEl.innerText = activeStage.desc || "Generating high-fidelity studio assets...";
+                const firstStage = this.stages[0];
+                if (statusEl && firstStage) {
+                    statusEl.innerText = firstStage.desc || "Generating high-fidelity studio assets...";
                 }
 
                 let html = '';
                 this.stages.forEach((st, idx) => {
-                    let itemClass = 'pending';
-                    let chipText = 'Queued';
-                    let iconHtml = '';
-
-                    if (idx < activeIdx) {
-                        itemClass = 'completed';
-                        chipText = 'Done';
-                        iconHtml = '<svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-                    } else if (idx === activeIdx) {
-                        itemClass = 'active';
-                        chipText = 'Active';
-                        iconHtml = '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>';
-                    } else {
-                        itemClass = 'pending';
-                        chipText = 'Queued';
-                        iconHtml = '';
-                    }
+                    const isFirst = (idx === 0);
+                    const itemClass = isFirst ? 'active' : 'pending';
+                    const chipText = isFirst ? 'Active' : 'Queued';
+                    const iconHtml = isFirst ? '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>' : '';
 
                     html += `
-                        <div class="hud-stage-item ${itemClass}">
-                            <div class="hud-stage-icon">${iconHtml}</div>
-                            <span class="hud-stage-label">${escapeHtml(st.title)}</span>
-                            <span class="hud-stage-status-chip">${chipText}</span>
+                        <div class="hud-stage-item ${itemClass}" id="hud-stage-card-${idx}">
+                            <div class="hud-water-track">
+                                <div class="hud-water-fill" id="hud-water-fill-${idx}" style="width: 0%;">
+                                    <div class="hud-water-crest"></div>
+                                </div>
+                            </div>
+                            <div class="hud-stage-content">
+                                <div class="hud-stage-icon" id="hud-stage-icon-${idx}">${iconHtml}</div>
+                                <span class="hud-stage-label">${escapeHtml(st.title)}</span>
+                                <span class="hud-stage-status-chip" id="hud-stage-chip-${idx}">${chipText}</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -3780,22 +3901,17 @@
                 clearInterval(this.timerId);
                 const totalElapsedSec = ((Date.now() - this.startTime) / 1000).toFixed(1);
 
-                // Mark all stages completed
-                const listEl = document.getElementById('hud-stages-list');
-                if (listEl) {
-                    let html = '';
-                    this.stages.forEach((st) => {
-                        html += `
-                            <div class="hud-stage-item completed">
-                                <div class="hud-stage-icon">
-                                    <svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                </div>
-                                <span class="hud-stage-label">${escapeHtml(st.title)}</span>
-                                <span class="hud-stage-status-chip">Done</span>
-                            </div>
-                        `;
-                    });
-                    listEl.innerHTML = html;
+                // Water fills 100% of all cards and locks to "Done"
+                const totalStages = this.stages.length;
+                for (let i = 0; i < totalStages; i++) {
+                    const card = document.getElementById(`hud-stage-card-${i}`);
+                    const fill = document.getElementById(`hud-water-fill-${i}`);
+                    const chip = document.getElementById(`hud-stage-chip-${i}`);
+                    const icon = document.getElementById(`hud-stage-icon-${i}`);
+                    if (card) card.className = 'hud-stage-item completed';
+                    if (fill) fill.style.width = '100%';
+                    if (chip) chip.innerText = 'Done';
+                    if (icon) icon.innerHTML = '<svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
                 }
 
                 const headingEl = document.getElementById('hud-main-heading');
@@ -3817,7 +3933,7 @@
                     setTimeout(() => {
                         this.stop();
                         resolve();
-                    }, 450);
+                    }, 500);
                 });
             },
 

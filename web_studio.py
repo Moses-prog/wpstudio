@@ -2336,25 +2336,7 @@ def api_tooncraft_generate():
         story_title = toon_data.get("title", "Kids Cartoon Adventure")
         total_scenes = len(toon_data.get("scenes", []))
 
-        # Generate 5 Individual Production PDFs
-        script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = "", "", "", "", ""
-        try:
-            script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = pdf_generator.generate_all_production_pdfs(
-                story_data=toon_data,
-                culture="Universal Animated",
-                style="3D Pixar Animation",
-                genre=genre,
-                delivery_format="Dialogue / Narrative",
-                length_tier=length_tier,
-                timezone="Africa/Lagos"
-            )
-            if script_pdf: toon_data["script_pdf"] = script_pdf
-            if char_pdf: toon_data["char_pdf"] = char_pdf
-            if loc_pdf: toon_data["loc_pdf"] = loc_pdf
-        except Exception as pdf_err:
-            print(f"[TOONCRAFT PDF ERROR] {pdf_err}")
-
-        # Save job in database
+        # Save initial job in database so client gets instant response
         job_id = database.create_story_job(
             user_id=user_id,
             source_input=f"ToonCraft ({character_type}, Age {age_band})",
@@ -2369,11 +2351,25 @@ def api_tooncraft_generate():
             job_type="tooncraft",
             story_text=custom_topic
         )
-        database.update_job_completion(int(job_id), json.dumps(toon_data), bible_pdf, scene_pdf)
 
-        # Deliver all 5 individual PDFs directly to Telegram chat in background thread (instant client response)
-        def _deliver_tooncraft_telegram():
+        # Compile all 5 PDFs and deliver to Telegram in background thread (0 wait, prevents timeout!)
+        def _compile_and_deliver_tooncraft_async():
             try:
+                s_pdf, c_pdf, l_pdf, b_pdf, sc_pdf = pdf_generator.generate_all_production_pdfs(
+                    story_data=toon_data,
+                    culture="Universal Animated",
+                    style="3D Pixar Animation",
+                    genre=genre,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=length_tier,
+                    timezone="Africa/Lagos"
+                )
+                if s_pdf: toon_data["script_pdf"] = s_pdf
+                if c_pdf: toon_data["char_pdf"] = c_pdf
+                if l_pdf: toon_data["loc_pdf"] = l_pdf
+
+                database.update_job_completion(int(job_id), json.dumps(toon_data), b_pdf, sc_pdf)
+
                 header_text = (
                     f"<b>ToonCraft 3D Kids Cartoon Package Ready!</b>\n\n"
                     f"<b>Title:</b> {story_title}\n"
@@ -2386,40 +2382,40 @@ def api_tooncraft_generate():
                 )
                 send_telegram_message(user_id, header_text)
 
-                if script_pdf and os.path.exists(script_pdf):
+                if s_pdf and os.path.exists(s_pdf):
                     send_telegram_document(
                         user_id=user_id,
-                        file_path=script_pdf,
+                        file_path=s_pdf,
                         caption=f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{story_title}</i>\nReady for voice actors and narrator recording."
                     )
-                if char_pdf and os.path.exists(char_pdf):
+                if c_pdf and os.path.exists(c_pdf):
                     send_telegram_document(
                         user_id=user_id,
-                        file_path=char_pdf,
+                        file_path=c_pdf,
                         caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body 3D Pixar visual consistency locks for Midjourney & Flux."
                     )
-                if loc_pdf and os.path.exists(loc_pdf):
+                if l_pdf and os.path.exists(l_pdf):
                     send_telegram_document(
                         user_id=user_id,
-                        file_path=loc_pdf,
+                        file_path=l_pdf,
                         caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster unoccupied background reference prompts for recurring settings."
                     )
-                if bible_pdf and os.path.exists(bible_pdf):
+                if b_pdf and os.path.exists(b_pdf):
                     send_telegram_document(
                         user_id=user_id,
-                        file_path=bible_pdf,
+                        file_path=b_pdf,
                         caption=f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{story_title}</i>\nTight Octane 3D Pixar render prompts."
                     )
-                if scene_pdf and os.path.exists(scene_pdf):
+                if sc_pdf and os.path.exists(sc_pdf):
                     send_telegram_document(
                         user_id=user_id,
-                        file_path=scene_pdf,
+                        file_path=sc_pdf,
                         caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>\nSmooth camera & character animation prompts for Kling & Runway."
                     )
-            except Exception as tg_err:
-                print(f"[TOONCRAFT ASYNC TG ERROR] {tg_err}")
+            except Exception as async_err:
+                print(f"[TOONCRAFT ASYNC PDF & TG ERROR] {async_err}")
 
-        threading.Thread(target=_deliver_tooncraft_telegram, daemon=True).start()
+        threading.Thread(target=_compile_and_deliver_tooncraft_async, daemon=True).start()
 
         refreshed_user = database.get_user(user_id)
         return jsonify({

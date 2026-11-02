@@ -1606,6 +1606,21 @@
             </div>
         </div>
 
+        <div class="list-item" onclick="openModal('tooncraft')">
+            <div class="icon-box" style="background: rgba(229, 169, 60, 0.15); color: #e5a93c;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">ToonCraft (Kids 3D Cartoon Studio)</div>
+                <div class="item-subtitle">Original kids cartoon blueprint — 3D Pixar locks, ≤15s segments, 5 production PDFs</div>
+            </div>
+            <div class="item-right">
+                <span class="chip active">20–80 Credits</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
+
         <div class="list-item" onclick="openModal('history')">
             <div class="icon-box">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -2458,6 +2473,323 @@
             </div>
         </div>
     </div>
+
+
+    <!-- ===================================================================== -->
+    <!-- 1D. MODAL: TOONCRAFT (3D KIDS CARTOON & ANIMATION STUDIO)             -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-tooncraft">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                    ToonCraft (Kids 3D Cartoon Studio)
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Original kids cartoon blueprint — Story Bible, portraits, ≤15s segments, 5 production PDFs.</div>
+        </div>
+        <div class="modal-body">
+            <!-- Step Indicators -->
+            <div class="adapter-step-bar" style="margin-bottom:16px;">
+                <div id="toon-tab-1" class="step-tab active" onclick="goToTooncraftStep(1)">
+                    <span class="step-num">1</span> <span class="step-label">Length</span>
+                </div>
+                <div id="toon-tab-2" class="step-tab" onclick="goToTooncraftStep(2)">
+                    <span class="step-num">2</span> <span class="step-label">Cast world</span>
+                </div>
+                <div id="toon-tab-3" class="step-tab" onclick="goToTooncraftStep(3)">
+                    <span class="step-num">3</span> <span class="step-label">Story craft</span>
+                </div>
+                <div id="toon-tab-4" class="step-tab" onclick="goToTooncraftStep(4)">
+                    <span class="step-num">4</span> <span class="step-label">Audio & extras</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: LENGTH & TOPIC -->
+            <div id="toon-step-1" class="toon-step-pane">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">What story should we make?</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Pick a length, set the vibe, and we invent the cast from the storyline — up to 5 main characters.</div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">LENGTH</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div class="pill-btn active" data-len="5 min" onclick="setTooncraftLength('5 min', this)" style="padding:12px 6px;">
+                            <div style="font-size:13px; font-weight:700;">5 min</div>
+                            <div style="font-size:10px; color:#e5a93c; margin-top:2px;">20 cr</div>
+                        </div>
+                        <div class="pill-btn" data-len="10 min" onclick="setTooncraftLength('10 min', this)" style="padding:12px 6px;">
+                            <div style="font-size:13px; font-weight:700;">10 min</div>
+                            <div style="font-size:10px; color:#e5a93c; margin-top:2px;">40 cr</div>
+                        </div>
+                        <div class="pill-btn" data-len="15 min" onclick="setTooncraftLength('15 min', this)" style="padding:12px 6px;">
+                            <div style="font-size:13px; font-weight:700;">15 min</div>
+                            <div style="font-size:10px; color:#e5a93c; margin-top:2px;">60 cr</div>
+                        </div>
+                        <div class="pill-btn" data-len="20 min" onclick="setTooncraftLength('20 min', this)" style="padding:12px 6px;">
+                            <div style="font-size:13px; font-weight:700;">20 min</div>
+                            <div style="font-size:10px; color:#e5a93c; margin-top:2px;">80 cr</div>
+                        </div>
+                    </div>
+                    <div id="toon-length-desc" class="form-hint" style="font-size:11px;">5 min: 16–22 scenes. Absolute ≤15s per segment. 3D animated Pixar default.</div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">TOPIC MODE</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:12px;">
+                        <div class="pill-btn active" data-topic="ai_invents" onclick="setTooncraftTopicMode('ai_invents', this)">AI invents topic</div>
+                        <div class="pill-btn" data-topic="custom" onclick="setTooncraftTopicMode('custom', this)">I provide topic</div>
+                    </div>
+
+                    <div id="toon-topic-ai-hint" class="form-hint" style="font-size:11px;">
+                        AI will invent an original kids topic that fits your genre, lesson, and setting.
+                    </div>
+
+                    <div id="toon-topic-custom-container" style="display:none; margin-top:10px;">
+                        <div class="form-label" style="font-size:11px;">Your Topic or Premise</div>
+                        <textarea id="toon-input-custom-topic" class="form-input" style="height:90px;" placeholder="e.g. A shy little mango named Pip who is nervous about starting Fruitland Preschool with his animal friends..."></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-submit" onclick="goToTooncraftStep(2)" style="margin-top:10px;">Next &rarr;</button>
+            </div>
+
+            <!-- STEP 2: CAST WORLD -->
+            <div id="toon-step-2" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Cast world & Age band</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Pick character types and developmental age group. Up to 5 characters will be locked with 3D Pixar visual specifications.</div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">CHARACTER TYPE</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:10px;">
+                        <div class="pill-btn active" data-ctype="Kids" onclick="setTooncraftCharType('Kids', this)">Kids</div>
+                        <div class="pill-btn" data-ctype="Animals" onclick="setTooncraftCharType('Animals', this)">Animals</div>
+                        <div class="pill-btn" data-ctype="Fruits" onclick="setTooncraftCharType('Fruits', this)">Fruits</div>
+                        <div class="pill-btn" data-ctype="Vehicles" onclick="setTooncraftCharType('Vehicles', this)">Vehicles</div>
+                        <div class="pill-btn" data-ctype="Objects" onclick="setTooncraftCharType('Objects', this)">Objects</div>
+                        <div class="pill-btn" data-ctype="Mixed" onclick="setTooncraftCharType('Mixed', this)">Mixed</div>
+                    </div>
+                    <div id="toon-ctype-desc" class="form-hint" style="font-size:11px;">Stylized 3D human kids with cute cartoon hairstyles and big expressive eyes in Pixar CGI style.</div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">AGE BAND</div>
+                    <select id="toon-select-age" class="form-input" onchange="setTooncraftAgeBand(this.value)">
+                        <option value="2–4">2–4 Years (Toddler / Preschool — Repetition & Rhymes)</option>
+                        <option value="4–7" selected>4–7 Years (Early Elementary — Curiosity & Teamwork)</option>
+                        <option value="8–11">8–11 Years (Middle Kids — Inventions & Quests)</option>
+                    </select>
+                    <div class="form-hint" style="font-size:11px; margin-top:8px;">Main cast size is chosen automatically from the storyline (max 5).</div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-cancel" onclick="goToTooncraftStep(1)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToTooncraftStep(3)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: STORY CRAFT -->
+            <div id="toon-step-3" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Story craft & Tone</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Select the narrative foundation and emotional vibe of the cartoon episode.</div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">GENRE</div>
+                    <select id="toon-select-genre" class="form-input">
+                        <option value="Adventure & Quest" selected>Adventure & Quest</option>
+                        <option value="Moral & Life Lesson">Moral & Life Lesson (Sharing, Kindness, Bedtime)</option>
+                        <option value="Fairy Tale & Fantasy">Fairy Tale & Fantasy</option>
+                        <option value="Bedtime Calm & Sleep Story">Bedtime Calm & Sleep Story</option>
+                        <option value="Fun Comedy & Silly Laughs">Fun Comedy & Silly Laughs</option>
+                        <option value="Discovery & Nature">Discovery & Nature</option>
+                    </select>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">TONE</div>
+                    <select id="toon-select-tone" class="form-input">
+                        <option value="Playful & Cheerful" selected>Playful & Cheerful (Recommended)</option>
+                        <option value="Gentle & Soothing">Gentle & Soothing</option>
+                        <option value="Energetic & Bouncy">Energetic & Bouncy</option>
+                        <option value="Heartwarming & Sweet">Heartwarming & Sweet</option>
+                        <option value="Curious & Wonder">Curious & Wonder</option>
+                    </select>
+                    <div class="form-hint" style="font-size:11px; margin-top:8px;">AI will choose the moral lesson and setting to match the invented topic.</div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-cancel" onclick="goToTooncraftStep(2)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToTooncraftStep(4)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: AUDIO & EXTRAS -->
+            <div id="toon-step-4" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Audio, Songs & Extras</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Configure songs, dance routines, and 4th-wall audience engagement.</div>
+
+                <div class="form-card" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:13px; font-weight:600;">Catchy Rhyming Songs</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Injects 4-line rhyming song lyrics with melody notes.</div>
+                        </div>
+                        <div class="pills-grid" style="grid-template-columns: 1fr 1fr; width:120px;">
+                            <div class="pill-btn active" data-opt="yes" onclick="setTooncraftSongs(true, this)" style="padding:6px 0;">Yes</div>
+                            <div class="pill-btn" data-opt="no" onclick="setTooncraftSongs(false, this)" style="padding:6px 0;">No</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:13px; font-weight:600;">Joyful Dance Breaks</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Character dance choreography and bounce cues.</div>
+                        </div>
+                        <div class="pills-grid" style="grid-template-columns: 1fr 1fr; width:120px;">
+                            <div class="pill-btn active" data-opt="yes" onclick="setTooncraftDance(true, this)" style="padding:6px 0;">Yes</div>
+                            <div class="pill-btn" data-opt="no" onclick="setTooncraftDance(false, this)" style="padding:6px 0;">No</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:13px; font-weight:600;">4th-Wall Interactive Questions</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Direct viewer participation pauses and praise.</div>
+                        </div>
+                        <div class="pills-grid" style="grid-template-columns: 1fr 1fr; width:120px;">
+                            <div class="pill-btn active" data-opt="yes" onclick="setTooncraftInteractive(true, this)" style="padding:6px 0;">Yes</div>
+                            <div class="pill-btn" data-opt="no" onclick="setTooncraftInteractive(false, this)" style="padding:6px 0;">No</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Cost Summary -->
+                <div class="form-card" style="background:rgba(229,169,60,0.06); border-color:rgba(229,169,60,0.3); margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:12px; font-weight:600;">Package Cost:</span>
+                        <span id="toon-cost-label" style="font-size:14px; font-weight:700; color:#e5a93c;">20 Credits</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted);">
+                        <span>Your Current Balance:</span>
+                        <span id="toon-balance-label" style="font-weight:600; color:var(--text-main);">0 credits</span>
+                    </div>
+                    <div class="form-hint" style="font-size:10px; margin-top:8px;">
+                        Generates complete screenplay + 5 individual production PDFs delivered directly to your Telegram chat.
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-cancel" onclick="goToTooncraftStep(3)" style="flex:1;">&larr; Back</button>
+                    <button id="btn-tooncraft-generate" class="btn-submit" onclick="submitTooncraft()" style="flex:2; margin-top:0;">Generate Kids Cartoon</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: RESULTS & 5 PRODUCTION PDFS VIEW -->
+            <div id="toon-step-5" class="toon-step-pane" style="display:none;">
+                <div class="form-card" style="margin-bottom:14px; border-color:rgba(229,169,60,0.4); background:rgba(229,169,60,0.05);">
+                    <div style="font-size:11px; font-weight:700; color:#e5a93c; text-transform:uppercase;">ToonCraft Production Package</div>
+                    <div id="toon-res-title" style="font-size:18px; font-weight:700; margin:4px 0;">Story Title</div>
+                    <div id="toon-res-logline" style="font-size:12px; color:var(--text-muted); font-style:italic; margin-bottom:8px;">Logline</div>
+                    <div id="toon-res-meta" style="font-size:11px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                </div>
+
+                <!-- Primary Action Buttons -->
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+                    <button class="btn-submit" onclick="sendTooncraftAllToTelegram()" style="margin-top:0;">
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send All 5 PDFs to Telegram
+                    </button>
+                    <div style="display:flex; gap:8px;">
+                        <button class="pill-btn" onclick="copyAllTooncraftPrompts()" style="flex:1;">Copy All Prompts</button>
+                        <button class="pill-btn" onclick="goToTooncraftStep(1)" style="flex:1;">Produce Another</button>
+                    </div>
+                </div>
+
+                <!-- 5 Individual Production PDF Delivery Grid -->
+                <div class="section-label" style="margin-bottom:8px;">5 Individual Production PDFs</div>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+                    <div class="form-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:0;">
+                        <div>
+                            <div style="font-size:12px; font-weight:700;">PDF 1: Full Voiceover & Song Script</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Ready for voice actors and narrator recording</div>
+                        </div>
+                        <button class="pill-btn active" onclick="sendTooncraftPdf('script')" style="padding:6px 10px; font-size:11px;">Send PDF</button>
+                    </div>
+
+                    <div class="form-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:0;">
+                        <div>
+                            <div style="font-size:12px; font-weight:700;">PDF 2: Character Sheet Prompts</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Full-body 3D Pixar character consistency locks</div>
+                        </div>
+                        <button class="pill-btn active" onclick="sendTooncraftPdf('character')" style="padding:6px 10px; font-size:11px;">Send PDF</button>
+                    </div>
+
+                    <div class="form-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:0;">
+                        <div>
+                            <div style="font-size:12px; font-weight:700;">PDF 3: Recurring Location Prompts</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Unoccupied background reference prompts</div>
+                        </div>
+                        <button class="pill-btn active" onclick="sendTooncraftPdf('location')" style="padding:6px 10px; font-size:11px;">Send PDF</button>
+                    </div>
+
+                    <div class="form-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:0;">
+                        <div>
+                            <div style="font-size:12px; font-weight:700;">PDF 4: Scene-by-Scene Image Prompts</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Octane 3D Pixar render prompts for Midjourney / Flux</div>
+                        </div>
+                        <button class="pill-btn active" onclick="sendTooncraftPdf('bible')" style="padding:6px 10px; font-size:11px;">Send PDF</button>
+                    </div>
+
+                    <div class="form-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin-bottom:0;">
+                        <div>
+                            <div style="font-size:12px; font-weight:700;">PDF 5: Scene Video Motion Prompts</div>
+                            <div style="font-size:10px; color:var(--text-muted);">Smooth camera & character animation for Kling / Runway</div>
+                        </div>
+                        <button class="pill-btn active" onclick="sendTooncraftPdf('scene')" style="padding:6px 10px; font-size:11px;">Send PDF</button>
+                    </div>
+                </div>
+
+                <!-- YouTube Description Card -->
+                <div id="toon-yt-card" class="form-card" style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span class="form-label" style="margin-bottom:0;">Ready-to-Copy YouTube Description</span>
+                        <button class="pill-btn" onclick="copyTooncraftText('toon-res-yt')" style="padding:4px 8px; font-size:10px;">Copy</button>
+                    </div>
+                    <pre id="toon-res-yt" style="white-space:pre-wrap; font-size:11px; color:var(--text-main); font-family:inherit; max-height:120px; overflow-y:auto; margin:0;"></pre>
+                </div>
+
+                <!-- Characters Visual Lock Section -->
+                <div style="margin-bottom:16px;">
+                    <div class="section-label" style="margin-bottom:8px;">Character Sheet Visual Locks</div>
+                    <div id="toon-characters-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Recurring Locations Consistency Section -->
+                <div style="margin-bottom:16px;">
+                    <div class="section-label" style="margin-bottom:8px;">Recurring Location Consistency</div>
+                    <div id="toon-locations-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+
+                <!-- Scene-by-Scene Storyboard & Prompts -->
+                <div>
+                    <div class="section-label" style="margin-bottom:8px;">Scene-by-Scene Storyboard & Prompts</div>
+                    <div id="toon-scenes-container" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- ===================================================================== -->
     <!-- 2. MODAL: PRODUCTION SCREENPLAY VAULT (HISTORY)                       -->
@@ -3653,6 +3985,7 @@
                 if (id === 'thumbnail') setTimeout(redrawThumbnailCanvas, 60);
                 if (id === 'story-adapter') { goToAdapterStep(1); onAdapterStoryInput(); }
                 if (id === 'remixcraft') { goToRemixStep(1); populateRemixCastDropdown(); }
+                if (id === 'tooncraft') { goToTooncraftStep(1); updateTooncraftCost(); }
             }
         }
 
@@ -6384,6 +6717,503 @@
             if (sc) sc.value = '';
             if (ti) ti.value = '';
             goToRemixStep(1);
+        }
+
+
+        // =====================================================================
+        // TOONCRAFT: 3D KIDS CARTOON STUDIO CONTROLLER
+        // =====================================================================
+        const tooncraftState = {
+            lengthTier: '5 min',
+            topicMode: 'ai_invents',
+            customTopic: '',
+            characterType: 'Kids',
+            ageBand: '4–7',
+            genre: 'Adventure & Quest',
+            tone: 'Playful & Cheerful',
+            hasSongs: true,
+            hasDance: true,
+            hasInteractive: true,
+            currentPackage: null
+        };
+
+        function goToTooncraftStep(step) {
+            try { if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e){}
+            for (let i = 1; i <= 4; i++) {
+                const pane = document.getElementById(`toon-step-${i}`);
+                const tab = document.getElementById(`toon-tab-${i}`);
+                if (pane) pane.style.display = (i === step) ? 'block' : 'none';
+                if (tab) {
+                    if (i === step) {
+                        tab.classList.add('active');
+                        tab.classList.remove('completed');
+                    } else if (i < step) {
+                        tab.classList.remove('active');
+                        tab.classList.add('completed');
+                    } else {
+                        tab.classList.remove('active', 'completed');
+                    }
+                }
+            }
+            const step5 = document.getElementById('toon-step-5');
+            if (step5) step5.style.display = (step === 5) ? 'block' : 'none';
+
+            if (step === 4) {
+                updateTooncraftCost();
+            }
+
+            const mBody = document.querySelector('#modal-tooncraft .modal-body');
+            if (mBody) mBody.scrollTop = 0;
+        }
+
+        function setTooncraftLength(tier, el) {
+            tooncraftState.lengthTier = tier;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            const desc = document.getElementById('toon-length-desc');
+            if (desc) {
+                if (tier.includes('10')) {
+                    desc.innerText = '10 min: 32–42 scenes. Absolute ≤15s per segment. 3D animated Pixar default.';
+                } else if (tier.includes('15')) {
+                    desc.innerText = '15 min: 48–60 scenes. Absolute ≤15s per segment. 3D animated Pixar default.';
+                } else if (tier.includes('20')) {
+                    desc.innerText = '20 min: 64–80 scenes. Absolute ≤15s per segment. 3D animated Pixar default.';
+                } else {
+                    desc.innerText = '5 min: 16–22 scenes. Absolute ≤15s per segment. 3D animated Pixar default.';
+                }
+            }
+            updateTooncraftCost();
+        }
+
+        function setTooncraftTopicMode(mode, el) {
+            tooncraftState.topicMode = mode;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            const customBox = document.getElementById('toon-topic-custom-container');
+            const aiHint = document.getElementById('toon-topic-ai-hint');
+            if (customBox) customBox.style.display = (mode === 'custom') ? 'block' : 'none';
+            if (aiHint) aiHint.style.display = (mode === 'ai_invents') ? 'block' : 'none';
+        }
+
+        function setTooncraftCharType(type, el) {
+            tooncraftState.characterType = type;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            const desc = document.getElementById('toon-ctype-desc');
+            if (desc) {
+                const map = {
+                    'Kids': 'Stylized 3D human kids with cute cartoon hairstyles and big expressive eyes in Pixar CGI style.',
+                    'Animals': 'Cute anthropomorphic talking animals with fluffy stylized fur texture and kid outfits.',
+                    'Fruits': 'Smiling anthropomorphic talking fruits & veggies with cartoon gloves and sneakers (Pixar / Cocomelon).',
+                    'Vehicles': 'Friendly talking cars, trucks, and planes with big windshield eyes and bumper smiles (Cars style).',
+                    'Objects': 'Playful anthropomorphic everyday toys, school items, and instruments with animated faces.',
+                    'Mixed': 'A kid protagonist paired with an adorable talking animal, fruit, or vehicle companion.'
+                };
+                desc.innerText = map[type] || '3D Pixar animation style characters with expressive faces.';
+            }
+        }
+
+        function setTooncraftAgeBand(age) {
+            tooncraftState.ageBand = age;
+        }
+
+        function setTooncraftSongs(val, el) {
+            tooncraftState.hasSongs = val;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function setTooncraftDance(val, el) {
+            tooncraftState.hasDance = val;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function setTooncraftInteractive(val, el) {
+            tooncraftState.hasInteractive = val;
+            if (el && el.parentElement) {
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        async function updateTooncraftCost() {
+            try {
+                const res = await fetch('/api/tooncraft/cost', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        length_tier: tooncraftState.lengthTier,
+                        model_name: userProfile?.selected_model
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    const costEl = document.getElementById('toon-cost-label');
+                    const balEl = document.getElementById('toon-balance-label');
+                    if (costEl) costEl.innerText = `${d.cost} Credits`;
+                    if (balEl) balEl.innerText = `${d.user_balance} credits`;
+                }
+            } catch (e) {
+                console.error('updateTooncraftCost error:', e);
+            }
+        }
+
+        async function submitTooncraft() {
+            const btn = document.getElementById('btn-tooncraft-generate');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Creating 3D Cartoon Package...';
+            }
+
+            if (tooncraftState.topicMode === 'custom') {
+                const customTxt = document.getElementById('toon-input-custom-topic')?.value.trim() || '';
+                if (!customTxt) {
+                    showToast('Please enter your story topic or switch to AI invents topic.', false);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Generate Kids Cartoon';
+                    }
+                    return;
+                }
+                tooncraftState.customTopic = customTxt;
+            }
+
+            const genreEl = document.getElementById('toon-select-genre');
+            if (genreEl) tooncraftState.genre = genreEl.value;
+
+            const toneEl = document.getElementById('toon-select-tone');
+            if (toneEl) tooncraftState.tone = toneEl.value;
+
+            showToast('Producing 3D Kids Cartoon & 5 Production PDFs...', true);
+
+            try {
+                const res = await fetch('/api/tooncraft/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        length_tier: tooncraftState.lengthTier,
+                        topic_mode: tooncraftState.topicMode,
+                        custom_topic: tooncraftState.customTopic,
+                        character_type: tooncraftState.characterType,
+                        age_band: tooncraftState.ageBand,
+                        genre: tooncraftState.genre,
+                        tone: tooncraftState.tone,
+                        has_songs: tooncraftState.hasSongs,
+                        has_dance: tooncraftState.hasDance,
+                        has_interactive: tooncraftState.hasInteractive,
+                        model_name: userProfile?.selected_model
+                    })
+                });
+
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.error || 'Failed to generate cartoon package', false);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Generate Kids Cartoon';
+                    }
+                    return;
+                }
+
+                tooncraftState.currentPackage = data.data;
+                renderTooncraftResults(data.data);
+                goToTooncraftStep(5);
+                showToast('ToonCraft Package & 5 PDFs Delivered to Telegram!', true);
+                fetchUserProfile();
+            } catch (err) {
+                console.error('submitTooncraft error:', err);
+                showToast('Network error while generating cartoon package.', false);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Generate Kids Cartoon';
+                }
+            }
+        }
+
+        function renderTooncraftResults(pkg) {
+            if (!pkg) return;
+            const titleEl = document.getElementById('toon-res-title');
+            const loglineEl = document.getElementById('toon-res-logline');
+            const metaEl = document.getElementById('toon-res-meta');
+            const ytEl = document.getElementById('toon-res-yt');
+            const charsContainer = document.getElementById('toon-characters-container');
+            const locsContainer = document.getElementById('toon-locations-container');
+            const scenesContainer = document.getElementById('toon-scenes-container');
+
+            if (titleEl) titleEl.innerText = pkg.title || 'Kids Cartoon Adventure';
+            if (loglineEl) loglineEl.innerText = pkg.logline || '';
+
+            if (metaEl) {
+                const scenesCount = (pkg.scenes || []).length;
+                metaEl.innerHTML = `
+                    <span class="chip active">${scenesCount} Scenes (≤15s)</span>
+                    <span class="chip">${pkg.target_duration || tooncraftState.lengthTier}</span>
+                    <span class="chip">Cast: ${pkg.character_type || tooncraftState.characterType}</span>
+                    <span class="chip">Ages: ${pkg.age_band || tooncraftState.ageBand}</span>
+                    <span class="chip">${pkg.genre || tooncraftState.genre}</span>
+                `;
+            }
+
+            if (ytEl) {
+                ytEl.innerText = pkg.youtube_description || `${pkg.title}\n\n${pkg.logline}\n\n#KidsAnimation #3DCartoon #ToonCraft`;
+            }
+
+            // Characters Visual Locks
+            if (charsContainer) {
+                charsContainer.innerHTML = '';
+                const chars = pkg.characters || [];
+                if (chars.length === 0) {
+                    charsContainer.innerHTML = '<div class="form-hint">No individual character visual locks defined.</div>';
+                } else {
+                    chars.forEach((c, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'form-card';
+                        card.style.padding = '10px 12px';
+                        card.style.marginBottom = '0';
+                        const vLock = c.visual_lock || c.locked_visual_description || '';
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:12px; font-weight:700;">${c.name} (${c.role || 'Character'})</span>
+                                <button class="copy-pill-btn" onclick="copyTooncraftTextDirect(this, \`${vLock.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">Wardrobe: ${c.wardrobe_lock || 'Consistent animated outfit'}</div>
+                            <div class="scene-prompt-box" style="font-size:11px;">${vLock}</div>
+                        `;
+                        charsContainer.appendChild(card);
+                    });
+                }
+            }
+
+            // Recurring Locations Consistency
+            if (locsContainer) {
+                locsContainer.innerHTML = '';
+                const locs = pkg.locations || [];
+                if (locs.length === 0) {
+                    locsContainer.innerHTML = '<div class="form-hint">No recurring location reference prompts defined.</div>';
+                } else {
+                    locs.forEach((l, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'form-card';
+                        card.style.padding = '10px 12px';
+                        card.style.marginBottom = '0';
+                        const mPrompt = l.master_location_prompt || l.unoccupied_reference || '';
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:12px; font-weight:700;">${l.name}</span>
+                                <button class="copy-pill-btn" onclick="copyTooncraftTextDirect(this, \`${mPrompt.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">Appears in: ${l.scenes_used || 'Multiple Scenes'}</div>
+                            <div class="scene-prompt-box" style="font-size:11px;">${mPrompt}</div>
+                        `;
+                        locsContainer.appendChild(card);
+                    });
+                }
+            }
+
+            // Scene-by-Scene Storyboard & Prompts
+            if (scenesContainer) {
+                scenesContainer.innerHTML = '';
+                const scenes = pkg.scenes || [];
+                scenes.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'scene-card';
+                    card.style.background = 'var(--card-bg)';
+                    card.style.border = '1px solid var(--border-color)';
+                    card.style.borderRadius = '12px';
+                    card.style.padding = '14px';
+
+                    const sNum = s.scene_number || 1;
+                    const sTitle = s.scene_title || `Scene ${sNum}`;
+                    const sDur = s.duration || '12s';
+                    const sSetting = s.setting || 'Main Location';
+                    const sDialogue = s.dialogue_or_narration || s.narration || '';
+                    const sSong = s.song_lyrics ? `<div style="font-size:11px; color:#e5a93c; margin-top:4px; font-style:italic;">🎵 Song: ${s.song_lyrics}</div>` : '';
+                    const sInter = s.interactive_cue ? `<div style="font-size:11px; color:#30d158; margin-top:4px;">🗣️ 4th-Wall: ${s.interactive_cue}</div>` : '';
+                    const imgPrompt = s.image_prompt || '';
+                    const vidPrompt = s.video_prompt || '';
+
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:13px; font-weight:700;">SCENE ${sNum}: ${sTitle}</span>
+                            <span class="chip active" style="font-size:10px;">${sDur} (≤15s)</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">📍 ${sSetting}</div>
+                        <div style="font-size:12px; line-height:1.4; margin-bottom:8px;">${sDialogue}</div>
+                        ${sSong}
+                        ${sInter}
+
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Midjourney / Flux 3D Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyTooncraftTextDirect(this, \`${imgPrompt.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${imgPrompt}</div>
+                        </div>
+
+                        ${vidPrompt ? `
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Video Motion Prompt:</span>
+                                <button class="copy-pill-btn" onclick="copyTooncraftTextDirect(this, \`${vidPrompt.replace(/`/g, "\\`")}\`)">Copy Prompt</button>
+                            </div>
+                            <div class="scene-prompt-box">${vidPrompt}</div>
+                        </div>
+                        ` : ''}
+                    `;
+                    scenesContainer.appendChild(card);
+                });
+            }
+        }
+
+        function copyTooncraftText(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = el.innerText || el.value || '';
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard!', true);
+            }).catch(() => {
+                showToast('Copied to clipboard!', true);
+            });
+        }
+
+        function copyTooncraftTextDirect(btn, text) {
+            try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e){}
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.style.background = '#30d158';
+                btn.style.color = '#000';
+                setTimeout(() => {
+                    btn.innerText = orig;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 1800);
+            }).catch(() => {
+                showToast('Copied to clipboard!');
+            });
+        }
+
+        function copyAllTooncraftPrompts() {
+            if (!tooncraftState.currentPackage) return;
+            const pkg = tooncraftState.currentPackage;
+            const scenes = pkg.scenes || [];
+            let full = `${pkg.title}\n${pkg.logline}\n\n`;
+
+            if (pkg.characters && pkg.characters.length > 0) {
+                full += `=== CHARACTER SHEETS ===\n`;
+                pkg.characters.forEach(c => {
+                    full += `${c.name}: ${c.visual_lock || ''}\n`;
+                });
+                full += `\n`;
+            }
+
+            if (pkg.locations && pkg.locations.length > 0) {
+                full += `=== RECURRING LOCATIONS ===\n`;
+                pkg.locations.forEach(l => {
+                    full += `${l.name} (${l.scenes_used}): ${l.master_location_prompt || ''}\n`;
+                });
+                full += `\n`;
+            }
+
+            full += `=== SCENE PROMPTS ===\n`;
+            scenes.forEach(s => {
+                full += `--- SCENE ${s.scene_number}: ${s.scene_title} (${s.duration || '12s'}) ---\n`;
+                if (s.dialogue_or_narration) full += `SCRIPT: "${s.dialogue_or_narration}"\n`;
+                if (s.image_prompt) full += `IMAGE: ${s.image_prompt}\n`;
+                if (s.video_prompt) full += `MOTION: ${s.video_prompt}\n`;
+                full += `\n`;
+            });
+
+            navigator.clipboard.writeText(full).then(() => {
+                showToast('All ToonCraft prompts copied to clipboard!', true);
+            }).catch(() => {
+                showToast('Copied to clipboard!', true);
+            });
+        }
+
+        async function sendTooncraftPdf(pdfType) {
+            if (!tooncraftState.currentPackage) return;
+            const labelMap = {
+                script: 'PDF 1 (Full Voiceover & Song Script)',
+                character: 'PDF 2 (Character Sheet Prompts)',
+                location: 'PDF 3 (Recurring Location Prompts)',
+                bible: 'PDF 4 (Scene-by-Scene Image Prompts)',
+                scene: 'PDF 5 (Scene Video Motion Prompts)'
+            };
+            showToast(`Sending ${labelMap[pdfType] || 'PDF'} to your Telegram chat...`, true);
+            try {
+                const res = await fetch('/api/tooncraft/send_to_telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: tooncraftState.currentPackage.title,
+                        logline: tooncraftState.currentPackage.logline,
+                        characters: tooncraftState.currentPackage.characters,
+                        locations: tooncraftState.currentPackage.locations,
+                        scenes: tooncraftState.currentPackage.scenes,
+                        youtube_description: tooncraftState.currentPackage.youtube_description,
+                        genre: tooncraftState.genre,
+                        tone: tooncraftState.tone,
+                        target_duration: tooncraftState.lengthTier,
+                        pdf_type: pdfType
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(`${labelMap[pdfType] || 'PDF'} delivered directly to your Telegram chat!`, true);
+                    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                } else {
+                    showToast(d.error || 'Failed to send PDF to Telegram', false);
+                }
+            } catch (err) {
+                console.error("sendTooncraftPdf error:", err);
+                showToast('Network error delivering PDF to Telegram', false);
+            }
+        }
+
+        async function sendTooncraftAllToTelegram() {
+            if (!tooncraftState.currentPackage) return;
+            showToast('Sending all 5 individual PDFs to your Telegram chat...', true);
+            try {
+                const res = await fetch('/api/tooncraft/send_to_telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: tooncraftState.currentPackage.title,
+                        logline: tooncraftState.currentPackage.logline,
+                        characters: tooncraftState.currentPackage.characters,
+                        locations: tooncraftState.currentPackage.locations,
+                        scenes: tooncraftState.currentPackage.scenes,
+                        youtube_description: tooncraftState.currentPackage.youtube_description,
+                        genre: tooncraftState.genre,
+                        tone: tooncraftState.tone,
+                        target_duration: tooncraftState.lengthTier,
+                        pdf_type: 'all'
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('All 5 individual PDFs delivered directly to your Telegram chat!', true);
+                    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(e){}
+                } else {
+                    showToast(d.error || 'Failed to send PDFs to Telegram', false);
+                }
+            } catch (err) {
+                console.error("sendTooncraftAllToTelegram error:", err);
+                showToast('Network error delivering to Telegram', false);
+            }
         }
 
         // =====================================================================

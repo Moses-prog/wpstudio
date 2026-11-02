@@ -1545,3 +1545,248 @@ Write the complete shot-by-shot screenplay, Midjourney visual prompts, video mot
     return data
 
 
+
+
+# ==============================================================================
+# TOONCRAFT: 3D KIDS CARTOON & ANIMATION PRODUCTION SUITE
+# ==============================================================================
+
+async def generate_tooncraft_story_package(
+    length_tier: str = "5 min",
+    topic_mode: str = "ai_invents",
+    custom_topic: str = "",
+    character_type: str = "Kids",
+    age_band: str = "4–7",
+    genre: str = "Adventure & Quest",
+    tone: str = "Playful & Cheerful",
+    has_songs: bool = True,
+    has_dance: bool = True,
+    has_interactive: bool = True,
+    lead_character: str = None,
+    user_api_key: str = None,
+    model_name: str = None,
+    user_keys: dict = None
+) -> dict:
+    """
+    ToonCraft 3D Kids Cartoon Production Engine:
+    Generates a complete kids animation package with:
+    - 3D Pixar & DreamWorks CGI styling with Octane renders and subsurface scattering (SSS).
+    - Age-appropriate developmental storytelling and vocabulary for the selected Age Band.
+    - Fast, child-retention pacing (scenes strictly <= 15 seconds each).
+    - Catchy nursery rhymes / musical songs with melodic cues.
+    - Dance break choreography cues.
+    - 4th-wall interactive viewer pauses for audience participation.
+    - Master Character Sheet prompts (visual locks).
+    - Recurring Location Consistency Prompts (unoccupied background references).
+    - Scene-by-scene 3D Image Prompts & Video Motion Prompts.
+    """
+    model = model_name or DEFAULT_MODEL
+    length_str = str(length_tier).lower()
+    
+    if "20" in length_str:
+        target_scenes = 70
+        min_scenes = 64
+        max_scenes = 80
+        runtime_label = "20 min (~70 scenes, <=15s segments)"
+    elif "15" in length_str:
+        target_scenes = 52
+        min_scenes = 48
+        max_scenes = 60
+        runtime_label = "15 min (~52 scenes, <=15s segments)"
+    elif "10" in length_str:
+        target_scenes = 36
+        min_scenes = 32
+        max_scenes = 42
+        runtime_label = "10 min (~36 scenes, <=15s segments)"
+    else:
+        target_scenes = 18
+        min_scenes = 16
+        max_scenes = 22
+        runtime_label = "5 min (~18 scenes, <=15s segments)"
+
+    # Age band styling guidelines
+    age_str = str(age_band)
+    if "2" in age_str or "3" in age_str:
+        age_guideline = (
+            "Target Audience: Toddlers & Preschoolers (Ages 2-4). Use simple, repetitive words, joyful rhymes, "
+            "gentle reassuring conflicts, bright primary colors, friendly smiles, and clear emotional expressions."
+        )
+    elif "8" in age_str or "9" in age_str or "10" in age_str or "11" in age_str:
+        age_guideline = (
+            "Target Audience: Older Kids (Ages 8-11). Use witty dialogue, inventive quests, teamwork, clever solutions, "
+            "playful humor, and exciting dynamic challenges."
+        )
+    else:
+        age_guideline = (
+            "Target Audience: Early Elementary Kids (Ages 4-7). Use playful curiosity, preschool problem-solving, "
+            "teamwork, sharing, funny antics, wonder, and encouraging positive reinforcement."
+        )
+
+    # Character world instructions
+    char_type_lower = str(character_type).lower()
+    if "fruit" in char_type_lower:
+        char_rules = (
+            "Characters must be anthropomorphic talking fruits and vegetables (e.g. golden mango, red apple, sweet strawberry, "
+            "dancing banana, friendly broccoli) with expressive cartoon eyes, beaming open-mouth smiles, cute white cartoon gloves, "
+            "and colorful sneakers in 3D Pixar animation style."
+        )
+    elif "animal" in char_type_lower:
+        char_rules = (
+            "Characters must be cute anthropomorphic talking animals (e.g. fluffy puppy, curious lion cub, playful bunny, friendly bear) "
+            "with soft 3D stylized fur, upright posture, cute bright kid outfits, and large sparkling cartoon eyes."
+        )
+    elif "vehicle" in char_type_lower:
+        char_rules = (
+            "Characters must be anthropomorphic talking vehicles (e.g. friendly fire truck, cheerful delivery car, playful airplane) "
+            "with big expressive windshield eyes, smiling front bumpers, and glossy Pixar Cars aesthetic."
+        )
+    elif "object" in char_type_lower:
+        char_rules = (
+            "Characters must be anthropomorphic talking everyday objects (e.g. playful pencil, smiling clock, bouncy soccer ball, "
+            "talking paintbrush) with cute cartoon faces and energetic limbs in Pixar Toy Story style."
+        )
+    elif "mixed" in char_type_lower:
+        char_rules = (
+            "Cast must feature a human child protagonist paired with an adorable talking animal, fruit, or vehicle best friend."
+        )
+    else:
+        char_rules = (
+            "Characters must be stylized 3D human kids with oversized expressive eyes, cute cartoon hairstyles, joyful smiles, "
+            "and bright modern colorful kid clothes in 3D Pixar and Disney CGI animation style."
+        )
+
+    # Audio extras instructions
+    song_rule = (
+        "CATCHY SONGS: Include 1 to 3 catchy rhyming song / nursery rhyme verses in the story. "
+        "Format with [SONG / RHYME - Melody: Upbeat & Cheerful]: four-line rhyming lyrics that kids love to sing along to."
+        if has_songs else "No full songs needed, focus on spoken dialogue and narration."
+    )
+    dance_rule = (
+        "DANCE BREAKS: In 2 to 3 scenes, include joyful dance choreography cues in the script and motion prompts, "
+        "e.g. [DANCE BREAK: character does the wiggle dance and spins around cheerfully!]."
+        if has_dance else ""
+    )
+    inter_rule = (
+        "4TH-WALL INTERACTIVE PARTICIPATION: Include 2 to 4 interactive audience engagement pauses where a character "
+        "breaks the fourth wall, looks directly into the camera, asks the viewer a simple question, pauses, and praises them. "
+        "Format: [INTERACTIVE PAUSE - 3 SECONDS: Character points to screen: \'Can you find the yellow star? There it is! Good job!\']."
+        if has_interactive else ""
+    )
+
+    topic_instruction = (
+        f"USER SPECIFIED TOPIC / PREMISE:\n{custom_topic}"
+        if (topic_mode != "ai_invents" and custom_topic.strip())
+        else "AI INVENTED TOPIC: Invent an original, heartwarming, educational, and fun kids animation story premise that perfectly fits the genre, tone, cast, and age band."
+    )
+
+    system_instruction = f"""You are the Lead Creative Director and Animation Screenplay Master at a world-class 3D animation studio (Pixar, Disney, DreamWorks, Cocomelon).
+You specialize in creating hit animated cartoons for kids YouTube channels with massive audience retention, educational value, and visual delight.
+
+STRICT CARTOON SPECIFICATIONS:
+1. AGE & DEVELOPMENTAL FIT:
+{age_guideline}
+
+2. CAST WORLD & VISUAL LOCKS:
+{char_rules}
+Invent a memorable cast of 2 to 5 characters. Every character must have a permanent full-body 3D Pixar visual lock description.
+
+3. SCENE TIMING & PACING:
+- Produce EXACTLY {target_scenes} scenes (minimum {min_scenes}, maximum {max_scenes}).
+- Every single scene MUST be strictly 10 to 15 seconds in duration (<=15s). This matches toddler and child attention spans.
+- Each scene must be punchy, visually dynamic, and have clear character actions.
+
+4. SCRIPT & AUDIO:
+- Warm, cheerful narrator voiceover and joyful character dialogue.
+- {song_rule}
+- {dance_rule}
+- {inter_rule}
+
+5. TIGHT & ACCURATE IMAGE PROMPTS (MIDJOURNEY / FLUX):
+Every scene image prompt MUST follow this strict 3D Pixar CGI aesthetic:
+"3D Pixar and Disney animation style, Octane 3D render, smooth stylized skin with soft subsurface scattering (SSS), large expressive sparkling eyes, joyful facial expression, vibrant warm studio lighting, playful pastel and primary color palette, child-safe whimsical background, clean CGI aesthetic, cinematic depth of field, 8K ultra detail --ar 16:9"
+Negative guardrails: Strictly NO photorealism, NO skin pores, NO sharp scary teeth, NO dark gloomy shadows, NO violence, NO menacing expressions.
+
+6. DYNAMIC VIDEO MOTION PROMPTS (KLING / RUNWAY / GOOGLE FLOW):
+Every video motion prompt must specify fluid animated camera motion:
+"Gentle bouncy camera track, cheerful character head tilt, playful camera zoom-in on smiling face, smooth Pixar motion dynamics, fluid 3D cartoon animation physics, warm ambient glow"
+
+7. RECURRING LOCATION CONSISTENCY:
+Identify all recurring locations that appear more than once (e.g. Preschool Classroom, Sunny Hill, Treehouse, Garden).
+For every recurring location, provide an unoccupied wide background establishing prompt with zero characters, so the setting looks 100% consistent throughout the movie.
+
+OUTPUT FORMAT:
+You MUST respond with valid JSON ONLY, strictly following this schema:
+{{
+  "title": "Fun Catchy Kids Story Title",
+  "logline": "1-sentence uplifting logline",
+  "moral_lesson": "Core positive lesson (e.g. sharing brings happiness, teamwork solves big problems)",
+  "target_duration": "{runtime_label}",
+  "age_band": "{age_band}",
+  "genre": "{genre}",
+  "tone": "{tone}",
+  "character_type": "{character_type}",
+  "youtube_description": "SEO-optimized YouTube video description with kid-friendly hashtags and chapter timestamps",
+  "characters": [
+    {{
+      "name": "Character Name",
+      "role": "Lead Protagonist / Best Friend / Mentor",
+      "character_type": "{character_type}",
+      "visual_lock": "Full-body 3D Pixar visual description for Midjourney/Flux including colors, facial features, eyes, and clothes --ar 16:9",
+      "wardrobe_lock": "Specific consistent outfit or features"
+    }}
+  ],
+  "locations": [
+    {{
+      "name": "Location Name",
+      "scenes_used": "Scene 1, Scene 3, Scene 7",
+      "master_location_prompt": "Unoccupied wide establishing shot of the location with no characters present, 3D Pixar aesthetic, Octane render --ar 16:9"
+    }}
+  ],
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "scene_title": "Scene Name",
+      "duration": "12s",
+      "setting": "Location Name",
+      "characters_present": ["Character Name"],
+      "narration": "Warm cheerful narrator line",
+      "dialogue": "Character dialogue line",
+      "dialogue_or_narration": "Full combined script text for this scene including songs or interactive pauses if present",
+      "song_lyrics": "Rhyming song lyrics if this scene includes singing, else empty string",
+      "interactive_cue": "Interactive 4th-wall pause if present, else empty string",
+      "dance_cue": "Dance choreography cue if present, else empty string",
+      "image_prompt": "3D Pixar and Disney animation style, Octane 3D render... full scene image prompt --ar 16:9",
+      "video_prompt": "Camera motion prompt for Kling/Runway with smooth cartoon motion physics"
+    }}
+  ]
+}}
+"""
+
+    prompt = f"""GENERATE TOONCRAFT 3D KIDS CARTOON PACKAGE:
+Length Tier: {length_tier} (Generate exactly {target_scenes} scenes, strictly <=15s per cut)
+Character Type: {character_type}
+Age Band: {age_band}
+Genre: {genre}
+Tone: {tone}
+Catchy Songs: {'Yes' if has_songs else 'No'}
+Dance Breaks: {'Yes' if has_dance else 'No'}
+Interactive 4th-Wall Pauses: {'Yes' if has_interactive else 'No'}
+
+{topic_instruction}
+
+Ensure every scene image prompt uses the tight 3D Pixar CGI formula with subsurface scattering, Octane render, and playful colors. Return valid JSON only."""
+
+    raw_response = generate_ai_completion(
+        preferred_model=model,
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.65,
+        json_mode=True,
+        user_keys=user_keys,
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(raw_response)
+    if not isinstance(data, dict):
+        data = {"title": "Kids Cartoon Adventure", "scenes": []}
+    return data

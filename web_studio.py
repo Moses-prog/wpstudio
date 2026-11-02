@@ -2203,6 +2203,355 @@ def api_remixcraft_send_to_telegram():
     return jsonify({"success": True, "message": "All 5 individual PDFs sent directly to your Telegram chat!"})
 
 
+
+# =====================================================================
+# TOONCRAFT API ROUTES (3D KIDS CARTOON & ANIMATION STUDIO)
+# =====================================================================
+
+@app.route('/api/tooncraft/cost', methods=['POST'])
+def api_tooncraft_cost():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    length_tier = str(data.get("length_tier", "5 min")).lower()
+
+    if "20" in length_tier:
+        base_cost = 80
+    elif "15" in length_tier:
+        base_cost = 60
+    elif "10" in length_tier:
+        base_cost = 40
+    else:
+        base_cost = 20
+
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    user_keys = build_user_keys(user)
+    has_byok = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok = True
+
+    sys_settings = database.get_system_settings()
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+    is_vip = int(user.get("credits", 0)) >= 999999
+    is_free = is_vip or (has_byok and byok_allowed)
+    cost = 0 if is_free else base_cost
+
+    return jsonify({
+        "success": True,
+        "cost": cost,
+        "base_cost": base_cost,
+        "user_balance": user.get("credits", 0),
+        "is_vip": is_vip,
+        "can_afford": (is_vip or user.get("credits", 0) >= cost)
+    })
+
+@app.route('/api/tooncraft/generate', methods=['POST'])
+def api_tooncraft_generate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    length_tier = str(data.get("length_tier", "5 min")).strip()
+    topic_mode = str(data.get("topic_mode", "ai_invents")).strip()
+    custom_topic = str(data.get("custom_topic", "")).strip()
+    character_type = str(data.get("character_type", "Kids")).strip()
+    age_band = str(data.get("age_band", "4–7")).strip()
+    genre = str(data.get("genre", "Adventure & Quest")).strip()
+    tone = str(data.get("tone", "Playful & Cheerful")).strip()
+    has_songs = bool(data.get("has_songs", True))
+    has_dance = bool(data.get("has_dance", True))
+    has_interactive = bool(data.get("has_interactive", True))
+
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available"):
+        return jsonify({
+            "success": False,
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok = True
+
+    sys_settings = database.get_system_settings()
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+
+    # Pricing: 5m: 20cr, 10m: 40cr, 15m: 60cr, 20m: 80cr
+    length_str = length_tier.lower()
+    if "20" in length_str:
+        cost = 80
+    elif "15" in length_str:
+        cost = 60
+    elif "10" in length_str:
+        cost = 40
+    else:
+        cost = 20
+
+    is_vip = int(user.get("credits", 0)) >= 999999
+    if is_vip or (has_byok and byok_allowed):
+        cost = 0
+
+    if cost > 0 and user.get("credits", 0) < cost:
+        return jsonify({"success": False, "error": f"Insufficient credits! ToonCraft requires {cost} credits."}), 402
+
+    try:
+        toon_data = run_async(ai_engine.generate_tooncraft_story_package(
+            length_tier=length_tier,
+            topic_mode=topic_mode,
+            custom_topic=custom_topic,
+            character_type=character_type,
+            age_band=age_band,
+            genre=genre,
+            tone=tone,
+            has_songs=has_songs,
+            has_dance=has_dance,
+            has_interactive=has_interactive,
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
+        ))
+
+        # Deduct credits
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        story_title = toon_data.get("title", "Kids Cartoon Adventure")
+        total_scenes = len(toon_data.get("scenes", []))
+
+        # Generate 5 Individual Production PDFs
+        script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = "", "", "", "", ""
+        try:
+            script_pdf, char_pdf, loc_pdf, bible_pdf, scene_pdf = pdf_generator.generate_all_production_pdfs(
+                story_data=toon_data,
+                culture="Universal Animated",
+                style="3D Pixar Animation",
+                genre=genre,
+                delivery_format="Dialogue / Narrative",
+                length_tier=length_tier,
+                timezone="Africa/Lagos"
+            )
+            if script_pdf: toon_data["script_pdf"] = script_pdf
+            if char_pdf: toon_data["char_pdf"] = char_pdf
+            if loc_pdf: toon_data["loc_pdf"] = loc_pdf
+        except Exception as pdf_err:
+            print(f"[TOONCRAFT PDF ERROR] {pdf_err}")
+
+        # Save job in database
+        job_id = database.create_story_job(
+            user_id=user_id,
+            source_input=f"ToonCraft ({character_type}, Age {age_band})",
+            source_title=story_title,
+            transcript=toon_data.get("logline", "") or custom_topic[:2000],
+            culture=tone,
+            style="3D Pixar Animation",
+            genre=genre,
+            timezone="Africa/Lagos",
+            length_tier=f"{total_scenes} Scenes ({length_tier})",
+            delivery_format="Dialogue / Narrative",
+            job_type="tooncraft",
+            story_text=custom_topic
+        )
+        database.update_job_completion(int(job_id), json.dumps(toon_data), bible_pdf, scene_pdf)
+
+        # Deliver all 5 individual PDFs directly to Telegram chat
+        header_text = (
+            f"<b>ToonCraft 3D Kids Cartoon Package Ready!</b>\n\n"
+            f"<b>Title:</b> {story_title}\n"
+            f"<b>Logline:</b> <i>{toon_data.get('logline', '')}</i>\n"
+            f"<b>Cast World:</b> {character_type} | <b>Age Band:</b> {age_band} Years\n"
+            f"<b>Genre:</b> {genre} | <b>Tone:</b> {tone}\n"
+            f"<b>Total Scenes:</b> {total_scenes} (<=15s segments)\n"
+            f"<b>Songs / Nursery Rhymes:</b> {'Yes' if has_songs else 'No'} | <b>Dance Breaks:</b> {'Yes' if has_dance else 'No'}\n\n"
+            f"<i>All 5 production PDFs have been delivered to your chat below:</i>"
+        )
+        send_telegram_message(user_id, header_text)
+
+        if script_pdf and os.path.exists(script_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=script_pdf,
+                caption=f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{story_title}</i>\nReady for voice actors and narrator recording."
+            )
+        if char_pdf and os.path.exists(char_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=char_pdf,
+                caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body 3D Pixar visual consistency locks for Midjourney & Flux."
+            )
+        if loc_pdf and os.path.exists(loc_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=loc_pdf,
+                caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster unoccupied background reference prompts for recurring settings."
+            )
+        if bible_pdf and os.path.exists(bible_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=bible_pdf,
+                caption=f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{story_title}</i>\nTight Octane 3D Pixar render prompts."
+            )
+        if scene_pdf and os.path.exists(scene_pdf):
+            send_telegram_document(
+                user_id=user_id,
+                file_path=scene_pdf,
+                caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>\nSmooth camera & character animation prompts for Kling & Runway."
+            )
+
+        refreshed_user = database.get_user(user_id)
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "data": toon_data,
+            "cost_charged": cost,
+            "user_balance": refreshed_user.get("credits", 0)
+        })
+    except Exception as e:
+        print(f"[TOONCRAFT ERROR] {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+
+@app.route('/api/tooncraft/send_to_telegram', methods=['POST'])
+def api_tooncraft_send_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    scenes = data.get("scenes", [])
+    title = data.get("title", "Kids Cartoon Adventure")
+    logline = data.get("logline", "")
+    pdf_type = str(data.get("pdf_type", "all")).strip().lower()
+
+    if not scenes:
+        return jsonify({"success": False, "error": "No scenes found to send"}), 400
+
+    story_payload = {
+        "title": title,
+        "logline": logline,
+        "moral_lesson": data.get("moral_lesson", ""),
+        "characters": data.get("characters", []),
+        "locations": data.get("locations", []),
+        "scenes": scenes,
+        "youtube_description": data.get("youtube_description", ""),
+        "target_duration": data.get("target_duration", f"{len(scenes)} Scenes")
+    }
+    culture_val = data.get("tone", "Playful & Cheerful")
+    style_val = "3D Pixar Animation"
+    genre_val = data.get("genre", "Kids Animation")
+    tier_val = data.get("target_duration", f"{len(scenes)} Scenes")
+
+    if pdf_type in ["script", "character", "char", "location", "loc", "bible", "image", "scene", "video"]:
+        try:
+            if pdf_type == "script":
+                fpath = pdf_generator.generate_voiceover_script_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{title}</i>\nReady for voiceover recording."
+            elif pdf_type in ["character", "char"]:
+                fpath = pdf_generator.generate_character_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body 3D Pixar character consistency locks."
+            elif pdf_type in ["location", "loc"]:
+                fpath = pdf_generator.generate_location_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations appearing more than once."
+            elif pdf_type in ["bible", "image"]:
+                fpath = pdf_generator.generate_image_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{title}</i>"
+            else:
+                fpath = pdf_generator.generate_video_prompts_pdf(
+                    story_data=story_payload,
+                    culture=culture_val,
+                    style=style_val,
+                    genre=genre_val,
+                    delivery_format="Dialogue / Narrative",
+                    length_tier=tier_val
+                )
+                caption = f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>"
+
+            if fpath and os.path.exists(fpath) and send_telegram_document(user_id, fpath, caption):
+                return jsonify({"success": True, "message": "PDF sent directly to your Telegram chat!"})
+            return jsonify({"success": False, "error": "Could not send PDF to Telegram chat."}), 500
+        except Exception as e:
+            print(f"[TOONCRAFT SINGLE PDF ERROR] {e}")
+            return jsonify({"success": False, "error": "Could not build PDF file."}), 500
+
+    # If "all", send header and all 5 PDFs
+    header_msg = f"<b>WP Studio — ToonCraft Kids Cartoon Package</b>\n"
+    header_msg += f"<b>Title:</b> {title}\n"
+    if logline:
+        header_msg += f"<i>{logline}</i>\n"
+    header_msg += f"<b>Total Scenes:</b> {len(scenes)} (<=15s segments)\n"
+    header_msg += f"<b>Style:</b> 3D Pixar Animation | <b>Genre:</b> {genre_val}\n"
+    header_msg += "\n<b>--------------------</b>"
+    send_telegram_message(user_id, header_msg)
+
+    try:
+        sc_pdf, ch_pdf, lo_pdf, b_pdf, s_pdf = pdf_generator.generate_all_production_pdfs(
+            story_data=story_payload,
+            culture=culture_val,
+            style=style_val,
+            genre=genre_val,
+            delivery_format="Dialogue / Narrative",
+            length_tier=tier_val
+        )
+        if sc_pdf and os.path.exists(sc_pdf):
+            send_telegram_document(user_id, sc_pdf, caption=f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{title}</i>\nReady for voiceover recording.")
+        if ch_pdf and os.path.exists(ch_pdf):
+            send_telegram_document(user_id, ch_pdf, caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{title}</i>\nFull-body 3D Pixar character consistency locks.")
+        if lo_pdf and os.path.exists(lo_pdf):
+            send_telegram_document(user_id, lo_pdf, caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{title}</i>\nMaster reference prompts for locations appearing more than once.")
+        if b_pdf and os.path.exists(b_pdf):
+            send_telegram_document(user_id, b_pdf, caption=f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{title}</i>")
+        if s_pdf and os.path.exists(s_pdf):
+            send_telegram_document(user_id, s_pdf, caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{title}</i>")
+    except Exception as pdf_e:
+        print(f"[TOONCRAFT ALL PDF ERROR] {pdf_e}")
+
+    return jsonify({"success": True, "message": f"All 5 individual PDFs ({len(scenes)} scenes) sent directly to your Telegram chat!"})
+
+
 @app.route('/api/render_frame', methods=['POST'])
 def api_render_frame():
     user = get_current_user()

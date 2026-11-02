@@ -942,6 +942,27 @@ async def main():
         ]
         await event.respond(settings_text, buttons=buttons)
 
+    @client.on(events.NewMessage(pattern=r"^/tooncraft"))
+    async def tooncraft_handler(event):
+        user_id = event.sender_id
+        username = event.sender.username or "Creator"
+        user = database.get_user(user_id, username)
+        miniapp_url = os.getenv("MINIAPP_URL", "").strip() or os.getenv("RENDER_EXTERNAL_URL", "").strip() or "https://wpstudio.onrender.com/miniapp"
+        if not miniapp_url.endswith("/miniapp"):
+            miniapp_url = miniapp_url.rstrip("/") + "/miniapp"
+        url = f"{miniapp_url}?user_id={user_id}"
+        msg = (
+            "🌟 **ToonCraft — 3D Kids Cartoon & Animation Studio**\n\n"
+            "Produce hit kids YouTube cartoons with 3D Pixar & DreamWorks visual consistency:\n"
+            "• **Pacing:** Fast ≤15s segments for maximum child retention\n"
+            "• **Cast:** Kids, Animals, Fruits, Vehicles, Objects & Mixed\n"
+            "• **Audio:** Catchy rhyming songs, dance routines & 4th-wall viewer pauses\n"
+            "• **Deliverables:** 5 individual production PDFs delivered to your chat\n\n"
+            "Tap the button below to launch ToonCraft Studio in the Web MiniApp:"
+        )
+        buttons = [[Button.url("🚀 Launch ToonCraft Studio", url)]]
+        await event.respond(msg, buttons=buttons)
+
     @client.on(events.CallbackQuery)
     async def callback_handler(event):
         user_id = event.sender_id

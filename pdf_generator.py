@@ -161,8 +161,8 @@ def _normalize_characters_and_locations(story_data: dict, style: str = "Realisti
         c_name = char.get("name", "Character")
         c_orig = char.get("original_name", "")
         c_role = char.get("role", "SUPPORTING")
-        c_locked = char.get("locked_visual_description") or ""
-        c_vis = char.get("visual_description") or ""
+        c_locked = char.get("locked_visual_description") or char.get("visual_lock") or ""
+        c_vis = char.get("visual_description") or char.get("visual_lock") or ""
         if not c_locked and c_vis:
             c_locked = (
                 f"Full-length standing shot, complete head-to-toe uncropped full body view showing entire figure "
@@ -331,7 +331,9 @@ def _extract_scene_script_text(s: dict, delivery_format: str = "Dialogue / Narra
     """
     narr = (s.get("narration") or "").strip()
     dial = (s.get("dialogue") or "").strip()
-    comb = (s.get("dialogue_or_narration") or "").strip()
+    comb = (s.get("dialogue_or_narration") or s.get("voiceover_and_dialogue") or s.get("voiceover") or "").strip()
+    song = (s.get("song_lyrics") or "").strip()
+    inter = (s.get("interactive_cue") or "").strip()
 
     if not narr and not dial and comb:
         if "Narrative" in delivery_format and "Dialogue" not in delivery_format:
@@ -351,6 +353,10 @@ def _extract_scene_script_text(s: dict, delivery_format: str = "Dialogue / Narra
         parts.append(narr)
     if dial and dial != narr:
         parts.append(dial)
+    if song and song not in (narr + dial + comb):
+        parts.append(f"[SONG / RHYME]:\n{song}")
+    if inter and inter not in (narr + dial + comb):
+        parts.append(inter)
     full_scene_script = "\n\n".join(parts) if parts else comb
     return narr, dial, full_scene_script
 

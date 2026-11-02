@@ -802,151 +802,289 @@
             pointer-events: none !important;
         }
 
-        .progress-hud-card {
+                .progress-hud-card {
             width: 100%;
-            max-width: 326px;
-            background: linear-gradient(180deg, rgba(22, 22, 28, 0.97) 0%, rgba(14, 14, 18, 0.99) 100%);
-            border: 1px solid rgba(229, 169, 60, 0.3);
-            border-radius: 20px;
-            padding: 22px 20px 18px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(229, 169, 60, 0.1);
+            max-width: 356px;
+            background: linear-gradient(180deg, rgba(20, 21, 26, 0.98) 0%, rgba(13, 14, 18, 0.99) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(229, 169, 60, 0.4);
+            border-radius: 18px;
+            padding: 20px 18px 16px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 35px rgba(229, 169, 60, 0.08);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
             position: relative;
-            animation: hudPopIn 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-sizing: border-box;
+            animation: hudMatureIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes hudPopIn {
-            0% { transform: scale(0.94); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        @keyframes hudMatureIn {
+            0% { transform: translateY(8px) scale(0.97); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
         }
 
-        .hud-circle-wrap {
-            position: relative;
-            width: 112px;
-            height: 112px;
-            margin: 10px auto 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hud-circle-svg {
-            width: 112px;
-            height: 112px;
-            transform: rotate(-90deg);
-            filter: drop-shadow(0 0 10px rgba(229, 169, 60, 0.25));
-        }
-
-        .hud-circle-bg {
-            stroke: rgba(255, 255, 255, 0.08);
-            stroke-width: 5;
-            fill: none;
-        }
-
-        .hud-circle-bar {
-            stroke: url(#hudGrad);
-            stroke-width: 5;
-            stroke-linecap: round;
-            fill: none;
-            stroke-dasharray: 264;
-            stroke-dashoffset: 264;
-            transition: stroke-dashoffset 0.14s ease-out;
-        }
-
-        .hud-percent-text {
+        .hud-close-btn {
             position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            color: var(--text-muted);
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            line-height: 1;
+            padding: 0;
+            transition: all 0.15s ease;
         }
-
-        .hud-percent-num-row {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
+        .hud-close-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
             color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            letter-spacing: -0.5px;
+        }
+        .hud-close-btn svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
         }
 
-        .hud-percent-symbol {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e5a93c;
-            margin-left: 2px;
+        .hud-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-right: 28px;
         }
 
-        .hud-stage-step-tag {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 4px;
-        }
-
-        .hud-linear-track {
-            width: 100%;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.08);
+        .hud-badge-active {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(229, 169, 60, 0.1);
+            border: 1px solid rgba(229, 169, 60, 0.3);
             border-radius: 999px;
-            overflow: hidden;
+            padding: 3px 9px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #e5a93c;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .hud-pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e5a93c;
+            box-shadow: 0 0 8px #e5a93c;
+            animation: hudDotPulse 1.4s ease-in-out infinite;
+        }
+
+        .hud-engine-chip {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-family: -apple-system-monospaced, "SF Mono", Menlo, monospace;
+        }
+
+        .hud-hero-section {
+            text-align: left;
             margin-bottom: 14px;
         }
 
-        .hud-linear-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #e5a93c 0%, #ffe399 50%, #e5a93c 100%);
-            background-size: 200% 100%;
-            animation: hudGoldShimmer 2s linear infinite;
-            border-radius: 999px;
-            transition: width 0.15s ease-out;
+        .hud-hero-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+            margin-bottom: 4px;
         }
 
-        @keyframes hudGoldShimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .hud-hero-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            min-height: 34px;
         }
 
-        .hud-linear-bar.completed {
-            background: #30d158;
-            animation: none;
-        }
-
-        .hud-status-box {
+        /* Sleek Continuous Indeterminate Shimmer Rail - No Fake 97% Halting! */
+        .hud-shimmer-track {
             width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+            margin: 4px 0 14px;
+        }
+
+        .hud-shimmer-beam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 42%;
+            background: linear-gradient(90deg, transparent 0%, rgba(229,169,60,0.5) 25%, #ffd97d 50%, rgba(229,169,60,0.5) 75%, transparent 100%);
+            border-radius: 999px;
+            filter: drop-shadow(0 0 5px rgba(229, 169, 60, 0.6));
+            animation: matureBeamGlide 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes matureBeamGlide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(340%); }
+        }
+
+        .hud-shimmer-beam.completed {
+            width: 100% !important;
+            animation: none !important;
+            transform: none !important;
+            background: #30d158 !important;
+            filter: drop-shadow(0 0 6px rgba(48, 209, 88, 0.6));
+        }
+
+        /* Milestone Checklist */
+        .hud-stages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            width: 100%;
+            margin-bottom: 14px;
+        }
+
+        .hud-stage-item {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
             gap: 10px;
-            font-size: 12px;
-            color: var(--text-main);
-            line-height: 1.4;
-            min-height: 42px;
-            text-align: left;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 9px 12px;
-            box-sizing: border-box;
+            padding: 7px 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
         }
 
-        .hud-live-dot {
-            width: 8px;
-            height: 8px;
+        .hud-stage-item.active {
+            background: rgba(229, 169, 60, 0.08);
+            border-color: rgba(229, 169, 60, 0.25);
+        }
+
+        .hud-stage-item.completed {
+            background: rgba(48, 209, 88, 0.06);
+            border-color: rgba(48, 209, 88, 0.18);
+        }
+
+        .hud-stage-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 9px;
+        }
+
+        .hud-stage-item.pending .hud-stage-icon {
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            color: transparent;
+        }
+
+        .hud-stage-item.active .hud-stage-icon {
+            border: 1.5px solid #e5a93c;
+            background: rgba(229, 169, 60, 0.2);
+            color: #e5a93c;
+            box-shadow: 0 0 8px rgba(229, 169, 60, 0.4);
+        }
+
+        .hud-stage-item.completed .hud-stage-icon {
+            border: 1.5px solid #30d158;
+            background: #30d158;
+            color: #000;
+        }
+
+        .hud-stage-label {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            flex: 1;
+            text-align: left;
+        }
+
+        .hud-stage-item.active .hud-stage-label {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .hud-stage-item.completed .hud-stage-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hud-stage-status-chip {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-stage-item.pending .hud-stage-status-chip {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .hud-stage-item.active .hud-stage-status-chip {
+            color: #e5a93c;
+        }
+
+        .hud-stage-item.completed .hud-stage-status-chip {
+            color: #30d158;
+        }
+
+        .hud-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 2px 2px 0;
+        }
+
+        .hud-timer-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hud-timer-dot {
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: #e5a93c;
-            box-shadow: 0 0 10px #e5a93c;
-            flex-shrink: 0;
-            animation: hudDotPulse 1.4s ease-in-out infinite;
+        }
+
+        #hud-timer-value {
+            color: #ffffff;
+            font-family: -apple-system-monospaced, "SF Mono", Menlo, monospace;
+            font-size: 11.5px;
+        }
+
+        .hud-latency-text {
+            color: #e5a93c;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .hud-subnote {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 8px;
+            text-align: center;
         }
 
         @keyframes hudDotPulse {
@@ -3420,65 +3558,51 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- REAL-TIME AI PROGRESS & TIME TRACKER HUD (LUXURY STUDIO GLASS DESIGN)    -->
+        <!-- ===================================================================== -->
+    <!-- REAL-TIME AI PROGRESS & STUDIO HUD (EXECUTIVE OBSIDIAN GLASS DESIGN)   -->
     <!-- ===================================================================== -->
     <div id="ai-progress-hud" class="progress-hud-overlay" onclick="AIProgressTracker.stop()">
         <div class="progress-hud-card" onclick="event.stopPropagation()">
-            <button type="button" onclick="AIProgressTracker.stop()" style="position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:50%; width:26px; height:26px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;" title="Close" aria-label="Close">
-                <svg viewBox="0 0 24 24" style="width:13px; height:13px; stroke:currentColor; stroke-width:2.2; fill:none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button type="button" onclick="AIProgressTracker.stop()" class="hud-close-btn" title="Dismiss" aria-label="Dismiss">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             
-            <!-- Top Badges -->
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-right:26px;">
-                <div class="badge pro" id="hud-op-title" style="font-size:11px; letter-spacing:0.5px; border-color:rgba(229,169,60,0.4);">
-                    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                    <span>AI STUDIO PIPELINE</span>
+            <!-- Top Header -->
+            <div class="hud-header-row">
+                <div class="hud-badge-active" id="hud-op-title">
+                    <span class="hud-pulse-dot"></span>
+                    <span id="hud-title-text">AI STUDIO PIPELINE</span>
                 </div>
-                <div class="chip" id="hud-engine-chip" style="font-size:10px; background:rgba(255,255,255,0.06);">
-                    <span>GEMINI 3.8</span>
+                <div class="hud-engine-chip" id="hud-engine-chip">GEMINI 3.5</div>
+            </div>
+
+            <!-- Primary Task Info -->
+            <div class="hud-hero-section">
+                <div class="hud-hero-title" id="hud-main-heading">Synthesizing Story Package</div>
+                <div class="hud-hero-desc" id="hud-status-text">Drafting screenplay scenes, dialogue and visual locks...</div>
+            </div>
+
+            <!-- Sleek Indeterminate Studio Shimmer Rail (Continuous Fluid Motion - No Fake 97% Halting!) -->
+            <div class="hud-shimmer-track">
+                <div id="hud-bar-fill" class="hud-shimmer-beam"></div>
+            </div>
+
+            <!-- Sequential Studio Phase Milestones Checklist -->
+            <div class="hud-stages-list" id="hud-stages-list">
+                <!-- Dynamically populated with clean micro-steps -->
+            </div>
+
+            <!-- Clean Studio Telemetry Footer -->
+            <div class="hud-footer-row">
+                <div class="hud-timer-wrap">
+                    <span class="hud-timer-dot"></span>
+                    <span>Elapsed: <strong id="hud-timer-value">00:00s</strong></span>
                 </div>
+                <span id="hud-latency-value" class="hud-latency-text">Processing Stream</span>
             </div>
-
-            <!-- Gradient Circular Progress Meter -->
-            <div class="hud-circle-wrap">
-                <svg class="hud-circle-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="hudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#ffd97d"></stop>
-                            <stop offset="100%" stop-color="#e5a93c"></stop>
-                        </linearGradient>
-                    </defs>
-                    <circle class="hud-circle-bg" cx="50" cy="50" r="42"></circle>
-                    <circle id="hud-circle-meter" class="hud-circle-bar" cx="50" cy="50" r="42"></circle>
-                </svg>
-                <div class="hud-percent-text">
-                    <div class="hud-percent-num-row">
-                        <span id="hud-percent-value">0</span><span class="hud-percent-symbol">%</span>
-                    </div>
-                    <div class="hud-stage-step-tag" id="hud-stage-step">STAGE 1 OF 5</div>
-                </div>
-            </div>
-
-            <!-- Hairline Linear Progress Track -->
-            <div class="hud-linear-track">
-                <div id="hud-bar-fill" class="hud-linear-bar"></div>
-            </div>
-
-            <!-- Dynamic Status Message Box -->
-            <div class="hud-status-box" id="hud-status-box">
-                <div class="hud-live-dot" id="hud-live-dot"></div>
-                <span id="hud-status-text" style="flex:1; text-align:left; font-weight:500;">Connecting to AI screenplay engine...</span>
-            </div>
-
-            <!-- Clean Studio Footer Row (Replaces Clunky Telemetry Cards) -->
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:12px; font-size:11px; color:var(--text-muted); padding:0 2px;">
-                <span>Elapsed: <strong id="hud-timer-value" style="color:var(--text-main); font-family:-apple-system-monospaced, 'SF Mono', monospace;">00:00s</strong></span>
-                <span id="hud-latency-value" style="color:#e5a93c; font-weight:600;">Processing Live</span>
-            </div>
-            <div style="font-size:10px; color:rgba(255,255,255,0.38); margin-top:8px;">Please keep this screen open while AI assets are generated</div>
+            <div class="hud-subnote">Processing background tokens. Keep this screen open.</div>
         </div>
     </div>
-
     <!-- JAVASCRIPT LOGIC ENGINE -->
     <script>
         const tg = window.Telegram?.WebApp;
@@ -3520,14 +3644,11 @@
         // REAL-TIME AI PROGRESS & TIME TRACKER CONTROLLER (GENUINE CALIBRATION)
         // =====================================================================
         const AIProgressTracker = {
-            intervalId: null,
             timerId: null,
             startTime: 0,
-            currentPercent: 0,
-            targetMaxPercent: 97,
-            estimatedDurationMs: 12000,
             stages: [],
             currentStageIdx: 0,
+            estimatedDurationSec: 20,
 
             start(title, estimatedDurationSec, stages, engineName) {
                 this.stop();
@@ -3537,52 +3658,62 @@
                 hud.style.pointerEvents = 'auto';
                 hud.classList.add('active');
 
-                const titleEl = document.getElementById('hud-op-title');
+                const titleEl = document.getElementById('hud-title-text');
                 if (titleEl) {
-                    titleEl.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg><span>${title.toUpperCase()}</span>`;
+                    titleEl.innerText = (title || 'AI STUDIO PIPELINE').toUpperCase();
+                }
+
+                const headingEl = document.getElementById('hud-main-heading');
+                if (headingEl) {
+                    headingEl.innerText = title || 'Processing Request';
                 }
 
                 const engineEl = document.getElementById('hud-engine-chip');
                 if (engineEl) {
-                    const modelName = engineName || (currentUser?.selected_model ? currentUser.selected_model.replace('gemini-', '').toUpperCase() : 'GEMINI 3.8');
+                    const modelName = engineName || (currentUser?.selected_model ? currentUser.selected_model.replace('gemini-', '').toUpperCase() : 'GEMINI 3.5');
                     engineEl.innerText = modelName;
-                }
-
-                const circle = document.getElementById('hud-circle-meter');
-                if (circle) {
-                    circle.style.stroke = 'var(--accent)';
-                    circle.style.strokeDashoffset = '264';
                 }
 
                 const fillEl = document.getElementById('hud-bar-fill');
                 if (fillEl) {
-                    fillEl.style.width = '0%';
                     fillEl.classList.remove('completed');
                 }
 
-                const dot = document.getElementById('hud-live-dot');
-                if (dot) dot.style.background = 'var(--accent)';
+                // Standardize stages into clean title/desc milestones
+                if (stages && stages.length) {
+                    this.stages = stages.map((st, i) => {
+                        if (typeof st === 'string') {
+                            return { title: st, desc: `Executing ${st.toLowerCase()}...` };
+                        }
+                        return {
+                            title: st.title || st.text || `Phase ${i + 1}`,
+                            desc: st.desc || st.text || 'Processing streaming tokens...'
+                        };
+                    });
+                } else {
+                    this.stages = [
+                        { title: "Story Architecture & Plot", desc: "Formulating plot arcs, narrative beats & scene structure..." },
+                        { title: "Visual Locks & Continuity", desc: "Locking character sheets and recurring location setups..." },
+                        { title: "Shot Pacing & Scene Prompts", desc: "Generating shot-by-shot visual and camera motion prompts..." },
+                        { title: "Production PDF Compilation", desc: "Compiling individual production PDFs for export..." }
+                    ];
+                }
 
-                this.stages = (stages && stages.length) ? stages : [
-                    { at: 0, text: "Connecting to AI..." },
-                    { at: 20, text: "Reading story idea..." },
-                    { at: 50, text: "Writing scenes and dialogue..." },
-                    { at: 75, text: "Checking story flow..." },
-                    { at: 90, text: "Creating script and PDF files..." }
-                ];
-
+                this.estimatedDurationSec = Math.max(8, estimatedDurationSec || 20);
                 this.startTime = Date.now();
-                this.currentPercent = 0;
                 this.currentStageIdx = 0;
-                this.estimatedDurationMs = Math.max(5, estimatedDurationSec || 12) * 1000;
-                this.targetMaxPercent = 97;
-
-                this.updateDisplay(0, this.stages[0].text, 1, this.stages.length);
+                this.renderStagesList(0);
 
                 const timerEl = document.getElementById('hud-timer-value');
                 if (timerEl) timerEl.innerText = "00:00s";
 
-                // Clean Studio Stopwatch Timer
+                const latencyEl = document.getElementById('hud-latency-value');
+                if (latencyEl) {
+                    latencyEl.innerText = "Streaming Live";
+                    latencyEl.style.color = "#e5a93c";
+                }
+
+                // Honest live stopwatch timer (no fake 97% halting!)
                 this.timerId = setInterval(() => {
                     const elapsedMs = Date.now() - this.startTime;
                     const sec = Math.floor(elapsedMs / 1000);
@@ -3592,114 +3723,105 @@
                     const tEl = document.getElementById('hud-timer-value');
                     if (tEl) tEl.innerText = timeStr;
 
-                    const rateEl = document.getElementById('hud-latency-value');
-                    if (rateEl) {
-                        if (this.currentPercent >= 95) {
-                            rateEl.innerText = "Finalizing Assets";
-                        } else {
-                            rateEl.innerText = "Processing Live";
-                        }
+                    // Progress through stages organically across the estimated duration
+                    const totalStages = this.stages.length;
+                    const stageIntervalSec = Math.max(3.5, this.estimatedDurationSec / totalStages);
+                    const expectedStageIdx = Math.min(totalStages - 1, Math.floor(sec / stageIntervalSec));
+                    if (expectedStageIdx !== this.currentStageIdx) {
+                        this.currentStageIdx = expectedStageIdx;
+                        this.renderStagesList(this.currentStageIdx);
                     }
                 }, 100);
-
-                // Steady, Honest Linear-Stage Progression
-                // Progress tracks elapsed time smoothly without aggressive artificial 95% freeze!
-                this.intervalId = setInterval(() => {
-                    const elapsedMs = Date.now() - this.startTime;
-                    let targetPct;
-
-                    if (elapsedMs <= this.estimatedDurationMs) {
-                        // Regular linear progress up to 90% across the expected duration
-                        targetPct = (elapsedMs / this.estimatedDurationMs) * 90;
-                    } else {
-                        // Once past expected baseline, smoothly ease from 90% toward 97% without stopping dead
-                        const overtimeMs = elapsedMs - this.estimatedDurationMs;
-                        const overtimeFraction = 1 - Math.exp(-overtimeMs / 6000);
-                        targetPct = 90 + (overtimeFraction * 7); // smoothly caps at 97%
-                    }
-
-                    if (targetPct > this.currentPercent) {
-                        this.currentPercent = Math.min(this.targetMaxPercent, targetPct);
-                    }
-
-                    // Determine active stage
-                    let stageIdx = 0;
-                    for (let i = this.stages.length - 1; i >= 0; i--) {
-                        if (this.currentPercent >= this.stages[i].at) {
-                            stageIdx = i;
-                            break;
-                        }
-                    }
-                    this.currentStageIdx = stageIdx;
-                    const stageText = (elapsedMs > this.estimatedDurationMs && stageIdx === this.stages.length - 1)
-                        ? "Receiving model output stream & finalizing..."
-                        : this.stages[stageIdx].text;
-
-                    this.updateDisplay(
-                        Math.round(this.currentPercent),
-                        stageText,
-                        stageIdx + 1,
-                        this.stages.length
-                    );
-                }, 40);
             },
 
-            updateDisplay(percent, text, stageNum, totalStages) {
-                const pEl = document.getElementById('hud-percent-value');
-                const fillEl = document.getElementById('hud-bar-fill');
-                const circle = document.getElementById('hud-circle-meter');
+            renderStagesList(activeIdx) {
+                const listEl = document.getElementById('hud-stages-list');
                 const statusEl = document.getElementById('hud-status-text');
-                const stepEl = document.getElementById('hud-stage-step');
+                if (!listEl) return;
 
-                if (pEl) pEl.innerText = percent;
-                if (fillEl) fillEl.style.width = percent + '%';
-                if (circle) {
-                    const circumference = 264;
-                    const offset = circumference - (circumference * Math.min(100, Math.max(0, percent)) / 100);
-                    circle.style.strokeDashoffset = offset;
+                const activeStage = this.stages[activeIdx] || this.stages[0];
+                if (statusEl) {
+                    statusEl.innerText = activeStage.desc || "Generating high-fidelity studio assets...";
                 }
-                if (statusEl && text) statusEl.innerText = text;
-                if (stepEl && stageNum && totalStages) {
-                    stepEl.innerText = `STAGE ${stageNum} OF ${totalStages}`;
-                }
+
+                let html = '';
+                this.stages.forEach((st, idx) => {
+                    let itemClass = 'pending';
+                    let chipText = 'Queued';
+                    let iconHtml = '';
+
+                    if (idx < activeIdx) {
+                        itemClass = 'completed';
+                        chipText = 'Done';
+                        iconHtml = '<svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    } else if (idx === activeIdx) {
+                        itemClass = 'active';
+                        chipText = 'Active';
+                        iconHtml = '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>';
+                    } else {
+                        itemClass = 'pending';
+                        chipText = 'Queued';
+                        iconHtml = '';
+                    }
+
+                    html += `
+                        <div class="hud-stage-item ${itemClass}">
+                            <div class="hud-stage-icon">${iconHtml}</div>
+                            <span class="hud-stage-label">${escapeHtml(st.title)}</span>
+                            <span class="hud-stage-status-chip">${chipText}</span>
+                        </div>
+                    `;
+                });
+
+                listEl.innerHTML = html;
             },
 
-            complete(successText = "Operation Complete") {
-                clearInterval(this.intervalId);
+            async complete(successText = "Operation Complete") {
                 clearInterval(this.timerId);
-
                 const totalElapsedSec = ((Date.now() - this.startTime) / 1000).toFixed(1);
-                this.updateDisplay(100, `${successText} (${totalElapsedSec}s)`, this.stages.length, this.stages.length);
+
+                // Mark all stages completed
+                const listEl = document.getElementById('hud-stages-list');
+                if (listEl) {
+                    let html = '';
+                    this.stages.forEach((st) => {
+                        html += `
+                            <div class="hud-stage-item completed">
+                                <div class="hud-stage-icon">
+                                    <svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#000; stroke-width:3; fill:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </div>
+                                <span class="hud-stage-label">${escapeHtml(st.title)}</span>
+                                <span class="hud-stage-status-chip">Done</span>
+                            </div>
+                        `;
+                    });
+                    listEl.innerHTML = html;
+                }
+
+                const headingEl = document.getElementById('hud-main-heading');
+                if (headingEl) headingEl.innerText = successText;
+
+                const statusEl = document.getElementById('hud-status-text');
+                if (statusEl) statusEl.innerText = `Generation completed in ${totalElapsedSec}s.`;
 
                 const fillEl = document.getElementById('hud-bar-fill');
-                if (fillEl) {
-                    fillEl.style.width = '100%';
-                    fillEl.classList.add('completed');
-                }
-                const circle = document.getElementById('hud-circle-meter');
-                if (circle) {
-                    circle.style.strokeDashoffset = '0';
-                    circle.style.stroke = 'var(--success)';
-                }
-                const pEl = document.getElementById('hud-percent-value');
-                if (pEl) pEl.innerText = 100;
+                if (fillEl) fillEl.classList.add('completed');
 
-                const dot = document.getElementById('hud-live-dot');
-                if (dot) dot.style.background = 'var(--success)';
-
-                const rateEl = document.getElementById('hud-latency-value');
-                if (rateEl) rateEl.innerText = "COMPLETE";
+                const latencyEl = document.getElementById('hud-latency-value');
+                if (latencyEl) {
+                    latencyEl.innerText = "Completed";
+                    latencyEl.style.color = "#30d158";
+                }
 
                 return new Promise(resolve => {
                     setTimeout(() => {
                         this.stop();
                         resolve();
-                    }, 350);
+                    }, 450);
                 });
             },
 
             stop() {
-                clearInterval(this.intervalId);
                 clearInterval(this.timerId);
                 const hud = document.getElementById('ai-progress-hud');
                 if (hud) {
@@ -6904,25 +7026,27 @@
             const toneEl = document.getElementById('toon-select-tone');
             if (toneEl) tooncraftState.tone = toneEl.value;
 
-            // Start Modern Luxury Studio Progress Tracker
+            // Start Executive Obsidian Progress Tracker
             AIProgressTracker.start(
                 "ToonCraft Studio",
-                25,
+                20,
                 [
-                    { at: 0, text: "Connecting to 3D Kids Animation Engine..." },
-                    { at: 18, text: "Designing 3D Pixar character cast & visual locks..." },
-                    { at: 42, text: "Crafting ≤15s scenes, nursery rhymes & dance cues..." },
-                    { at: 68, text: "Formulating Octane 3D & camera motion prompts..." },
-                    { at: 86, text: "Compiling 5 individual production PDFs..." },
-                    { at: 94, text: "Delivering PDFs directly to Telegram..." }
+                    { title: "Story Architecture & Cast", desc: "Inventing 3D Pixar character cast & visual locks..." },
+                    { title: "Nursery Rhymes & Dance Cues", desc: "Crafting ≤15s scenes, song lyrics & dance routines..." },
+                    { title: "3D Image & Camera Prompts", desc: "Formulating Octane 3D lighting & smooth motion prompts..." },
+                    { title: "Production PDF Compilation", desc: "Compiling 5 individual production PDFs & delivering to Telegram..." }
                 ],
                 "TOONCRAFT 3D"
             );
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout
 
             try {
                 const res = await fetch('/api/tooncraft/generate', {
                     method: 'POST',
                     headers: getHeaders(),
+                    signal: controller.signal,
                     body: JSON.stringify({
                         length_tier: tooncraftState.lengthTier,
                         topic_mode: tooncraftState.topicMode,
@@ -6937,6 +7061,7 @@
                         model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined
                     })
                 });
+                clearTimeout(timeoutId);
 
                 const data = await res.json();
                 if (!data.success) {
@@ -6962,8 +7087,14 @@
                 goToTooncraftStep(5);
                 showToast('ToonCraft Package & 5 PDFs Delivered to Telegram!', true);
             } catch (err) {
+                clearTimeout(timeoutId);
                 console.error('submitTooncraft error:', err);
-                AIProgressTracker.fail(err.message || 'Error generating cartoon package');
+                const errMsg = err.name === 'AbortError'
+                    ? 'Server request timed out. Please check Telegram for completed PDFs or try again.'
+                    : (err.message && err.message.toLowerCase().includes('load failed')
+                        ? 'Connection interrupted. Please verify your connection or check Telegram for completed PDFs.'
+                        : (err.message || 'Error generating cartoon package'));
+                AIProgressTracker.fail(errMsg);
             } finally {
                 if (btn) {
                     btn.disabled = false;

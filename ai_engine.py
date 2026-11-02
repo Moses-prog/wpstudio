@@ -32,7 +32,7 @@ AVAILABLE_MODELS = {
     "claude-3-7-sonnet": "Claude 3.5 Sonnet (Narrative Depth & Rich Dialogue)"
 }
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 def get_model_provider(model_name: str) -> str:
     """Returns 'gemini', 'gpt', or 'claude' based on the requested model name."""
@@ -130,7 +130,7 @@ def get_provider_availability(user_dict=None) -> dict:
     }
 
 # Fallback chain for Gemini
-FALLBACK_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+FALLBACK_CHAIN = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash"]
 
 def clean_json_loads(text: str):
     """Safely extracts and parses JSON even if wrapped in markdown code fences, with trailing text, or truncated mid-stream."""
@@ -258,9 +258,9 @@ def generate_with_fallback(client, preferred_model, contents, config, user_api_k
                         return fallback_client.models.generate_content(model=m, contents=contents, config=config)
                     except Exception as fe:
                         logger.warning(f"Fallback key also failed: {fe}")
-            # Pause between retries to let Google Cloud load balancer clear
-            if "503" in err_str or "429" in err_str:
-                time.sleep(1.5)
+            # Switch to alternate fallback model immediately without blocking
+            if "429" in err_str:
+                time.sleep(1.0)
             continue
     raise last_err
 
@@ -1584,25 +1584,25 @@ async def generate_tooncraft_story_package(
     length_str = str(length_tier).lower()
     
     if "20" in length_str:
-        target_scenes = 70
-        min_scenes = 64
-        max_scenes = 80
-        runtime_label = "20 min (~70 scenes, <=15s segments)"
+        target_scenes = 40
+        min_scenes = 36
+        max_scenes = 45
+        runtime_label = "20 min (~40 scenes, <=15s segments)"
     elif "15" in length_str:
-        target_scenes = 52
-        min_scenes = 48
-        max_scenes = 60
-        runtime_label = "15 min (~52 scenes, <=15s segments)"
+        target_scenes = 30
+        min_scenes = 26
+        max_scenes = 35
+        runtime_label = "15 min (~30 scenes, <=15s segments)"
     elif "10" in length_str:
-        target_scenes = 36
-        min_scenes = 32
-        max_scenes = 42
-        runtime_label = "10 min (~36 scenes, <=15s segments)"
+        target_scenes = 20
+        min_scenes = 18
+        max_scenes = 24
+        runtime_label = "10 min (~20 scenes, <=15s segments)"
     else:
-        target_scenes = 18
-        min_scenes = 16
-        max_scenes = 22
-        runtime_label = "5 min (~18 scenes, <=15s segments)"
+        target_scenes = 12
+        min_scenes = 10
+        max_scenes = 14
+        runtime_label = "5 min (~12 scenes, <=15s segments)"
 
     # Age band styling guidelines
     age_str = str(age_band)

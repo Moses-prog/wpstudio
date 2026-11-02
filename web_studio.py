@@ -1,3 +1,4 @@
+import threading
 import os
 import sys
 import gc
@@ -2370,49 +2371,55 @@ def api_tooncraft_generate():
         )
         database.update_job_completion(int(job_id), json.dumps(toon_data), bible_pdf, scene_pdf)
 
-        # Deliver all 5 individual PDFs directly to Telegram chat
-        header_text = (
-            f"<b>ToonCraft 3D Kids Cartoon Package Ready!</b>\n\n"
-            f"<b>Title:</b> {story_title}\n"
-            f"<b>Logline:</b> <i>{toon_data.get('logline', '')}</i>\n"
-            f"<b>Cast World:</b> {character_type} | <b>Age Band:</b> {age_band} Years\n"
-            f"<b>Genre:</b> {genre} | <b>Tone:</b> {tone}\n"
-            f"<b>Total Scenes:</b> {total_scenes} (<=15s segments)\n"
-            f"<b>Songs / Nursery Rhymes:</b> {'Yes' if has_songs else 'No'} | <b>Dance Breaks:</b> {'Yes' if has_dance else 'No'}\n\n"
-            f"<i>All 5 production PDFs have been delivered to your chat below:</i>"
-        )
-        send_telegram_message(user_id, header_text)
+        # Deliver all 5 individual PDFs directly to Telegram chat in background thread (instant client response)
+        def _deliver_tooncraft_telegram():
+            try:
+                header_text = (
+                    f"<b>ToonCraft 3D Kids Cartoon Package Ready!</b>\n\n"
+                    f"<b>Title:</b> {story_title}\n"
+                    f"<b>Logline:</b> <i>{toon_data.get('logline', '')}</i>\n"
+                    f"<b>Cast World:</b> {character_type} | <b>Age Band:</b> {age_band} Years\n"
+                    f"<b>Genre:</b> {genre} | <b>Tone:</b> {tone}\n"
+                    f"<b>Total Scenes:</b> {total_scenes} (<=15s segments)\n"
+                    f"<b>Songs / Nursery Rhymes:</b> {'Yes' if has_songs else 'No'} | <b>Dance Breaks:</b> {'Yes' if has_dance else 'No'}\n\n"
+                    f"<i>All 5 production PDFs have been delivered to your chat below:</i>"
+                )
+                send_telegram_message(user_id, header_text)
 
-        if script_pdf and os.path.exists(script_pdf):
-            send_telegram_document(
-                user_id=user_id,
-                file_path=script_pdf,
-                caption=f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{story_title}</i>\nReady for voice actors and narrator recording."
-            )
-        if char_pdf and os.path.exists(char_pdf):
-            send_telegram_document(
-                user_id=user_id,
-                file_path=char_pdf,
-                caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body 3D Pixar visual consistency locks for Midjourney & Flux."
-            )
-        if loc_pdf and os.path.exists(loc_pdf):
-            send_telegram_document(
-                user_id=user_id,
-                file_path=loc_pdf,
-                caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster unoccupied background reference prompts for recurring settings."
-            )
-        if bible_pdf and os.path.exists(bible_pdf):
-            send_telegram_document(
-                user_id=user_id,
-                file_path=bible_pdf,
-                caption=f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{story_title}</i>\nTight Octane 3D Pixar render prompts."
-            )
-        if scene_pdf and os.path.exists(scene_pdf):
-            send_telegram_document(
-                user_id=user_id,
-                file_path=scene_pdf,
-                caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>\nSmooth camera & character animation prompts for Kling & Runway."
-            )
+                if script_pdf and os.path.exists(script_pdf):
+                    send_telegram_document(
+                        user_id=user_id,
+                        file_path=script_pdf,
+                        caption=f"<b>PDF 1: Full Voiceover & Song Screenplay Script</b>\n<i>{story_title}</i>\nReady for voice actors and narrator recording."
+                    )
+                if char_pdf and os.path.exists(char_pdf):
+                    send_telegram_document(
+                        user_id=user_id,
+                        file_path=char_pdf,
+                        caption=f"<b>PDF 2: Character Sheet Prompts</b>\n<i>{story_title}</i>\nFull-body 3D Pixar visual consistency locks for Midjourney & Flux."
+                    )
+                if loc_pdf and os.path.exists(loc_pdf):
+                    send_telegram_document(
+                        user_id=user_id,
+                        file_path=loc_pdf,
+                        caption=f"<b>PDF 3: Recurring Location Consistency Prompts</b>\n<i>{story_title}</i>\nMaster unoccupied background reference prompts for recurring settings."
+                    )
+                if bible_pdf and os.path.exists(bible_pdf):
+                    send_telegram_document(
+                        user_id=user_id,
+                        file_path=bible_pdf,
+                        caption=f"<b>PDF 4: Scene-by-Scene 3D Image Prompts</b>\n<i>{story_title}</i>\nTight Octane 3D Pixar render prompts."
+                    )
+                if scene_pdf and os.path.exists(scene_pdf):
+                    send_telegram_document(
+                        user_id=user_id,
+                        file_path=scene_pdf,
+                        caption=f"<b>PDF 5: Scene Video Motion Prompts</b>\n<i>{story_title}</i>\nSmooth camera & character animation prompts for Kling & Runway."
+                    )
+            except Exception as tg_err:
+                print(f"[TOONCRAFT ASYNC TG ERROR] {tg_err}")
+
+        threading.Thread(target=_deliver_tooncraft_telegram, daemon=True).start()
 
         refreshed_user = database.get_user(user_id)
         return jsonify({

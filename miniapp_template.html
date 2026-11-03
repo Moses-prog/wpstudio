@@ -1471,239 +1471,7 @@
         }
 
         /* Story Adapter Multi-Step & Visual Styling */
-        /* Podcast Studio Rival Flow & Obsidian Polish */
-        .podcast-stepper-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 6px 2px 10px 2px;
-            margin-bottom: 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        .podcast-stepper-bar::-webkit-scrollbar {
-            display: none;
-        }
-        .podcast-step-tab {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            padding-bottom: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            opacity: 0.55;
-            transition: all 0.2s ease;
-            border-bottom: 2px solid transparent;
-        }
-        .podcast-step-tab.active {
-            opacity: 1;
-            border-bottom: 2px solid #f59e0b;
-        }
-        .podcast-step-tab.completed {
-            opacity: 0.9;
-        }
-        .podcast-step-circle {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            background: #141824;
-            color: #64748b;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            flex-shrink: 0;
-        }
-        .podcast-step-tab.active .podcast-step-circle {
-            background: #141824;
-            color: #f59e0b;
-            border: 1.5px solid #f59e0b;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
-        }
-        .podcast-step-tab.completed .podcast-step-circle {
-            background: #10b981;
-            color: #ffffff;
-            border: 1px solid #10b981;
-        }
-        .podcast-step-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #94a3b8;
-        }
-        .podcast-step-tab.active .podcast-step-label {
-            color: #ffffff;
-            font-weight: 600;
-        }
-        .podcast-step-tab.completed .podcast-step-label {
-            color: #cbd5e1;
-        }
-
-        .pod-card {
-            background: #0d111a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 18px 16px;
-            margin-bottom: 16px;
-        }
-        .pod-section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .pod-section-badge {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 1.5px solid #f59e0b;
-            color: #f59e0b;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .pod-section-heading {
-            font-size: 12.5px;
-            font-weight: 700;
-            letter-spacing: 0.8px;
-            color: #e2e8f0;
-            text-transform: uppercase;
-        }
-        .pod-field-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        .pod-field-subtext {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.45;
-            margin-top: 6px;
-            margin-bottom: 12px;
-        }
-
-        .pod-pill-btn {
-            background: #141824;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #cbd5e1;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 12.5px;
-            font-weight: 500;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .pod-pill-btn:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: #181d2e;
-        }
-        .pod-pill-btn.active {
-            background: #161b2a;
-            border: 1.5px solid #6366f1;
-            color: #f59e0b;
-            font-weight: 600;
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
-        }
-
-        .pod-upload-box {
-            border: 1.5px dashed rgba(255, 255, 255, 0.16);
-            border-radius: 10px;
-            padding: 24px 16px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.25);
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .pod-upload-box:hover {
-            border-color: #f59e0b;
-            background: rgba(245, 158, 11, 0.03);
-        }
-
-        .pod-callout-orange {
-            border-left: 3px solid #f59e0b;
-            background: rgba(245, 158, 11, 0.06);
-            padding: 12px 14px;
-            border-radius: 0 8px 8px 0;
-            color: #cbd5e1;
-            font-size: 11.5px;
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-
-        .pod-callout-teal {
-            border: 1px solid rgba(20, 184, 166, 0.4);
-            background: rgba(20, 184, 166, 0.06);
-            padding: 14px;
-            border-radius: 8px;
-            color: #cbd5e1;
-            font-size: 12px;
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-
-        .btn-pod-next {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #0b0e14;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 10px 24px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-        }
-        .btn-pod-next:hover {
-            filter: brightness(1.1);
-        }
-
-        .btn-pod-back {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-pod-back:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn-pod-generate {
-            width: 100%;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #0b0e14;
-            font-size: 14px;
-            font-weight: 700;
-            padding: 14px 20px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
-        }
-        .btn-pod-generate:hover {
-            filter: brightness(1.1);
-        }
-
+        /* Polished Unified Stepper Bar across ToonCraft, Podcast Studio & History */
         .adapter-step-bar {
             display: flex;
             align-items: center;
@@ -1714,14 +1482,21 @@
             border-radius: 12px;
             padding: 4px;
             gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .adapter-step-bar::-webkit-scrollbar {
+            display: none;
         }
         .step-tab {
             flex: 1;
+            min-width: 68px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 8px 4px;
+            gap: 5px;
+            padding: 8px 6px;
             border-radius: 8px;
             font-size: 11px;
             font-weight: 600;
@@ -1729,6 +1504,7 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            white-space: nowrap;
         }
         .step-tab.active {
             background: var(--card-bg);
@@ -1748,10 +1524,16 @@
             align-items: center;
             justify-content: center;
             font-size: 10px;
+            flex-shrink: 0;
         }
         .step-tab.active .step-num {
             background: #e5a93c;
             color: #000;
+            font-weight: 700;
+        }
+        .step-tab.completed .step-num {
+            background: var(--success);
+            color: #fff;
             font-weight: 700;
         }
         .pills-grid {
@@ -3279,360 +3061,364 @@
                     <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                     Podcast Studio (Viral Multi-Cam AI Podcast)
                 </div>
-                <button class="modal-close" onclick="closeAllModals()">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button class="btn-cancel" onclick="openVaultForStudio('podcast')" style="padding:4px 10px; font-size:11px;">Vault</button>
+                    <button class="modal-close" onclick="closeAllModals()">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
             </div>
             <div class="modal-subtitle">Viral short-form podcast blueprint: 3s hook, studio continuity, multi-cam cutaways, 3 executive PDFs.</div>
         </div>
         <div class="modal-body">
-            <!-- Stepper Navigation Bar -->
-            <div id="podcast-stepper-bar" class="podcast-stepper-bar">
-                <div id="pod-tab-1" class="podcast-step-tab active" onclick="goToPodcastStep(1)">
-                    <span class="podcast-step-circle">1</span>
-                    <span class="podcast-step-label">Topic dir...</span>
+            <!-- Stepper Navigation Bar (Native ToonCraft Style) -->
+            <div class="adapter-step-bar" id="pod-stepper-bar" style="margin-bottom:16px;">
+                <div id="pod-tab-1" class="step-tab active" onclick="goToPodcastStep(1)">
+                    <span class="step-num">1</span> <span class="step-label">Topic</span>
                 </div>
-                <div id="pod-tab-2" class="podcast-step-tab" onclick="goToPodcastStep(2)">
-                    <span class="podcast-step-circle">2</span>
-                    <span class="podcast-step-label">Format &amp;...</span>
+                <div id="pod-tab-2" class="step-tab" onclick="goToPodcastStep(2)">
+                    <span class="step-num">2</span> <span class="step-label">Format</span>
                 </div>
-                <div id="pod-tab-3" class="podcast-step-tab" onclick="goToPodcastStep(3)">
-                    <span class="podcast-step-circle">3</span>
-                    <span class="podcast-step-label">Characte...</span>
+                <div id="pod-tab-3" class="step-tab" onclick="goToPodcastStep(3)">
+                    <span class="step-num">3</span> <span class="step-label">Portraits</span>
                 </div>
-                <div id="pod-tab-4" class="podcast-step-tab" onclick="goToPodcastStep(4)">
-                    <span class="podcast-step-circle">4</span>
-                    <span class="podcast-step-label">Host 1 voi...</span>
+                <div id="pod-tab-4" class="step-tab" onclick="goToPodcastStep(4)">
+                    <span class="step-num">4</span> <span class="step-label">Host 1</span>
                 </div>
-                <div id="pod-tab-5" class="podcast-step-tab" onclick="goToPodcastStep(5)">
-                    <span class="podcast-step-circle">5</span>
-                    <span class="podcast-step-label">Accent</span>
+                <div id="pod-tab-5" class="step-tab" onclick="goToPodcastStep(5)">
+                    <span class="step-num">5</span> <span class="step-label">Accent</span>
                 </div>
-                <div id="pod-tab-6" class="podcast-step-tab" onclick="goToPodcastStep(6)">
-                    <span class="podcast-step-circle">6</span>
-                    <span class="podcast-step-label">Host 2...</span>
+                <div id="pod-tab-6" class="step-tab" onclick="goToPodcastStep(6)">
+                    <span class="step-num">6</span> <span class="step-label">Host 2</span>
                 </div>
-                <div id="pod-tab-7" class="podcast-step-tab" onclick="goToPodcastStep(7)">
-                    <span class="podcast-step-circle" id="pod-tab-7-circle">7</span>
-                    <span class="podcast-step-label">Channel ...</span>
+                <div id="pod-tab-7" class="step-tab" onclick="goToPodcastStep(7)">
+                    <span class="step-num" id="pod-tab-7-circle">7</span> <span class="step-label">Branding</span>
                 </div>
             </div>
 
             <!-- STEP 1: TOPIC DIRECTION -->
-            <div id="pod-step-1" class="pod-step-pane">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">1</span>
-                        <span class="pod-section-heading">TOPIC DIRECTION</span>
-                    </div>
+            <div id="pod-step-1" class="toon-step-pane">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">What episode should we make?</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Choose a category, provide your angle or let AI invent a high-voltage debate.</div>
 
-                    <div class="pod-field-label">PODCAST CATEGORY</div>
-                    <div class="pills-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px; margin-bottom:6px;">
-                        <div class="pod-pill-btn active" data-cat="Motivational Quotes" onclick="setPodcastCategory('Motivational Quotes', this)">Motivational Quotes</div>
-                        <div class="pod-pill-btn" data-cat="Relationship" onclick="setPodcastCategory('Relationship', this)">Relationship</div>
-                        <div class="pod-pill-btn" data-cat="Business" onclick="setPodcastCategory('Business', this)">Business</div>
-                        <div class="pod-pill-btn" data-cat="Alpha Male" onclick="setPodcastCategory('Alpha Male', this)">Alpha Male</div>
-                        <div class="pod-pill-btn" data-cat="Feminist" onclick="setPodcastCategory('Feminist', this)">Feminist</div>
-                        <div class="pod-pill-btn" data-cat="Pregnancy" onclick="setPodcastCategory('Pregnancy', this)">Pregnancy</div>
-                        <div class="pod-pill-btn" data-cat="Marriage" onclick="setPodcastCategory('Marriage', this)">Marriage</div>
-                        <div class="pod-pill-btn" data-cat="Custom Niche" onclick="setPodcastCategory('Custom Niche', this)">Custom Niche</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">PODCAST CATEGORY</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div class="pill-btn active" data-cat="Motivational Quotes" onclick="setPodcastCategory('Motivational Quotes', this)">Motivational Quotes</div>
+                        <div class="pill-btn" data-cat="Relationship" onclick="setPodcastCategory('Relationship', this)">Relationship</div>
+                        <div class="pill-btn" data-cat="Business" onclick="setPodcastCategory('Business', this)">Business</div>
+                        <div class="pill-btn" data-cat="Alpha Male" onclick="setPodcastCategory('Alpha Male', this)">Alpha Male</div>
+                        <div class="pill-btn" data-cat="Feminist" onclick="setPodcastCategory('Feminist', this)">Feminist</div>
+                        <div class="pill-btn" data-cat="Pregnancy" onclick="setPodcastCategory('Pregnancy', this)">Pregnancy</div>
+                        <div class="pill-btn" data-cat="Marriage" onclick="setPodcastCategory('Marriage', this)">Marriage</div>
+                        <div class="pill-btn" data-cat="Custom Niche" onclick="setPodcastCategory('Custom Niche', this)">Custom Niche</div>
                     </div>
-                    <div class="pod-field-subtext">Choose a category, then provide your own direction or let AI create a fresh idea.</div>
+                    <div class="form-hint" style="font-size:11px;">Choose a category, then provide your own direction or let AI create a fresh idea.</div>
+                </div>
 
-                    <div class="pod-field-label" style="margin-top:16px;">TOPIC SOURCE</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:6px;">
-                        <div id="pod-ts-custom" class="pod-pill-btn" onclick="setPodcastTopicMode('custom', this)">Custom Topic</div>
-                        <div id="pod-ts-ai" class="pod-pill-btn active" onclick="setPodcastTopicMode('ai_idea', this)">AI Idea</div>
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">TOPIC SOURCE</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div id="pod-ts-ai" class="pill-btn active" onclick="setPodcastTopicMode('ai_idea', this)">AI Idea</div>
+                        <div id="pod-ts-custom" class="pill-btn" onclick="setPodcastTopicMode('custom', this)">Custom Topic</div>
                     </div>
-                    <div id="pod-topic-help" class="pod-field-subtext">Custom Topic follows your perception. AI Idea selects a fresh topic from the chosen category.</div>
+                    <div id="pod-topic-help" class="form-hint" style="font-size:11px;">AI Idea selects a fresh, high-voltage topic from the chosen category.</div>
 
-                    <div id="pod-custom-topic-box" style="display:none; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
-                        <div class="pod-field-label">SUGGESTED TOPIC</div>
-                        <input type="text" id="pod-input-custom-topic" class="form-input" placeholder="Example: Why comfort quietly destroys ambition..." maxlength="300" style="margin-bottom:12px;">
-                        <div class="pod-field-label">YOUR PERSPECTIVE / STORY ANGLE (OPTIONAL)</div>
-                        <textarea id="pod-input-perspective" class="form-textarea" rows="3" placeholder="Add your viewpoint, angle, or core thesis. The AI will preserve your exact perception throughout the episode..." maxlength="2000"></textarea>
+                    <div id="pod-custom-topic-box" style="display:none; margin-top:10px;">
+                        <div class="form-label" style="font-size:11px;">Suggested Topic</div>
+                        <input type="text" id="pod-input-custom-topic" class="form-input" placeholder="Example: Why comfort quietly destroys ambition..." maxlength="300" style="margin-bottom:10px;">
+                        <div class="form-label" style="font-size:11px;">Your Perspective / Story Angle (Optional)</div>
+                        <textarea id="pod-input-perspective" class="form-input" style="height:80px;" placeholder="Add your viewpoint, angle, or core thesis. The AI will preserve your exact perception throughout the episode..." maxlength="2000"></textarea>
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end;">
-                    <button class="btn-pod-next" onclick="goToPodcastStep(2)">
-                        Next &rarr;
-                    </button>
-                </div>
+                <button class="btn-submit" onclick="goToPodcastStep(2)" style="margin-top:10px;">Next &rarr;</button>
             </div>
 
             <!-- STEP 2: FORMAT & VISUAL STYLE -->
-            <div id="pod-step-2" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">2</span>
-                        <span class="pod-section-heading">FORMAT &amp; VISUAL STYLE</span>
-                    </div>
+            <div id="pod-step-2" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Format &amp; Visual Style</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Select the host format, visual renderer, studio set, and target framing.</div>
 
-                    <div class="pod-field-label">HOST FORMAT</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:6px;">
-                        <div id="pod-hf-single" class="pod-pill-btn" onclick="setPodcastHostFormat('single_host', this)">Single Host</div>
-                        <div id="pod-hf-two" class="pod-pill-btn active" onclick="setPodcastHostFormat('two_host', this)">Two Hosts</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">HOST FORMAT</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div id="pod-hf-two" class="pill-btn active" onclick="setPodcastHostFormat('two_host', this)">Two Hosts</div>
+                        <div id="pod-hf-single" class="pill-btn" onclick="setPodcastHostFormat('single_host', this)">Single Host</div>
                     </div>
-                    <div class="pod-field-subtext">Single-host episodes use direct address. Two-host episodes mix debate, banter, discussion and reactions.</div>
+                    <div class="form-hint" style="font-size:11px;">Single-host episodes use direct address. Two-host episodes mix debate, banter, discussion and reactions.</div>
+                </div>
 
-                    <div class="pod-field-label" style="margin-top:16px;">VISUAL STYLE</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:6px;">
-                        <div id="pod-vs-human" class="pod-pill-btn active" onclick="setPodcastVisual('human_realistic', this)">Human Realistic</div>
-                        <div id="pod-vs-3d" class="pod-pill-btn" onclick="setPodcastVisual('pixar_3d', this)">3D animated</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">VISUAL STYLE</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div id="pod-vs-human" class="pill-btn active" onclick="setPodcastVisual('human_realistic', this)">Human Realistic</div>
+                        <div id="pod-vs-3d" class="pill-btn" onclick="setPodcastVisual('pixar_3d', this)">3D Animated</div>
                     </div>
-                    <div class="pod-field-subtext">The selected look stays locked across the full episode.</div>
+                    <div class="form-hint" style="font-size:11px;">The selected look stays locked across the full episode.</div>
+                </div>
 
-                    <div class="pod-field-label" style="margin-top:16px;">HOST DISCUSSION DYNAMIC</div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px; margin-bottom:6px;">
-                        <div class="pod-pill-btn active" data-dyn="heated_debate" onclick="setPodcastDynamic('heated_debate', this)">Heated Debate</div>
-                        <div class="pod-pill-btn" data-dyn="interviewer_expert" onclick="setPodcastDynamic('interviewer_expert', this)">Interviewer &amp; Expert</div>
-                        <div class="pod-pill-btn" data-dyn="unfiltered_banter" onclick="setPodcastDynamic('unfiltered_banter', this)">Unfiltered Banter</div>
-                        <div class="pod-pill-btn" data-dyn="philosophical_chill" onclick="setPodcastDynamic('philosophical_chill', this)">Deep Philosophical</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">HOST DISCUSSION DYNAMIC</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div class="pill-btn active" data-dyn="heated_debate" onclick="setPodcastDynamic('heated_debate', this)">Heated Debate</div>
+                        <div class="pill-btn" data-dyn="interviewer_expert" onclick="setPodcastDynamic('interviewer_expert', this)">Interviewer &amp; Expert</div>
+                        <div class="pill-btn" data-dyn="unfiltered_banter" onclick="setPodcastDynamic('unfiltered_banter', this)">Unfiltered Banter</div>
+                        <div class="pill-btn" data-dyn="philosophical_chill" onclick="setPodcastDynamic('philosophical_chill', this)">Deep Philosophical</div>
                     </div>
+                </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:16px;">
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                         <div>
-                            <div class="pod-field-label">STUDIO SET ARCHETYPE</div>
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <div class="pod-pill-btn active" data-set="dark_acoustic" onclick="setPodcastStudioSet('dark_acoustic', this)">Dark Slate Acoustic</div>
-                                <div class="pod-pill-btn" data-set="neon_cyber" onclick="setPodcastStudioSet('neon_cyber', this)">Neon Cyber Lounge</div>
-                                <div class="pod-pill-btn" data-set="luxury_penthouse" onclick="setPodcastStudioSet('luxury_penthouse', this)">Luxury Penthouse</div>
-                                <div class="pod-pill-btn" data-set="cozy_loft" onclick="setPodcastStudioSet('cozy_loft', this)">Cozy Living Room</div>
-                                <div class="pod-pill-btn" data-set="pixar_studio" onclick="setPodcastStudioSet('pixar_studio', this)">Pixar 3D Broadcast</div>
-                            </div>
+                            <div class="form-label">STUDIO SET</div>
+                            <select id="pod-sel-studio-set" class="form-input" onchange="setPodcastStudioSet(this.value, null)">
+                                <option value="dark_acoustic" selected>Dark Slate Acoustic</option>
+                                <option value="neon_cyber">Neon Cyber Lounge</option>
+                                <option value="luxury_penthouse">Luxury Penthouse</option>
+                                <option value="cozy_loft">Cozy Living Room</option>
+                                <option value="pixar_studio">Pixar 3D Broadcast</option>
+                            </select>
                         </div>
                         <div>
-                            <div class="pod-field-label">TARGET FRAMING</div>
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <div class="pod-pill-btn active" data-ar="9:16 Vertical" onclick="setPodcastAspect('9:16 Vertical', this)">9:16 Vertical (Shorts/TikTok)</div>
-                                <div class="pod-pill-btn" data-ar="16:9 Widescreen" onclick="setPodcastAspect('16:9 Widescreen', this)">16:9 Widescreen (YouTube)</div>
-                            </div>
+                            <div class="form-label">TARGET FRAMING</div>
+                            <select id="pod-sel-aspect-ratio" class="form-input" onchange="setPodcastAspect(this.value, null)">
+                                <option value="9:16 Vertical" selected>9:16 Vertical (Shorts/TikTok)</option>
+                                <option value="16:9 Widescreen">16:9 Widescreen (YouTube)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between;">
-                    <button class="btn-pod-back" onclick="goToPodcastStep(1)">&larr; Back</button>
-                    <button class="btn-pod-next" onclick="goToPodcastStep(3)">Next &rarr;</button>
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn-cancel" onclick="goToPodcastStep(1)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(3)" style="flex:2; margin-top:0;">Next &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 3: CHARACTER PORTRAITS OPTIONAL -->
-            <div id="pod-step-3" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">3</span>
-                        <span class="pod-section-heading">CHARACTER PORTRAITS <em style="font-size:11px; font-weight:normal; color:#94a3b8; font-style:normal;">OPTIONAL</em></span>
-                    </div>
+            <div id="pod-step-3" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Character Portraits <em style="font-size:11px; font-weight:normal; color:#e5a93c; font-style:normal;">(Optional)</em></div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Upload host portraits to lock facial identity across all scenes, or leave empty to auto-invent from scratch.</div>
 
-                    <div class="pod-callout-orange">
-                        Upload clear character portraits to lock facial identity. The AI may design one consistent hairstyle, outfit, makeup, jewelry and accessories, but the face remains unchanged. Leave both empty to create characters from scratch.
-                    </div>
+                <div style="border-left: 3px solid #e5a93c; background: rgba(229, 169, 60, 0.08); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 11.5px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                    Upload clear character portraits to lock facial identity. The AI may design one consistent hairstyle, outfit, makeup, jewelry and accessories, but the face remains unchanged. Leave both empty to create characters from scratch.
+                </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                        <!-- Host 1 Portrait -->
-                        <div>
-                            <div class="pod-field-label">HOST 1 PORTRAIT</div>
-                            <div class="pod-upload-box" onclick="document.getElementById('pod-h1-file').click()">
-                                <input type="file" id="pod-h1-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(1, event)">
-                                <div id="pod-h1-upload-prompt">
-                                    <div style="color:#f59e0b; font-weight:600; font-size:13px; margin-bottom:4px;">Upload portrait</div>
-                                    <div style="color:#64748b; font-size:10.5px;">PNG, JPEG or WebP &middot; max 8 MB</div>
-                                </div>
-                                <div id="pod-h1-preview-wrap" style="display:none; text-align:center;">
-                                    <img id="pod-h1-preview-img" src="" style="width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid #f59e0b; margin-bottom:6px;">
-                                    <div id="pod-h1-preview-name" style="font-size:11px; font-weight:600; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
-                                    <button type="button" onclick="event.stopPropagation(); removeHostPortrait(1);" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
-                                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                    <!-- Host 1 Portrait -->
+                    <div class="form-card">
+                        <div class="form-label" style="color:#e5a93c;">HOST 1 PORTRAIT</div>
+                        <div style="border: 1.5px dashed var(--border-color); border-radius: 10px; padding: 20px 10px; text-align: center; background: rgba(0,0,0,0.2); cursor: pointer;" onclick="document.getElementById('pod-h1-file').click()">
+                            <input type="file" id="pod-h1-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(1, event)">
+                            <div id="pod-h1-upload-prompt">
+                                <div style="color:#e5a93c; font-weight:700; font-size:12.5px; margin-bottom:4px;">Upload portrait</div>
+                                <div style="color:var(--text-muted); font-size:10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                            </div>
+                            <div id="pod-h1-preview-wrap" style="display:none; text-align:center;">
+                                <img id="pod-h1-preview-img" src="" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #e5a93c; margin-bottom:6px;">
+                                <div id="pod-h1-preview-name" style="font-size:11px; font-weight:600; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
+                                <button type="button" onclick="event.stopPropagation(); removeHostPortrait(1);" style="background:none; border:none; color:#ff453a; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Host 2 Portrait -->
-                        <div id="pod-h2-portrait-box">
-                            <div class="pod-field-label">HOST 2 PORTRAIT</div>
-                            <div class="pod-upload-box" onclick="document.getElementById('pod-h2-file').click()">
-                                <input type="file" id="pod-h2-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(2, event)">
-                                <div id="pod-h2-upload-prompt">
-                                    <div style="color:#f59e0b; font-weight:600; font-size:13px; margin-bottom:4px;">Upload portrait</div>
-                                    <div style="color:#64748b; font-size:10.5px;">PNG, JPEG or WebP &middot; max 8 MB</div>
-                                </div>
-                                <div id="pod-h2-preview-wrap" style="display:none; text-align:center;">
-                                    <img id="pod-h2-preview-img" src="" style="width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid #f59e0b; margin-bottom:6px;">
-                                    <div id="pod-h2-preview-name" style="font-size:11px; font-weight:600; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
-                                    <button type="button" onclick="event.stopPropagation(); removeHostPortrait(2);" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
-                                </div>
+                    <!-- Host 2 Portrait -->
+                    <div id="pod-h2-portrait-box" class="form-card">
+                        <div class="form-label" style="color:#e5a93c;">HOST 2 PORTRAIT</div>
+                        <div style="border: 1.5px dashed var(--border-color); border-radius: 10px; padding: 20px 10px; text-align: center; background: rgba(0,0,0,0.2); cursor: pointer;" onclick="document.getElementById('pod-h2-file').click()">
+                            <input type="file" id="pod-h2-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(2, event)">
+                            <div id="pod-h2-upload-prompt">
+                                <div style="color:#e5a93c; font-weight:700; font-size:12.5px; margin-bottom:4px;">Upload portrait</div>
+                                <div style="color:var(--text-muted); font-size:10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                            </div>
+                            <div id="pod-h2-preview-wrap" style="display:none; text-align:center;">
+                                <img id="pod-h2-preview-img" src="" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #e5a93c; margin-bottom:6px;">
+                                <div id="pod-h2-preview-name" style="font-size:11px; font-weight:600; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
+                                <button type="button" onclick="event.stopPropagation(); removeHostPortrait(2);" style="background:none; border:none; color:#ff453a; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between;">
-                    <button class="btn-pod-back" onclick="goToPodcastStep(2)">&larr; Back</button>
-                    <button class="btn-pod-next" onclick="goToPodcastStep(4)">Next &rarr;</button>
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn-cancel" onclick="goToPodcastStep(2)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(4)" style="flex:2; margin-top:0;">Next &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 4: HOST 1 VOICE & IDENTITY -->
-            <div id="pod-step-4" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">4</span>
-                        <span class="pod-section-heading">HOST 1 VOICE &amp; IDENTITY</span>
-                    </div>
+            <div id="pod-step-4" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Host 1 Voice &amp; Identity</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Configure the lead host gender, ethnicity, and visual styling.</div>
 
-                    <div class="pod-field-label">GENDER</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
-                        <div class="pod-pill-btn" onclick="setH1Gender('Female', this)">Female</div>
-                        <div class="pod-pill-btn active" onclick="setH1Gender('Male', this)">Male</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">GENDER</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+                        <div class="pill-btn" onclick="setH1Gender('Female', this)">Female</div>
+                        <div class="pill-btn active" onclick="setH1Gender('Male', this)">Male</div>
                     </div>
-
-                    <div class="pod-field-label">COMPLEXION / ETHNICITY</div>
-                    <div class="pills-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:8px; margin-bottom:14px;">
-                        <div class="pod-pill-btn active" onclick="setH1Eth('Black', this)">Black</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('White', this)">White</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('Hispanic/Latino', this)">Hispanic/Latino</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('South Asian', this)">South Asian</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('East Asian', this)">East Asian</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('Middle Eastern', this)">Middle Eastern</div>
-                        <div class="pod-pill-btn" onclick="setH1Eth('Custom', this)">Custom</div>
-                    </div>
-
-                    <div class="pod-field-label">DESCRIBE HOST 1 <em style="font-size:10.5px; font-weight:normal; color:#94a3b8; font-style:normal;">OPTIONAL</em></div>
-                    <textarea id="pod-h1-desc" class="form-textarea" rows="3" placeholder="Example: a warm Caribbean woman in her early 30s with shoulder-length locs and an expressive smile"></textarea>
-                    <div class="pod-field-subtext" style="margin-top:6px; margin-bottom:0;">Add age, hair, build or other details when no portrait is uploaded.</div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between;">
-                    <button class="btn-pod-back" onclick="goToPodcastStep(3)">&larr; Back</button>
-                    <button class="btn-pod-next" onclick="goToPodcastStep(5)">Next &rarr;</button>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">COMPLEXION / ETHNICITY</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+                        <div class="pill-btn active" onclick="setH1Eth('Black', this)">Black</div>
+                        <div class="pill-btn" onclick="setH1Eth('White', this)">White</div>
+                        <div class="pill-btn" onclick="setH1Eth('Hispanic/Latino', this)">Hispanic/Latino</div>
+                        <div class="pill-btn" onclick="setH1Eth('South Asian', this)">South Asian</div>
+                        <div class="pill-btn" onclick="setH1Eth('East Asian', this)">East Asian</div>
+                        <div class="pill-btn" onclick="setH1Eth('Middle Eastern', this)">Middle Eastern</div>
+                        <div class="pill-btn" onclick="setH1Eth('Custom', this)">Custom</div>
+                    </div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">DESCRIBE HOST 1 <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
+                    <textarea id="pod-h1-desc" class="form-input" style="height:74px;" placeholder="Example: a warm Caribbean woman in her early 30s with shoulder-length locs and an expressive smile"></textarea>
+                    <div class="form-hint" style="font-size:11px; margin-top:6px;">Add age, hair, build or other details when no portrait is uploaded.</div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn-cancel" onclick="goToPodcastStep(3)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(5)" style="flex:2; margin-top:0;">Next &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 5: ACCENT (HOST 1 ACCENT) -->
-            <div id="pod-step-5" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">5</span>
-                        <span class="pod-section-heading">ACCENT</span>
-                    </div>
+            <div id="pod-step-5" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Host 1 Accent</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Dialogue remains in English; only vocal delivery follows the accent.</div>
 
-                    <div class="pod-field-label">ACCENT</div>
-                    <div class="pills-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px; margin-bottom:6px;">
-                        <div class="pod-pill-btn active" onclick="setH1Accent('Nigerian English', this)">Nigerian English</div>
-                        <div class="pod-pill-btn" onclick="setH1Accent('American English', this)">American English</div>
-                        <div class="pod-pill-btn" onclick="setH1Accent('British English', this)">British English</div>
-                        <div class="pod-pill-btn" onclick="setH1Accent('Custom', this)">Custom</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">ACCENT</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div class="pill-btn active" onclick="setH1Accent('Nigerian English', this)">Nigerian English</div>
+                        <div class="pill-btn" onclick="setH1Accent('American English', this)">American English</div>
+                        <div class="pill-btn" onclick="setH1Accent('British English', this)">British English</div>
+                        <div class="pill-btn" onclick="setH1Accent('Custom', this)">Custom</div>
                     </div>
-                    <div class="pod-field-subtext">Dialogue remains in English; only vocal delivery follows the accent.</div>
+                    <div class="form-hint" style="font-size:11px;">Dialogue remains in English; only vocal delivery follows the accent.</div>
+                </div>
 
-                    <div class="pod-field-label" style="margin-top:14px;">CUSTOM HOST 1 ACCENT <em style="font-size:10.5px; font-weight:normal; color:#94a3b8; font-style:normal;">OPTIONAL</em></div>
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">CUSTOM HOST 1 ACCENT <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
                     <input type="text" id="pod-h1-custom-accent" class="form-input" placeholder="Example: Jamaican accent, Indian accent, Korean accent">
                 </div>
 
-                <div style="display:flex; justify-content:space-between;">
-                    <button class="btn-pod-back" onclick="goToPodcastStep(4)">&larr; Back</button>
-                    <button class="btn-pod-next" onclick="handleStep5Next()">Next &rarr;</button>
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn-cancel" onclick="goToPodcastStep(4)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="handleStep5Next()" style="flex:2; margin-top:0;">Next &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 6: HOST 2 VOICE & IDENTITY & ACCENT (Shown when Two Hosts) -->
-            <div id="pod-step-6" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge">5</span>
-                        <span class="pod-section-heading">HOST 2 VOICE &amp; IDENTITY</span>
+            <div id="pod-step-6" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Host 2 Voice &amp; Identity</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Configure the co-host or debate counterpoint vocal and visual profile.</div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">GENDER</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+                        <div class="pill-btn" onclick="setH2Gender('Female', this)">Female</div>
+                        <div class="pill-btn active" onclick="setH2Gender('Male', this)">Male</div>
                     </div>
+                </div>
 
-                    <div class="pod-field-label">GENDER</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
-                        <div class="pod-pill-btn" onclick="setH2Gender('Female', this)">Female</div>
-                        <div class="pod-pill-btn active" onclick="setH2Gender('Male', this)">Male</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">COMPLEXION / ETHNICITY</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+                        <div class="pill-btn" onclick="setH2Eth('Black', this)">Black</div>
+                        <div class="pill-btn" onclick="setH2Eth('White', this)">White</div>
+                        <div class="pill-btn active" onclick="setH2Eth('Hispanic/Latino', this)">Hispanic/Latino</div>
+                        <div class="pill-btn" onclick="setH2Eth('South Asian', this)">South Asian</div>
+                        <div class="pill-btn" onclick="setH2Eth('East Asian', this)">East Asian</div>
+                        <div class="pill-btn" onclick="setH2Eth('Middle Eastern', this)">Middle Eastern</div>
+                        <div class="pill-btn" onclick="setH2Eth('Custom', this)">Custom</div>
                     </div>
+                </div>
 
-                    <div class="pod-field-label">COMPLEXION / ETHNICITY</div>
-                    <div class="pills-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:8px; margin-bottom:14px;">
-                        <div class="pod-pill-btn" onclick="setH2Eth('Black', this)">Black</div>
-                        <div class="pod-pill-btn" onclick="setH2Eth('White', this)">White</div>
-                        <div class="pod-pill-btn active" onclick="setH2Eth('Hispanic/Latino', this)">Hispanic/Latino</div>
-                        <div class="pod-pill-btn" onclick="setH2Eth('South Asian', this)">South Asian</div>
-                        <div class="pod-pill-btn" onclick="setH2Eth('East Asian', this)">East Asian</div>
-                        <div class="pod-pill-btn" onclick="setH2Eth('Middle Eastern', this)">Middle Eastern</div>
-                        <div class="pod-pill-btn" onclick="setH2Eth('Custom', this)">Custom</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">DESCRIBE HOST 2 <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
+                    <textarea id="pod-h2-desc" class="form-input" style="height:74px;" placeholder="Example: a thoughtful East Asian man in his late 20s with neat black hair and round glasses"></textarea>
+                    <div class="form-hint" style="font-size:11px; margin-top:6px;">Add age, hair, build or other details when no portrait is uploaded.</div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">ACCENT</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
+                        <div class="pill-btn" onclick="setH2Accent('Nigerian English', this)">Nigerian English</div>
+                        <div class="pill-btn active" onclick="setH2Accent('American English', this)">American English</div>
+                        <div class="pill-btn" onclick="setH2Accent('British English', this)">British English</div>
+                        <div class="pill-btn" onclick="setH2Accent('Custom', this)">Custom</div>
                     </div>
-
-                    <div class="pod-field-label">DESCRIBE HOST 2 <em style="font-size:10.5px; font-weight:normal; color:#94a3b8; font-style:normal;">OPTIONAL</em></div>
-                    <textarea id="pod-h2-desc" class="form-textarea" rows="3" placeholder="Example: a thoughtful East Asian man in his late 20s with neat black hair and round glasses"></textarea>
-                    <div class="pod-field-subtext" style="margin-top:6px; margin-bottom:14px;">Add age, hair, build or other details when no portrait is uploaded.</div>
-
-                    <div class="pod-field-label">ACCENT</div>
-                    <div class="pills-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px; margin-bottom:6px;">
-                        <div class="pod-pill-btn" onclick="setH2Accent('Nigerian English', this)">Nigerian English</div>
-                        <div class="pod-pill-btn active" onclick="setH2Accent('American English', this)">American English</div>
-                        <div class="pod-pill-btn" onclick="setH2Accent('British English', this)">British English</div>
-                        <div class="pod-pill-btn" onclick="setH2Accent('Custom', this)">Custom</div>
-                    </div>
-                    <div class="pod-field-subtext">Dialogue remains in English; only vocal delivery follows the accent.</div>
-
-                    <div class="pod-field-label" style="margin-top:14px;">CUSTOM HOST 2 ACCENT <em style="font-size:10.5px; font-weight:normal; color:#94a3b8; font-style:normal;">OPTIONAL</em></div>
+                    <div class="form-label" style="font-size:11px; margin-top:10px;">CUSTOM HOST 2 ACCENT <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
                     <input type="text" id="pod-h2-custom-accent" class="form-input" placeholder="Example: Jamaican accent, Indian accent, Korean accent">
                 </div>
 
-                <div style="display:flex; justify-content:space-between;">
-                    <button class="btn-pod-back" onclick="goToPodcastStep(5)">&larr; Back</button>
-                    <button class="btn-pod-next" onclick="goToPodcastStep(7)">Next &rarr;</button>
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn-cancel" onclick="goToPodcastStep(5)" style="flex:1;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(7)" style="flex:2; margin-top:0;">Next &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 7: CHANNEL BRANDING & REVIEW -->
-            <div id="pod-step-7" class="pod-step-pane" style="display:none;">
-                <div class="pod-card">
-                    <div class="pod-section-title">
-                        <span class="pod-section-badge" id="pod-step-7-num">6</span>
-                        <span class="pod-section-heading">CHANNEL BRANDING</span>
-                    </div>
+            <div id="pod-step-7" class="toon-step-pane" style="display:none;">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Channel Branding &amp; Review</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Brand your podcast set and confirm production parameters.</div>
 
-                    <div class="pod-field-label">CHANNEL NAME</div>
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">PODCAST CHANNEL NAME</div>
                     <input type="text" id="pod-input-channel" class="form-input" placeholder="Example: Real Talk Africa" value="Real Talk Africa" maxlength="120" style="margin-bottom:6px;">
-                    <div class="pod-field-subtext">Your exact channel name will rotate naturally across the studio wall, mugs, clothing, desk signs and neon props.</div>
+                    <div class="form-hint" style="font-size:11px;">Your exact channel name will rotate naturally across the studio wall, mugs, clothing, desk signs and neon props.</div>
+                </div>
 
-                    <div class="pod-callout-teal">
-                        <strong style="color:#ffffff;">What you receive:</strong> a detailed character and studio bible followed by 8&ndash;12 cinematic scene prompts with synchronized image, camera, reaction, voice and dialogue direction.
+                <div style="border-left: 3px solid #38bdf8; background: rgba(56, 189, 248, 0.08); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 11.5px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                    <strong style="color:#38bdf8;">What you receive:</strong> a detailed character and studio bible followed by 8&ndash;12 cinematic scene prompts with synchronized image, camera, reaction, voice and dialogue direction.
+                </div>
+
+                <div class="form-card" style="margin-bottom:14px; border:1px solid rgba(229,169,60,0.3); background:rgba(229,169,60,0.04);">
+                    <div style="font-size:11px; font-weight:700; color:#e5a93c; text-transform:uppercase; margin-bottom:8px;">PODCAST PRODUCTION SPECIFICATION</div>
+                    <div style="font-size:12px; line-height:1.7;">
+                        <div>Category: <strong id="pod-rev-cat" style="color:var(--text-main);">Motivational Quotes</strong></div>
+                        <div>Dynamic: <strong id="pod-rev-dyn" style="color:var(--text-main);">Heated Debate</strong></div>
+                        <div>Set Archetype: <strong id="pod-rev-set" style="color:var(--text-main);">Dark Slate Acoustic</strong></div>
+                        <div>Visual Style: <strong id="pod-rev-style" style="color:var(--text-main);">Human Realistic</strong> &middot; <span id="pod-rev-ar">9:16 Vertical</span></div>
+                        <div>Format: <strong id="pod-rev-fmt" style="color:var(--text-main);">Two Hosts</strong></div>
+                        <div>Deliverables: <strong>8&ndash;12 Multi-Cam Cuts, Script &amp; 3 Executive PDFs</strong></div>
                     </div>
+                </div>
 
-                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; margin-bottom:14px;">
-                        <div style="font-size:11px; font-weight:700; color:#f59e0b; text-transform:uppercase; margin-bottom:6px;">PRODUCTION SPECIFICATION</div>
-                        <div style="font-size:11.5px; line-height:1.7; color:#cbd5e1;">
-                            <div>Category: <strong id="pod-rev-cat" style="color:#ffffff;">Motivational Quotes</strong></div>
-                            <div>Dynamic: <strong id="pod-rev-dyn" style="color:#ffffff;">Heated Debate</strong></div>
-                            <div>Set Archetype: <strong id="pod-rev-set" style="color:#ffffff;">Dark Slate Acoustic</strong></div>
-                            <div>Visual Style: <strong id="pod-rev-style" style="color:#ffffff;">Human Realistic</strong> &middot; <span id="pod-rev-ar">9:16 Vertical</span></div>
-                            <div>Format: <strong id="pod-rev-fmt" style="color:#ffffff;">Two Hosts</strong></div>
-                            <div>Deliverables: <strong style="color:#ffffff;">8&ndash;12 Multi-Cam Cuts, Script &amp; 3 Executive PDFs</strong></div>
-                        </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 4px;">
+                    <div style="font-size:12px; color:var(--text-muted);">
+                        Generation Cost: <strong style="color:#e5a93c; font-size:14px;">25 Credits</strong>
                     </div>
-
-                    <div style="font-size:11px; color:#64748b; line-height:1.5; margin-bottom:12px;">
-                        Podcast generation costs 25 credits. A system failure is refunded automatically. The complete readable Get Story Idea-style PDF is saved in Website Files for 48 hours (recoverable until 72 hours for 5 credits per download).
-                        <div style="margin-top:4px; font-size:11.5px; color:#94a3b8;">Your balance: <strong id="pod-user-credits" style="color:#e2e8f0;">0 credits</strong></div>
+                    <div style="font-size:11px; color:var(--text-muted);">
+                        Your Balance: <strong id="pod-user-credits" style="color:var(--text-main);">0 credits</strong>
                     </div>
+                </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <button class="btn-pod-back" onclick="handleStep7Back()">&larr; Back</button>
-                    </div>
-
-                    <button id="btn-podcast-generate" class="btn-pod-generate" onclick="submitPodcast()">
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-cancel" onclick="handleStep7Back()" style="flex:1;">&larr; Back</button>
+                    <button id="btn-podcast-generate" class="btn-submit" onclick="submitPodcast()" style="flex:2; margin-top:0;">
                         Generate Podcast &mdash; 25 Credits
                     </button>
                 </div>
             </div>
 
             <!-- RESULTS PANE -->
-            <div id="pod-step-results" class="pod-step-pane" style="display:none;">
-                <div style="border-radius:12px; padding:16px; margin-bottom:14px; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.05);">
-                    <div style="font-size:11px; font-weight:700; color:#f59e0b; text-transform:uppercase;">Podcast Studio Production Package</div>
+            <div id="pod-step-results" class="toon-step-pane" style="display:none;">
+                <div style="border-radius:12px; padding:16px; margin-bottom:14px; border:1px solid rgba(229,169,60,0.4); background:rgba(229,169,60,0.05);">
+                    <div style="font-size:11px; font-weight:700; color:#e5a93c; text-transform:uppercase;">Podcast Studio Production Package</div>
                     <div id="pod-res-title" style="font-size:18px; font-weight:700; margin:4px 0;">Episode Title</div>
-                    <div id="pod-res-hook" style="font-size:12px; color:#ffffff; font-weight:600; margin-bottom:8px; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border-left:3px solid #f59e0b;">3s Hook Line</div>
+                    <div id="pod-res-hook" style="font-size:12px; color:#ffffff; font-weight:600; margin-bottom:8px; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border-left:3px solid #e5a93c;">3s Hook Line</div>
                     <div id="pod-res-meta" style="font-size:11px; display:flex; flex-wrap:wrap; gap:8px;"></div>
                 </div>
 
@@ -3646,7 +3432,7 @@
                 </div>
 
                 <div class="form-card" style="margin-bottom:16px;">
-                    <div class="form-label" style="color:#f59e0b;">HOST CHARACTER &amp; VOCAL PROFILES</div>
+                    <div class="form-label" style="color:#e5a93c;">HOST CHARACTER &amp; VOCAL PROFILES</div>
                     <div id="pod-hosts-container" style="display:flex; flex-direction:column; gap:10px;"></div>
                 </div>
 
@@ -3675,7 +3461,23 @@
             </div>
             <div class="modal-subtitle">Access previously generated screenplays and download production packages</div>
         </div>
-        <div class="modal-body">
+                <div class="modal-body">
+            <!-- Studio Filter Bar (StoryCraft, ToonCraft, Podcast Studio) -->
+            <div class="adapter-step-bar" id="history-filter-bar" style="margin-bottom:14px;">
+                <div class="step-tab active" data-vfilter="all" onclick="filterHistoryVault('all', this)">
+                    <span class="step-label">All Vault</span>
+                </div>
+                <div class="step-tab" data-vfilter="storycraft" onclick="filterHistoryVault('storycraft', this)">
+                    <span class="step-label">StoryCraft</span>
+                </div>
+                <div class="step-tab" data-vfilter="tooncraft" onclick="filterHistoryVault('tooncraft', this)">
+                    <span class="step-label">ToonCraft</span>
+                </div>
+                <div class="step-tab" data-vfilter="podcast" onclick="filterHistoryVault('podcast', this)">
+                    <span class="step-label">Podcast Studio</span>
+                </div>
+            </div>
+
             <div id="history-items-container">
                 <div class="form-hint" style="text-align:center; padding:20px;">No screenplays produced yet. Use StoryCraft Studio to produce your first screenplay.</div>
             </div>
@@ -5215,46 +5017,111 @@
             container.innerHTML = html;
         }
 
-        // Render History Vault
+        // Render History Vault with Studio Filtering (StoryCraft, ToonCraft, Podcast Studio)
+        let currentVaultFilter = 'all';
+
+        function filterHistoryVault(filterType, el) {
+            currentVaultFilter = filterType;
+            const bar = document.getElementById('history-filter-bar');
+            if (bar) {
+                bar.querySelectorAll('.step-tab').forEach(t => {
+                    t.classList.toggle('active', t.getAttribute('data-vfilter') === filterType);
+                });
+            }
+            renderHistoryVault();
+        }
+
+        function openVaultForStudio(studioName) {
+            currentVaultFilter = studioName || 'all';
+            closeAllModals();
+            openModal('history');
+            const bar = document.getElementById('history-filter-bar');
+            if (bar) {
+                bar.querySelectorAll('.step-tab').forEach(t => {
+                    t.classList.toggle('active', t.getAttribute('data-vfilter') === currentVaultFilter);
+                });
+            }
+            renderHistoryVault();
+        }
+
         function renderHistoryVault() {
             const container = document.getElementById('history-items-container');
             if (!container) return;
 
-            if (storyHistory.length === 0) {
-                container.innerHTML = '<div class="form-hint" style="text-align:center; padding:20px;">No screenplays produced yet. Use StoryCraft Studio to produce your first screenplay.</div>';
+            let filtered = storyHistory || [];
+            if (currentVaultFilter === 'podcast') {
+                filtered = filtered.filter(h => {
+                    const jt = (h.job_type || '').toLowerCase();
+                    const df = (h.delivery_format || '').toLowerCase();
+                    const si = (h.source_input || '').toLowerCase();
+                    return jt === 'podcast' || df.includes('podcast') || si.includes('podcast');
+                });
+            } else if (currentVaultFilter === 'tooncraft') {
+                filtered = filtered.filter(h => {
+                    const jt = (h.job_type || '').toLowerCase();
+                    const df = (h.delivery_format || '').toLowerCase();
+                    const si = (h.source_input || '').toLowerCase();
+                    return jt === 'tooncraft' || df.includes('cartoon') || si.includes('tooncraft');
+                });
+            } else if (currentVaultFilter === 'storycraft') {
+                filtered = filtered.filter(h => {
+                    const jt = (h.job_type || '').toLowerCase();
+                    const df = (h.delivery_format || '').toLowerCase();
+                    const si = (h.source_input || '').toLowerCase();
+                    return jt === 'storycraft' || (!jt && !df.includes('podcast') && !df.includes('cartoon') && !si.includes('podcast') && !si.includes('tooncraft'));
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="form-hint" style="text-align:center; padding:24px;">No productions found in this vault section.</div>';
                 return;
             }
 
             let html = '';
-            storyHistory.forEach(h => {
+            filtered.forEach(h => {
                 const jId = h.job_id || h.id;
-                const title = h.source_title || 'Untitled Screenplay';
+                const title = h.source_title || 'Untitled Production';
                 const date = h.created_at ? h.created_at.slice(0, 10) : '';
                 const isCompleted = (h.status === 'completed' || h.story_bible_pdf || h.scene_prompts_pdf || !!h.full_story_json);
                 const hasBible = !!h.story_bible_pdf || h.status === 'completed' || !!h.full_story_json;
                 const hasScene = !!h.scene_prompts_pdf || h.status === 'completed' || !!h.full_story_json;
 
+                const jt = (h.job_type || '').toLowerCase();
+                const df = (h.delivery_format || '').toLowerCase();
+                const si = (h.source_input || '').toLowerCase();
+
+                let featureLabel = 'StoryCraft Screenplay';
+                let featureChipStyle = 'background:rgba(229,169,60,0.15); color:#e5a93c; border:1px solid rgba(229,169,60,0.3);';
+                let isPodcast = (jt === 'podcast' || df.includes('podcast') || si.includes('podcast'));
+                let isToon = (jt === 'tooncraft' || df.includes('cartoon') || si.includes('tooncraft'));
+
+                if (isPodcast) {
+                    featureLabel = 'Podcast Studio';
+                    featureChipStyle = 'background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);';
+                } else if (isToon) {
+                    featureLabel = 'ToonCraft 3D';
+                    featureChipStyle = 'background:rgba(48,209,88,0.15); color:#30d158; border:1px solid rgba(48,209,88,0.3);';
+                }
+
                 html += `
-                    <div class="form-card" style="margin-bottom:10px; cursor:pointer; transition:border-color 0.18s, transform 0.18s;" onclick="resumeProductionJob(${jId})">
-                        <div class="concept-header">
-                            <span class="concept-num">${h.length_tier || 'Short'} &bull; ${h.culture || 'Universal'}</span>
-                            <span class="chip ${isCompleted ? 'ready' : 'active'}">${isCompleted ? 'READY &bull; RESUME' : 'IN PROGRESS'}</span>
+                    <div class="form-card" style="margin-bottom:12px; cursor:pointer; transition:all 0.18s ease;" onclick="resumeProductionJob(${jId})">
+                        <div class="concept-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="chip" style="${featureChipStyle} font-size:10px; font-weight:700;">${featureLabel}</span>
+                            <span class="chip ${isCompleted ? 'ready' : 'active'}">${isCompleted ? 'READY &bull; OPEN' : 'IN PROGRESS'}</span>
                         </div>
-                        <div class="item-row-title" style="margin-bottom:4px; font-size:13.5px; font-weight:600;">${title}</div>
-                        <div class="item-row-sub" style="margin-bottom:10px;">Genre: ${h.genre || 'Action'} &bull; Date: ${date}</div>
+                        <div class="item-row-title" style="margin-bottom:4px; font-size:14px; font-weight:700;">${escapeHtml(title)}</div>
+                        <div class="item-row-sub" style="margin-bottom:10px; font-size:11px; color:var(--text-muted);">${h.length_tier || 'Production'} &bull; ${h.culture || h.genre || 'Original'} &bull; ${date}</div>
 
                         <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-top:6px;">
-                            <button class="btn-submit" style="padding:6px 12px; font-size:11px; flex:1; max-width:210px; height:32px;" onclick="event.stopPropagation(); resumeProductionJob(${jId});">
+                            <button class="btn-submit" style="padding:6px 14px; font-size:11px; flex:1; max-width:210px; height:32px; margin-top:0;" onclick="event.stopPropagation(); resumeProductionJob(${jId});">
                                 <svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                                ${isCompleted ? 'Open & Review Script' : 'Continue Where You Stopped'}
+                                Open in ${isPodcast ? 'Podcast Studio' : (isToon ? 'ToonCraft' : 'StoryCraft')}
                             </button>
 
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                 ${isCompleted ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'script');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Script PDF</button>` : ''}
-                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'character');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Character PDF</button>` : ''}
-                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'location');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Location PDF</button>` : ''}
-                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Image PDF</button>` : ''}
-                                ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Video PDF</button>` : ''}
+                                ${hasBible ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'bible');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Bible PDF</button>` : ''}
+                                ${hasScene ? `<button type="button" onclick="event.stopPropagation(); sendPdfToChat(${jId}, 'scene');" class="btn-secondary" style="font-size:11px; padding:6px 10px; cursor:pointer;">Prompts PDF</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -5265,7 +5132,7 @@
 
         async function resumeProductionJob(jobId) {
             let job = storyHistory.find(j => (j.job_id == jobId || j.id == jobId));
-            if (!job || !job.concepts_json) {
+            if (!job || !job.full_story_json) {
                 try {
                     const res = await fetch(`/api/job/${jobId}`, { headers: getHeaders() });
                     const d = await res.json();
@@ -5282,13 +5149,65 @@
                 return;
             }
 
-            // Close vault and open StoryCraft Studio modal
+            const jType = (job.job_type || '').toLowerCase();
+            const dFormat = (job.delivery_format || '').toLowerCase();
+            const sInput = (job.source_input || '').toLowerCase();
+
+            // 1. PODCAST STUDIO ROUTING
+            if (jType === 'podcast' || dFormat.includes('podcast') || sInput.includes('podcast')) {
+                closeAllModals();
+                openModal('podcast');
+
+                let podData = null;
+                if (job.full_story_json) {
+                    try {
+                        podData = typeof job.full_story_json === 'string' ? JSON.parse(job.full_story_json) : job.full_story_json;
+                    } catch(e){}
+                }
+                if (!podData) {
+                    podData = {
+                        title: job.source_title || 'Podcast Episode',
+                        hook: job.transcript || '',
+                        category: job.genre || 'General',
+                        discussion_dynamic: job.culture || 'Heated Debate',
+                        channel_name: job.channel_name || 'WP Studio',
+                        scenes: [],
+                        hosts: []
+                    };
+                }
+                podcastState.currentData = podData;
+                renderPodcastResults(podData);
+                goToPodcastStep(8);
+                showToast(`Loaded Podcast: ${podData.title || 'Episode'} from Vault`);
+                return;
+            }
+
+            // 2. TOONCRAFT 3D CARTOON ROUTING
+            if (jType === 'tooncraft' || dFormat.includes('cartoon') || sInput.includes('tooncraft')) {
+                closeAllModals();
+                openModal('tooncraft');
+
+                let toonData = null;
+                if (job.full_story_json) {
+                    try {
+                        toonData = typeof job.full_story_json === 'string' ? JSON.parse(job.full_story_json) : job.full_story_json;
+                    } catch(e){}
+                }
+                if (toonData) {
+                    tooncraftState.currentPackage = toonData;
+                    renderTooncraftResults(toonData);
+                    goToTooncraftStep(5);
+                }
+                showToast(`Loaded ToonCraft: ${job.source_title || 'Cartoon'} from Vault`);
+                return;
+            }
+
+            // 3. STORYCRAFT STUDIO ROUTING
             closeAllModals();
             openModal('story');
 
             activeJobId = job.job_id || job.id;
 
-            // 1. Populate Input Premise & Channel
             const inputSrc = document.getElementById('story-input-source');
             if (inputSrc) {
                 inputSrc.value = job.source_input || job.source_title || "";
@@ -5298,20 +5217,17 @@
                 inputChannel.value = job.channel_name;
             }
 
-            // 2. Populate Culture
             const cultureSel = document.getElementById('story-sel-culture');
             if (cultureSel && job.culture) {
                 cultureSel.value = job.culture;
             }
             onCultureChanged();
 
-            // 3. Populate Visual Style
             const styleSel = document.getElementById('story-sel-style');
             if (styleSel && (job.style || job.visual_style)) {
                 styleSel.value = job.style || job.visual_style;
             }
 
-            // 4. Populate Genre & Custom Genre
             const genreSel = document.getElementById('story-sel-genre');
             if (genreSel && job.genre) {
                 let found = false;
@@ -5340,13 +5256,11 @@
                 }
             }
 
-            // 5. Populate Length Tier
             const tierSel = document.getElementById('story-sel-tier');
             if (tierSel && job.length_tier) {
                 tierSel.value = job.length_tier;
             }
 
-            // 6. Handle Concepts Container
             let concepts = null;
             if (job.concepts_json) {
                 try {
@@ -5371,7 +5285,6 @@
                 conceptsSection.style.display = 'none';
             }
 
-            // 7. Handle Completed PDF Results Section
             const resultSec = document.getElementById('story-result-section');
             const scriptBtn = document.getElementById('btn-download-script');
             const charBtn = document.getElementById('btn-download-character');
@@ -5434,7 +5347,6 @@
                 resultSec.style.display = 'none';
             }
 
-            // 8. Scroll smoothly to the resume position
             setTimeout(() => {
                 const modalBody = document.querySelector('#modal-story .modal-body');
                 if (!modalBody) return;
@@ -5445,11 +5357,11 @@
                 }
             }, 140);
 
-            showToast(`Loaded: ${job.source_title || 'Project'} from Vault`);
+            showToast(`Loaded Screenplay: ${job.source_title || 'Project'} from Vault`);
         }
 
-        // =====================================================================
-        // STORYCRAFT ACTIONS
+
+                // STORYCRAFT ACTIONS
         // =====================================================================
         async function submitStoryConcepts() {
             const source = document.getElementById('story-input-source').value.trim();
@@ -8211,15 +8123,11 @@
 
             const tab7Circle = document.getElementById('pod-tab-7-circle');
             if (tab7Circle) tab7Circle.innerText = isTwo ? '7' : '6';
-            const step7Num = document.getElementById('pod-step-7-num');
-            if (step7Num) step7Num.innerText = isTwo ? '7' : '6';
-
-            const checkIconSvg = `<svg viewBox="0 0 24 24" style="width:12px; height:12px; stroke:#ffffff; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
             visibleSteps.forEach((sIdx, posIdx) => {
                 const tab = document.getElementById(`pod-tab-${sIdx}`);
                 if (!tab) return;
-                const circle = tab.querySelector('.podcast-step-circle');
+                const circle = tab.querySelector('.step-num');
                 const displayNum = String(posIdx + 1);
 
                 if (sIdx === step) {
@@ -8229,7 +8137,7 @@
                 } else if (step > sIdx || (step === 7 && sIdx < 7) || (step === 8)) {
                     tab.classList.remove('active');
                     tab.classList.add('completed');
-                    if (circle) circle.innerHTML = checkIconSvg;
+                    if (circle) circle.innerHTML = `<svg viewBox="0 0 24 24" style="width:10px; height:10px; stroke:#ffffff; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
                 } else {
                     tab.classList.remove('active', 'completed');
                     if (circle) circle.innerText = displayNum;
@@ -8263,7 +8171,7 @@
         function setPodcastCategory(cat, el) {
             podcastState.category = cat;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8283,7 +8191,7 @@
                 if (help) help.innerText = 'Custom Topic follows your exact perception and story thesis.';
             } else {
                 if (box) box.style.display = 'none';
-                if (help) help.innerText = 'Custom Topic follows your perception. AI Idea selects a fresh topic from the chosen category.';
+                if (help) help.innerText = 'AI Idea selects a fresh, high-voltage topic from the chosen category.';
             }
         }
 
@@ -8302,8 +8210,6 @@
             if (tab6) tab6.style.display = isTwo ? 'flex' : 'none';
             const tab7Circle = document.getElementById('pod-tab-7-circle');
             if (tab7Circle) tab7Circle.innerText = isTwo ? '7' : '6';
-            const step7Num = document.getElementById('pod-step-7-num');
-            if (step7Num) step7Num.innerText = isTwo ? '7' : '6';
         }
 
         function setPodcastVisual(vstyle, el) {
@@ -8319,23 +8225,27 @@
         function setPodcastDynamic(dyn, el) {
             podcastState.discussionDynamic = dyn;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
 
         function setPodcastStudioSet(setKey, el) {
             podcastState.studioArchetype = setKey;
+            const sel = document.getElementById('pod-sel-studio-set');
+            if (sel) sel.value = setKey;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
 
         function setPodcastAspect(ar, el) {
             podcastState.aspectRatio = ar;
+            const sel = document.getElementById('pod-sel-aspect-ratio');
+            if (sel) sel.value = ar;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8386,7 +8296,7 @@
         function setH1Gender(g, el) {
             podcastState.host1.gender = g;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8394,7 +8304,7 @@
         function setH1Eth(eth, el) {
             podcastState.host1.ethnicity = eth;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8402,7 +8312,7 @@
         function setH1Accent(acc, el) {
             podcastState.host1.accent = acc;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8410,7 +8320,7 @@
         function setH2Gender(g, el) {
             podcastState.host2.gender = g;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8418,7 +8328,7 @@
         function setH2Eth(eth, el) {
             podcastState.host2.ethnicity = eth;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8426,7 +8336,7 @@
         function setH2Accent(acc, el) {
             podcastState.host2.accent = acc;
             if (el && el.parentElement) {
-                el.parentElement.querySelectorAll('.pod-pill-btn').forEach(b => b.classList.remove('active'));
+                el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
         }
@@ -8546,6 +8456,7 @@
                         studio_archetype: podcastState.studioArchetype,
                         aspect_ratio: podcastState.aspectRatio,
                         channel_name: podcastState.channelName,
+                        model_name: (currentUser && currentUser.selected_model) ? currentUser.selected_model : undefined,
                         host_1: {
                             gender: podcastState.host1.gender,
                             ethnicity: podcastState.host1.ethnicity,
@@ -8587,6 +8498,9 @@
                 podcastState.currentData = data.podcast;
                 renderPodcastResults(data.podcast);
                 goToPodcastStep(8);
+
+                // Refresh vault history in background
+                loadHistory();
 
                 showToast('Podcast Episode Produced! 3 Executive PDFs delivering to Telegram.', true);
 

@@ -2990,11 +2990,10 @@ def api_podcast_generate():
     provider = ai_engine.get_model_provider(model_name)
     providers_status = ai_engine.get_provider_availability(user)
     avail = providers_status.get(provider, {})
+    # If chosen model is not available, failover to platform default Gemini model
     if not avail.get("available"):
-        return jsonify({
-            "success": False,
-            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
-        }), 400
+        model_name = ai_engine.DEFAULT_MODEL
+        provider = "gemini"
 
     user_keys = build_user_keys(user)
     has_byok = False
@@ -3017,23 +3016,47 @@ def api_podcast_generate():
         return jsonify({"success": False, "error": f"Insufficient credits! Podcast Studio requires {cost} credits."}), 402
 
     try:
-        podcast_data = run_async(ai_engine.generate_podcast_package(
-            category=category,
-            topic_mode=topic_mode,
-            custom_topic=custom_topic,
-            user_perspective=user_perspective,
-            host_format=host_format,
-            visual_style=visual_style,
-            discussion_dynamic=discussion_dynamic,
-            studio_archetype=studio_archetype,
-            aspect_ratio=aspect_ratio,
-            channel_name=channel_name,
-            host_1=host_1,
-            host_2=host_2,
-            user_api_key=user_keys.get("custom_gemini_key"),
-            model_name=model_name,
-            user_keys=user_keys
-        ))
+        try:
+            podcast_data = run_async(ai_engine.generate_podcast_package(
+                category=category,
+                topic_mode=topic_mode,
+                custom_topic=custom_topic,
+                user_perspective=user_perspective,
+                host_format=host_format,
+                visual_style=visual_style,
+                discussion_dynamic=discussion_dynamic,
+                studio_archetype=studio_archetype,
+                aspect_ratio=aspect_ratio,
+                channel_name=channel_name,
+                host_1=host_1,
+                host_2=host_2,
+                user_api_key=user_keys.get("custom_gemini_key"),
+                model_name=model_name,
+                user_keys=user_keys
+            ))
+        except Exception as primary_gen_err:
+            # Automatic failover: if user-selected model fails, immediately generate with default Gemini model
+            if model_name != ai_engine.DEFAULT_MODEL:
+                print(f"[PODCAST FAILOVER] Model {model_name} failed ({primary_gen_err}). Failing over to {ai_engine.DEFAULT_MODEL}...")
+                podcast_data = run_async(ai_engine.generate_podcast_package(
+                    category=category,
+                    topic_mode=topic_mode,
+                    custom_topic=custom_topic,
+                    user_perspective=user_perspective,
+                    host_format=host_format,
+                    visual_style=visual_style,
+                    discussion_dynamic=discussion_dynamic,
+                    studio_archetype=studio_archetype,
+                    aspect_ratio=aspect_ratio,
+                    channel_name=channel_name,
+                    host_1=host_1,
+                    host_2=host_2,
+                    user_api_key=None,
+                    model_name=ai_engine.DEFAULT_MODEL,
+                    user_keys=user_keys
+                ))
+            else:
+                raise primary_gen_err
 
         # Deduct credits
         if cost > 0:
@@ -3042,7 +3065,7 @@ def api_podcast_generate():
         ep_title = podcast_data.get("title", f"{channel_name} Podcast")
         total_scenes = len(podcast_data.get("scenes", []))
 
-        # Save initial job in database
+        # Save initial job in database so client gets instant response
         job_id = database.create_story_job(
             user_id=user_id,
             source_input=f"Podcast Studio ({category}, {host_format})",
@@ -3058,6 +3081,9 @@ def api_podcast_generate():
             story_text=custom_topic
         )
 
+        # Store complete full_story_json so it can be resumed directly from Vault
+        database.update_job_completion(int(job_id), json.dumps(podcast_data), "", "")
+
         # Background thread for PDF compilation and Telegram delivery
         def _compile_and_deliver_podcast_async():
             try:
@@ -3065,16 +3091,11 @@ def api_podcast_generate():
                     podcast_data=podcast_data,
                     timezone="Africa/Lagos"
                 )
+                if s_pdf: podcast_data["script_pdf"] = s_pdf
+                if p_pdf: podcast_data["scene_pdf"] = p_pdf
+                if b_pdf: podcast_data["bible_pdf"] = b_pdf
 
-                # Update database job with PDF paths
-                database.update_story_job_pdfs(
-                    job_id=job_id,
-                    script_pdf=s_pdf,
-                    char_pdf=b_pdf,
-                    loc_pdf=None,
-                    bible_pdf=b_pdf,
-                    scene_pdf=p_pdf
-                )
+                database.update_job_completion(int(job_id), json.dumps(podcast_data), b_pdf, p_pdf)
 
                 # Send PDFs to user's Telegram chat
                 caption_s = f"**{ep_title}**\n*Podcast Screenplay & Dialogue Script*\nChannel: {channel_name} | Cuts: {total_scenes}"

@@ -5,55 +5,56 @@ from datetime import datetime
 from markdown_pdf import MarkdownPdf, Section
 import fitz  # PyMuPDF
 
-# Executive Dark Mode CSS for PDF Generation
+# Executive Dark Mode CSS for PDF Generation (Obsidian & Champagne Gold Studio Design System)
 DARK_THEME_CSS = """
 @page {
     size: A4;
-    margin: 36pt;
-    background-color: #0b0f19;
+    margin: 32pt 36pt 42pt 36pt;
+    background-color: #0b0e14;
 }
 
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background-color: #0b0f19;
+    background-color: #0b0e14;
     color: #e2e8f0;
     line-height: 1.55;
-    font-size: 10pt;
+    font-size: 9.5pt;
+    margin: 0;
+    padding: 0;
 }
 
 h1 {
     color: #ffffff;
-    font-size: 20pt;
+    font-size: 16pt;
     font-weight: 800;
-    margin-top: 10pt;
+    margin-top: 8pt;
     margin-bottom: 6pt;
-    letter-spacing: -0.5pt;
-    border-bottom: 1.5pt solid #1e293b;
-    padding-bottom: 6pt;
+    letter-spacing: -0.3pt;
+    text-transform: uppercase;
 }
 
 h2 {
-    color: #38bdf8;
-    font-size: 13pt;
+    color: #d4af37;
+    font-size: 11.5pt;
     font-weight: 700;
-    margin-top: 14pt;
-    margin-bottom: 6pt;
+    margin-top: 12pt;
+    margin-bottom: 5pt;
     text-transform: uppercase;
     letter-spacing: 0.8pt;
 }
 
 h3 {
     color: #f8fafc;
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: 700;
-    margin-top: 10pt;
+    margin-top: 8pt;
     margin-bottom: 4pt;
 }
 
 p {
     color: #cbd5e1;
     margin-top: 3pt;
-    margin-bottom: 7pt;
+    margin-bottom: 6pt;
 }
 
 strong {
@@ -65,59 +66,280 @@ em {
     color: #94a3b8;
 }
 
-blockquote {
-    background-color: #111827;
-    border-left: 3.5pt solid #e5a93c;
-    color: #f8fafc;
-    padding: 8pt 12pt;
-    margin: 6pt 0 10pt 0;
+/* Executive Studio Header Card */
+.studio-header {
+    background-color: #121622;
+    border: 0.8pt solid #222b3d;
+    border-top: 2.5pt solid #d4af37;
     border-radius: 4pt;
+    padding: 10pt 14pt;
+    margin-bottom: 12pt;
+}
+
+.studio-title {
+    font-size: 15pt;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.2pt;
+    margin-bottom: 4pt;
+}
+
+.studio-subtitle {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    margin-bottom: 6pt;
+}
+
+.meta-grid {
+    margin-top: 6pt;
+    padding-top: 6pt;
+    border-top: 0.6pt solid #1e2638;
+}
+
+.meta-pill {
+    display: inline-block;
+    background-color: #171d2b;
+    border: 0.5pt solid #2c374d;
+    color: #d4af37;
+    font-size: 7.5pt;
+    font-weight: 700;
+    padding: 2pt 6pt;
+    border-radius: 3pt;
+    margin-right: 4pt;
+    margin-bottom: 3pt;
+}
+
+.meta-pill-slate {
+    display: inline-block;
+    background-color: #171d2b;
+    border: 0.5pt solid #2c374d;
+    color: #94a3b8;
+    font-size: 7.5pt;
+    font-weight: 600;
+    padding: 2pt 6pt;
+    border-radius: 3pt;
+    margin-right: 4pt;
+    margin-bottom: 3pt;
+}
+
+/* Executive Scene & Section Cards */
+.scene-card {
+    background-color: #10141f;
+    border: 0.8pt solid #1f2738;
+    border-radius: 4pt;
+    padding: 9pt 12pt;
+    margin-top: 8pt;
+    margin-bottom: 10pt;
+}
+
+.scene-title {
+    color: #ffffff;
+    font-size: 10.5pt;
+    font-weight: 800;
+    margin-bottom: 4pt;
+}
+
+/* Dedicated Prompt Vault Containers */
+.prompt-vault {
+    background-color: #07090d;
+    border: 0.8pt solid #222b3e;
+    border-left: 2.5pt solid #38bdf8;
+    border-radius: 3.5pt;
+    padding: 7pt 10pt;
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+    color: #e2e8f0;
+    line-height: 1.45;
+    margin-top: 5pt;
+    margin-bottom: 6pt;
+}
+
+.prompt-vault-video {
+    background-color: #07090d;
+    border: 0.8pt solid #222b3e;
+    border-left: 2.5pt solid #d4af37;
+    border-radius: 3.5pt;
+    padding: 7pt 10pt;
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+    color: #e2e8f0;
+    line-height: 1.45;
+    margin-top: 5pt;
+    margin-bottom: 6pt;
+}
+
+.prompt-label {
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
+    margin-bottom: 3pt;
+    display: block;
+}
+
+.prompt-label-blue {
+    color: #38bdf8;
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
+    margin-bottom: 3pt;
+    display: block;
+}
+
+.prompt-label-gold {
+    color: #d4af37;
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
+    margin-bottom: 3pt;
+    display: block;
+}
+
+/* Script Dialogue Formatting */
+.dialogue-card {
+    background-color: #0d111a;
+    border-left: 2pt solid #475569;
+    padding: 6pt 10pt;
+    margin: 4pt 0 6pt 6pt;
+    border-radius: 0 3pt 3pt 0;
+}
+
+.speaker-tag {
+    font-size: 8pt;
+    font-weight: 800;
+    color: #d4af37;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+}
+
+.delivery-cue {
+    font-size: 7.5pt;
+    font-style: italic;
+    color: #94a3b8;
+    margin-left: 4pt;
+}
+
+.dialogue-text {
+    font-size: 9pt;
+    color: #f1f5f9;
+    margin-top: 2pt;
+    line-height: 1.45;
+}
+
+blockquote {
+    background-color: #121622;
+    border-left: 3pt solid #d4af37;
+    color: #f8fafc;
+    padding: 7pt 11pt;
+    margin: 6pt 0 8pt 0;
+    border-radius: 3pt;
 }
 
 code {
-    background-color: #1e293b;
+    background-color: #171d2b;
     color: #38bdf8;
-    border: 0.5pt solid #334155;
-    padding: 1.5pt 4pt;
-    border-radius: 3pt;
+    border: 0.5pt solid #2c374d;
+    padding: 1.5pt 3.5pt;
+    border-radius: 2.5pt;
     font-family: 'Courier New', monospace;
-    font-size: 8.5pt;
+    font-size: 8pt;
 }
 
 hr {
     border: 0;
-    border-top: 0.8pt solid #1e293b;
-    margin: 14pt 0;
+    border-top: 0.6pt solid #1e2638;
+    margin: 10pt 0;
 }
 
 ul, ol {
-    margin-top: 4pt;
-    margin-bottom: 8pt;
-    padding-left: 18pt;
+    margin-top: 3pt;
+    margin-bottom: 6pt;
+    padding-left: 16pt;
     color: #cbd5e1;
 }
 
 li {
-    margin-bottom: 3pt;
+    margin-bottom: 2.5pt;
 }
 """
 
-def apply_dark_theme(pdf_path: str):
-    """Paints a full-bleed dark background (#0b0f19) onto all pages of the generated PDF."""
+def apply_dark_theme(pdf_path: str, doc_category: str = "PRODUCTION SPECIFICATION"):
+    """
+    Paints a full-bleed executive dark background (#0b0e14) onto all pages of the generated PDF,
+    with top gold hairline rules, running headers on continuation pages, and running footers with Page X of Y.
+    """
     try:
         doc = fitz.open(pdf_path)
-        bg = (11 / 255, 15 / 255, 25 / 255)  # #0b0f19 dark navy
-        for page in doc:
+        total_pages = doc.page_count
+        bg = (11 / 255, 14 / 255, 20 / 255)       # #0b0e14 obsidian dark
+        gold = (212 / 255, 175 / 255, 55 / 255)   # #d4af37 champagne gold
+        border = (31 / 255, 39 / 255, 56 / 255)   # #1f2738 subtle border
+        slate = (148 / 255, 163 / 255, 184 / 255) # #94a3b8 slate
+        dim = (100 / 255, 116 / 255, 139 / 255)   # #64748b dim
+
+        for idx, page in enumerate(doc, 1):
+            # 1. Full bleed background
             shape = page.new_shape()
             shape.draw_rect(page.rect)
             shape.finish(color=None, fill=bg)
             shape.commit(overlay=False)
+
+            w = page.rect.width
+            h = page.rect.height
+
+            # 2. Top gold hairline accent rule on all pages
+            top_shape = page.new_shape()
+            top_shape.draw_line(fitz.Point(36, 26), fitz.Point(w - 36, 26))
+            top_shape.finish(color=gold, width=0.8)
+            top_shape.commit(overlay=True)
+
+            # 3. Running header text on continuation pages
+            if idx > 1:
+                page.insert_text(
+                    fitz.Point(36, 21),
+                    f"WP STUDIO CREATIVE PRODUCTION PIPELINE  |  {doc_category.upper()}",
+                    fontsize=6.8,
+                    color=slate,
+                    fontname="helv"
+                )
+
+            # 4. Bottom subtle border rule on all pages
+            bot_shape = page.new_shape()
+            bot_shape.draw_line(fitz.Point(36, h - 30), fitz.Point(w - 36, h - 30))
+            bot_shape.finish(color=border, width=0.6)
+            bot_shape.commit(overlay=True)
+
+            # 5. Running footer left
+            page.insert_text(
+                fitz.Point(36, h - 18),
+                f"WP STUDIO  -  CONFIDENTIAL  -  {doc_category.upper()}",
+                fontsize=6.5,
+                color=dim,
+                fontname="helv"
+            )
+
+            # 6. Running footer right: Page X of Y in gold
+            page_str = f"Page {idx} of {total_pages}"
+            text_w = fitz.get_text_length(page_str, fontname="helv", fontsize=7)
+            page.insert_text(
+                fitz.Point(w - 36 - text_w, h - 18),
+                page_str,
+                fontsize=7,
+                color=gold,
+                fontname="helv"
+            )
+
         temp_path = f"{pdf_path}.tmp"
         doc.save(temp_path)
         doc.close()
         os.replace(temp_path, pdf_path)
     except Exception as e:
-        print(f"Warning: Failed to apply full bleed dark theme background: {e}")
+        print(f"Warning: Failed to apply executive theme decoration: {e}")
     finally:
         gc.collect()
 
@@ -505,7 +727,7 @@ def generate_voiceover_script_pdf(
 *Prepared by WP Studio — Individual Voiceover & Screenplay Script PDF.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
@@ -603,7 +825,7 @@ def generate_character_prompts_pdf(
     md += """*Prepared by WP Studio — Individual Character Sheet Prompts PDF.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
@@ -709,7 +931,7 @@ def generate_location_prompts_pdf(
     md += """*Prepared by WP Studio — Individual Recurring Location Consistency Prompts PDF.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
@@ -797,7 +1019,7 @@ def generate_image_prompts_pdf(
     md += """*Prepared by WP Studio — Individual Scene-by-Scene Image Prompts PDF.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
@@ -882,7 +1104,7 @@ def generate_video_prompts_pdf(
     md += """*Prepared by WP Studio — Individual Video Camera & Motion Prompts PDF.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
@@ -1003,10 +1225,230 @@ def generate_character_forge_pdf(char_data: dict, style="Stylised 3D") -> str:
 *Generated by WP Studio CastLock 3D Engine — 100% Identical Continuity Across Every Animation & Scene.*
 """
 
-    pdf = MarkdownPdf(toc_level=2)
+    pdf = MarkdownPdf(toc_level=0)
     pdf.add_section(Section(md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
     pdf.save(pdf_path)
     apply_dark_theme(pdf_path)
     del pdf
     gc.collect()
     return pdf_path
+
+
+def generate_podcast_pdfs(podcast_data: dict, timezone: str = "Africa/Lagos") -> tuple:
+    """
+    Generates the executive 3-PDF Production Suite for Podcast Studio:
+    1. Screenplay & Spoken Dialogue Script PDF (Viral hook, multi-cam dialogue lines, delivery cues, audio sound effects)
+    2. Scene Multi-Cam Prompts PDF (Standalone image prompts & video camera motion prompts with studio lighting and host consistency)
+    3. Host Character Bible & Studio Branding PDF (Complete host profiles, vocal delivery specs, studio architecture, channel branding watermarks)
+    Returns: (script_pdf_path, prompts_pdf_path, bible_pdf_path)
+    """
+    title = podcast_data.get("title", "WP Studio Podcast Episode")
+    category = podcast_data.get("category", "General")
+    hook = podcast_data.get("hook", "")
+    dynamic = podcast_data.get("discussion_dynamic", "Heated Debate")
+    studio_set = podcast_data.get("studio_archetype", "Dark Moody / Slate Acoustic")
+    visual_style = podcast_data.get("visual_style", "Human Realistic")
+    aspect_ratio = podcast_data.get("aspect_ratio", "9:16 Vertical")
+    channel_name = podcast_data.get("channel_name", "WP Studio Network")
+    host_format = podcast_data.get("host_format", "Two Hosts")
+    studio_env = podcast_data.get("studio_environment", "Professional acoustic studio setup.")
+    branding_desc = podcast_data.get("channel_branding", "Branded studio props.")
+    hosts = podcast_data.get("hosts", []) or []
+    scenes = podcast_data.get("scenes", []) or []
+    runtime = podcast_data.get("runtime_detail", f"{len(scenes)} Scenes (~60-90s)")
+
+    safe_title = sanitize_filename(title)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # -------------------------------------------------------------
+    # 1. Screenplay & Dialogue Script PDF
+    # -------------------------------------------------------------
+    script_filename = f"WP_Studio_Podcast_Screenplay_{safe_title}_{timestamp}.pdf"
+    script_path = os.path.join(OUTPUT_DIR, script_filename)
+
+    script_md = f"""<div class="studio-header">
+  <div class="studio-subtitle">WP STUDIO CREATIVE SUITE | PODCAST SCREENPLAY &amp; DIALOGUE SCRIPT</div>
+  <div class="studio-title">{title}</div>
+  <div class="meta-grid">
+    <span class="meta-pill">CATEGORY: {category.upper()}</span>
+    <span class="meta-pill">FORMAT: {host_format.upper()}</span>
+    <span class="meta-pill">DYNAMIC: {dynamic.upper()}</span>
+    <span class="meta-pill">CHANNEL: {channel_name.upper()}</span>
+    <span class="meta-pill-slate">RUNTIME: {runtime}</span>
+    <span class="meta-pill-slate">SCENES: {len(scenes)}</span>
+  </div>
+</div>
+
+<div class="scene-card" style="border-left: 3pt solid #d4af37;">
+  <span class="prompt-label-gold">THE 3-SECOND BOMBSHELL VIRAL HOOK</span>
+  <p style="font-size: 11pt; color: #ffffff; font-weight: 700; margin-top: 4pt;">"{hook}"</p>
+  <p style="font-size: 8pt; color: #94a3b8; margin-top: 2pt;">Delivery Note: Unresolved high-tension hook engineered to stop the viewer scroll in under 3 seconds before the podcast audio sting.</p>
+</div>
+
+<h2>EPISODE SCENE &amp; DIALOGUE STORYBOARD ({len(scenes)} CUTS)</h2>
+"""
+
+    for s in scenes:
+        if not isinstance(s, dict):
+            continue
+        s_num = s.get("scene_number", 1)
+        cam = s.get("camera_shot", "CAM A")
+        speaker = s.get("speaker", "Host 1")
+        cues = s.get("delivery_cues", "Direct delivery")
+        dialogue = s.get("dialogue", "")
+        audio = s.get("audio_cues", "Studio acoustic ambiance")
+        dur = s.get("estimated_duration", "7s")
+
+        script_md += f"""<div class="scene-card">
+  <div class="scene-title">CUT {s_num:02d} &bull; {cam}</div>
+  <span class="meta-pill-slate">SPEAKER: {speaker}</span>
+  <span class="meta-pill-slate">DURATION: {dur}</span>
+
+  <div class="dialogue-card">
+    <span class="speaker-tag">{speaker}</span> <span class="delivery-cue">({cues})</span>
+    <div class="dialogue-text">"{dialogue}"</div>
+  </div>
+
+  <p style="font-size: 8pt; color: #94a3b8; margin-top: 5pt; margin-bottom: 0;"><strong>Audio &amp; SFX:</strong> {audio}</p>
+</div>
+"""
+
+    script_md += f"""<br>
+<p style="font-size: 7.5pt; color: #64748b; text-align: center;">Official Production Asset &bull; Generated by WP Studio Podcast Engine &bull; Ready for ElevenLabs / TTS Synthesis</p>
+"""
+
+    pdf1 = MarkdownPdf(toc_level=0)
+    pdf1.add_section(Section(script_md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf1.save(script_path)
+    apply_dark_theme(script_path, doc_category="PODCAST SCREENPLAY & DIALOGUE")
+    del pdf1
+    gc.collect()
+
+    # -------------------------------------------------------------
+    # 2. Scene Multi-Cam Prompts PDF
+    # -------------------------------------------------------------
+    prompts_filename = f"WP_Studio_Podcast_Scene_Prompts_{safe_title}_{timestamp}.pdf"
+    prompts_path = os.path.join(OUTPUT_DIR, prompts_filename)
+
+    prompts_md = f"""<div class="studio-header">
+  <div class="studio-subtitle">WP STUDIO CREATIVE SUITE | MULTI-CAM IMAGE &amp; VIDEO PROMPTS</div>
+  <div class="studio-title">{title}</div>
+  <div class="meta-grid">
+    <span class="meta-pill">SET ARCHETYPE: {studio_set.upper()}</span>
+    <span class="meta-pill">ASPECT RATIO: {aspect_ratio}</span>
+    <span class="meta-pill">STYLE: {visual_style.upper()}</span>
+    <span class="meta-pill">BRANDING: {channel_name.upper()}</span>
+  </div>
+</div>
+
+<h2>SHOT-BY-SHOT MULTI-CAMERA PROMPT SPECIFICATION ({len(scenes)} SCENES)</h2>
+<p style="color: #94a3b8; font-size: 8.5pt;">Copy-ready image prompts for Midjourney / Flux and video camera motion prompts for Kling / Runway Gen-3 with locked studio lighting and host consistency.</p>
+"""
+
+    for s in scenes:
+        if not isinstance(s, dict):
+            continue
+        s_num = s.get("scene_number", 1)
+        cam = s.get("camera_shot", "CAM A")
+        speaker = s.get("speaker", "Host")
+        dur = s.get("estimated_duration", "7s")
+        img_p = s.get("image_prompt", "")
+        vid_p = s.get("video_prompt", "")
+
+        prompts_md += f"""<div class="scene-card">
+  <div class="scene-title">SCENE {s_num:02d} &bull; {cam}</div>
+  <span class="meta-pill-slate">TARGET SUBJECT: {speaker}</span>
+  <span class="meta-pill-slate">EST. DURATION: {dur}</span>
+
+  <div class="prompt-vault">
+    <span class="prompt-label-blue">MIDJOURNEY / FLUX SCENE IMAGE PROMPT (85MM / 4K PHOTOREALISTIC)</span>
+    {img_p}
+  </div>
+
+  <div class="prompt-vault-video">
+    <span class="prompt-label-gold">KLING / RUNWAY / LUMA VIDEO MOTION PROMPT (MICRO-EXPRESSIONS &amp; CAMERA PAN)</span>
+    {vid_p}
+  </div>
+</div>
+"""
+
+    prompts_md += f"""<br>
+<p style="font-size: 7.5pt; color: #64748b; text-align: center;">Official Production Asset &bull; Generated by WP Studio Podcast Engine &bull; Ready for Midjourney, Flux, Kling, Runway</p>
+"""
+
+    pdf2 = MarkdownPdf(toc_level=0)
+    pdf2.add_section(Section(prompts_md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf2.save(prompts_path)
+    apply_dark_theme(prompts_path, doc_category="MULTI-CAM PROMPT SPECIFICATION")
+    del pdf2
+    gc.collect()
+
+    # -------------------------------------------------------------
+    # 3. Host Character Bible & Studio Branding PDF
+    # -------------------------------------------------------------
+    bible_filename = f"WP_Studio_Podcast_Production_Bible_{safe_title}_{timestamp}.pdf"
+    bible_path = os.path.join(OUTPUT_DIR, bible_filename)
+
+    bible_md = f"""<div class="studio-header">
+  <div class="studio-subtitle">WP STUDIO CREATIVE SUITE | HOST CHARACTER &amp; STUDIO BRANDING BIBLE</div>
+  <div class="studio-title">{channel_name} &bull; {title}</div>
+  <div class="meta-grid">
+    <span class="meta-pill">TOTAL HOSTS: {len(hosts)}</span>
+    <span class="meta-pill">STUDIO SET: {studio_set.upper()}</span>
+    <span class="meta-pill">VISUAL STYLE: {visual_style.upper()}</span>
+    <span class="meta-pill-slate">ASPECT RATIO: {aspect_ratio}</span>
+  </div>
+</div>
+
+<div class="scene-card">
+  <div class="scene-title">1. STUDIO SET ARCHITECTURE &amp; LIGHTING SPECIFICATION</div>
+  <p style="color: #f1f5f9; font-size: 9pt;">{studio_env}</p>
+  <span class="prompt-label-blue" style="margin-top: 6pt;">CHANNEL BRANDING WATERMARK INTEGRATION:</span>
+  <p style="color: #cbd5e1; font-size: 8.5pt;">{branding_desc}</p>
+</div>
+
+<h2>2. HOST CHARACTER IDENTITY &amp; VOCAL PROFILES ({len(hosts)} HOSTS)</h2>
+"""
+
+    for idx, h in enumerate(hosts, 1):
+        if not isinstance(h, dict):
+            continue
+        h_name = h.get("name", f"Host {idx}")
+        h_role = h.get("role", "Podcast Host")
+        h_gender = h.get("gender", "Unspecified")
+        h_ethnicity = h.get("ethnicity", "Unspecified")
+        h_accent = h.get("accent", "Standard English")
+        h_wardrobe = h.get("wardrobe_lock", "Modern studio attire")
+        h_vis = h.get("locked_visual_description", "")
+        h_vocal = h.get("vocal_profile", "Natural expressive vocal delivery")
+
+        bible_md += f"""<div class="scene-card">
+  <div class="scene-title">{h_name.upper()} &bull; {h_role.upper()}</div>
+  <div style="margin-bottom: 6pt;">
+    <span class="meta-pill">GENDER: {h_gender.upper()}</span>
+    <span class="meta-pill">ETHNICITY: {h_ethnicity.upper()}</span>
+    <span class="meta-pill">ACCENT: {h_accent.upper()}</span>
+  </div>
+
+  <p style="color: #cbd5e1; font-size: 8.5pt; margin-bottom: 4pt;"><strong>Wardrobe Continuity Lock:</strong> {h_wardrobe}</p>
+  <p style="color: #cbd5e1; font-size: 8.5pt; margin-bottom: 6pt;"><strong>Vocal Delivery Profile (TTS/ElevenLabs):</strong> {h_vocal}</p>
+
+  <div class="prompt-vault">
+    <span class="prompt-label-blue">CHARACTER REFERENCE PROMPT &bull; FACIAL IDENTITY LOCK</span>
+    {h_vis}
+  </div>
+</div>
+"""
+
+    bible_md += f"""<br>
+<p style="font-size: 7.5pt; color: #64748b; text-align: center;">Official Production Asset &bull; Generated by WP Studio Podcast Engine &bull; Continuity Locked Across All Episodes</p>
+"""
+
+    pdf3 = MarkdownPdf(toc_level=0)
+    pdf3.add_section(Section(bible_md, borders=(36, 36, -36, -36)), user_css=DARK_THEME_CSS)
+    pdf3.save(bible_path)
+    apply_dark_theme(bible_path, doc_category="HOST & STUDIO PRODUCTION BIBLE")
+    del pdf3
+    gc.collect()
+
+    return script_path, prompts_path, bible_path

@@ -2925,3 +2925,216 @@ if __name__ == '__main__':
     port = int(os.getenv("PORT", 8085))
     print(f"\n[WP STUDIO] Server running at http://localhost:{port}/miniapp\n")
     app.run(host='0.0.0.0', port=port, debug=False)
+
+
+# ==============================================================================
+# PODCAST STUDIO ENDPOINTS
+# ==============================================================================
+
+@app.route('/api/podcast/cost', methods=['GET', 'POST'])
+def api_podcast_cost():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    base_cost = 25  # Standard Podcast Studio generation cost
+
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    user_keys = build_user_keys(user)
+    has_byok = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok = True
+
+    sys_settings = database.get_system_settings()
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+    is_vip = int(user.get("credits", 0)) >= 999999
+    cost = 0 if (is_vip or (has_byok and byok_allowed)) else base_cost
+
+    return jsonify({
+        "success": True,
+        "cost": cost,
+        "is_vip": is_vip,
+        "can_afford": (is_vip or user.get("credits", 0) >= cost)
+    })
+
+@app.route('/api/podcast/generate', methods=['POST'])
+def api_podcast_generate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    category = str(data.get("category", "Motivational Quotes")).strip()
+    topic_mode = str(data.get("topic_mode", "ai_idea")).strip()
+    custom_topic = str(data.get("custom_topic", "")).strip()
+    user_perspective = str(data.get("user_perspective", "")).strip()
+    host_format = str(data.get("host_format", "two_host")).strip()
+    visual_style = str(data.get("visual_style", "human_realistic")).strip()
+    discussion_dynamic = str(data.get("discussion_dynamic", "heated_debate")).strip()
+    studio_archetype = str(data.get("studio_archetype", "dark_acoustic")).strip()
+    aspect_ratio = str(data.get("aspect_ratio", "9:16 Vertical")).strip()
+    channel_name = str(data.get("channel_name", "WP Studio Network")).strip()
+
+    host_1 = data.get("host_1") or {}
+    host_2 = data.get("host_2") or {}
+
+    model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
+    provider = ai_engine.get_model_provider(model_name)
+    providers_status = ai_engine.get_provider_availability(user)
+    avail = providers_status.get(provider, {})
+    if not avail.get("available"):
+        return jsonify({
+            "success": False,
+            "error": "This model requires an API key. Please configure your key in Settings or choose another model."
+        }), 400
+
+    user_keys = build_user_keys(user)
+    has_byok = False
+    if provider == "claude" and user_keys.get("custom_claude_key"):
+        has_byok = True
+    elif provider == "openai" and user_keys.get("custom_openai_key"):
+        has_byok = True
+    elif provider == "gemini" and user_keys.get("custom_gemini_key"):
+        has_byok = True
+
+    sys_settings = database.get_system_settings()
+    byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
+
+    cost = 25
+    is_vip = int(user.get("credits", 0)) >= 999999
+    if is_vip or (has_byok and byok_allowed):
+        cost = 0
+
+    if cost > 0 and user.get("credits", 0) < cost:
+        return jsonify({"success": False, "error": f"Insufficient credits! Podcast Studio requires {cost} credits."}), 402
+
+    try:
+        podcast_data = run_async(ai_engine.generate_podcast_package(
+            category=category,
+            topic_mode=topic_mode,
+            custom_topic=custom_topic,
+            user_perspective=user_perspective,
+            host_format=host_format,
+            visual_style=visual_style,
+            discussion_dynamic=discussion_dynamic,
+            studio_archetype=studio_archetype,
+            aspect_ratio=aspect_ratio,
+            channel_name=channel_name,
+            host_1=host_1,
+            host_2=host_2,
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=model_name,
+            user_keys=user_keys
+        ))
+
+        # Deduct credits
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        ep_title = podcast_data.get("title", f"{channel_name} Podcast")
+        total_scenes = len(podcast_data.get("scenes", []))
+
+        # Save initial job in database
+        job_id = database.create_story_job(
+            user_id=user_id,
+            source_input=f"Podcast Studio ({category}, {host_format})",
+            source_title=ep_title,
+            transcript=podcast_data.get("hook", "") or custom_topic[:2000],
+            culture=discussion_dynamic,
+            style=visual_style,
+            genre=category,
+            timezone="Africa/Lagos",
+            length_tier=f"{total_scenes} Cuts (~60-90s)",
+            delivery_format="Multi-Cam Podcast",
+            job_type="podcast",
+            story_text=custom_topic
+        )
+
+        # Background thread for PDF compilation and Telegram delivery
+        def _compile_and_deliver_podcast_async():
+            try:
+                s_pdf, p_pdf, b_pdf = pdf_generator.generate_podcast_pdfs(
+                    podcast_data=podcast_data,
+                    timezone="Africa/Lagos"
+                )
+
+                # Update database job with PDF paths
+                database.update_story_job_pdfs(
+                    job_id=job_id,
+                    script_pdf=s_pdf,
+                    char_pdf=b_pdf,
+                    loc_pdf=None,
+                    bible_pdf=b_pdf,
+                    scene_pdf=p_pdf
+                )
+
+                # Send PDFs to user's Telegram chat
+                caption_s = f"**{ep_title}**\n*Podcast Screenplay & Dialogue Script*\nChannel: {channel_name} | Cuts: {total_scenes}"
+                caption_p = f"**{ep_title}**\n*Multi-Cam Scene Image & Video Prompts*\nAspect Ratio: {aspect_ratio}"
+                caption_b = f"**{ep_title}**\n*Host Identity & Studio Production Bible*\nSet: {studio_archetype}"
+
+                send_telegram_document_sync(user_id, s_pdf, caption=caption_s)
+                send_telegram_document_sync(user_id, p_pdf, caption=caption_p)
+                send_telegram_document_sync(user_id, b_pdf, caption=caption_b)
+            except Exception as e:
+                print(f"Async Podcast PDF delivery warning: {e}")
+
+        bg_thread = threading.Thread(target=_compile_and_deliver_podcast_async, daemon=True)
+        bg_thread.start()
+
+        user_now = database.get_user(user_id) or {}
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "podcast": podcast_data,
+            "cost": cost,
+            "credits_remaining": user_now.get("credits", 0)
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+
+@app.route('/api/podcast/send_to_telegram', methods=['POST'])
+def api_podcast_send_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    podcast_data = data.get("podcast", {})
+    pdf_type = str(data.get("pdf_type", "all")).strip().lower()
+
+    if not podcast_data or not podcast_data.get("scenes"):
+        return jsonify({"success": False, "error": "No podcast data found to send"}), 400
+
+    ep_title = podcast_data.get("title", "Podcast Episode")
+
+    try:
+        s_pdf, p_pdf, b_pdf = pdf_generator.generate_podcast_pdfs(
+            podcast_data=podcast_data,
+            timezone="Africa/Lagos"
+        )
+
+        if pdf_type == "script":
+            send_telegram_document_sync(user_id, s_pdf, caption=f"**{ep_title}** - Screenplay Script")
+        elif pdf_type == "prompts":
+            send_telegram_document_sync(user_id, p_pdf, caption=f"**{ep_title}** - Multi-Cam Prompts")
+        elif pdf_type == "bible":
+            send_telegram_document_sync(user_id, b_pdf, caption=f"**{ep_title}** - Host & Studio Bible")
+        else:
+            send_telegram_document_sync(user_id, s_pdf, caption=f"**{ep_title}** - Screenplay Script")
+            send_telegram_document_sync(user_id, p_pdf, caption=f"**{ep_title}** - Multi-Cam Prompts")
+            send_telegram_document_sync(user_id, b_pdf, caption=f"**{ep_title}** - Host & Studio Bible")
+
+        return jsonify({"success": True, "message": "Podcast PDFs sent to Telegram successfully!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500

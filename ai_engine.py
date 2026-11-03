@@ -1790,3 +1790,186 @@ Ensure every scene image prompt uses the tight 3D Pixar CGI formula with subsurf
     if not isinstance(data, dict):
         data = {"title": "Kids Cartoon Adventure", "scenes": []}
     return data
+
+
+def generate_podcast_package(
+    category: str = "Motivational Quotes",
+    topic_mode: str = "ai_idea",
+    custom_topic: str = "",
+    user_perspective: str = "",
+    host_format: str = "two_host",
+    visual_style: str = "human_realistic",
+    discussion_dynamic: str = "heated_debate",
+    studio_archetype: str = "dark_acoustic",
+    aspect_ratio: str = "9:16",
+    channel_name: str = "Real Talk Africa",
+    host_1: dict = None,
+    host_2: dict = None,
+    user_api_key: str = None,
+    model_name: str = None,
+    user_keys: dict = None
+) -> dict:
+    """
+    Podcast Studio Production Engine:
+    Generates a complete viral video podcast episode package with:
+    - 3-Second explosive viral hook engineered for short-form retention.
+    - Host continuity and facial identity lock specifications.
+    - Studio environment styling with user's exact channel branding on neon signs, mugs, and mic clips.
+    - Multi-camera director switching ([CAM A: Host 1 Close-Up], [CAM B: Host 2 Reaction Cutaway], [CAM C: Wide Two-Shot], [SPLIT SCREEN]).
+    - Dynamic back-and-forth dialogue with emotional delivery cues and TTS-ready performance notes.
+    - Standalone image prompts (Midjourney/Flux) and video camera motion prompts (Kling/Runway Gen-3).
+    """
+    model = model_name or DEFAULT_MODEL
+
+    h1 = host_1 or {}
+    h2 = host_2 or {}
+
+    h1_gender = h1.get("gender", "Male")
+    h1_eth = h1.get("ethnicity", "Black")
+    h1_desc = h1.get("description", "").strip() or f"{h1_eth} {h1_gender.lower()} in modern tailored minimalist attire"
+    h1_accent = h1.get("accent", "Nigerian English")
+
+    is_two_host = (host_format != "single_host")
+
+    h2_gender = h2.get("gender", "Female") if is_two_host else "None"
+    h2_eth = h2.get("ethnicity", "Black") if is_two_host else "None"
+    h2_desc = h2.get("description", "").strip() or f"{h2_eth} {h2_gender.lower()} in stylish studio wardrobe" if is_two_host else "None"
+    h2_accent = h2.get("accent", "American English") if is_two_host else "None"
+
+    # Studio Archetype Mapping
+    archetype_map = {
+        "dark_acoustic": "Dark Moody / Slate Acoustic studio with warm oak vertical wood slats, amber rim lighting, Shure SM7B microphones on black articulated boom arms, frosted glass table, and soft cyan neon background bokeh.",
+        "neon_cyber": "Late Night Cyber Lounge with raw dark industrial brick wall, custom vibrant neon sign displaying the channel name, velvet armchairs, moody purple and cyan ambient lighting.",
+        "luxury_penthouse": "High-End Executive Penthouse with floor-to-ceiling glass windows overlooking a nighttime city skyline, minimalist smoked glass desk, designer leather chairs, warm architectural downlights.",
+        "cozy_loft": "Intimate Bohemian Loft with exposed red brick, lush green indoor plants, warm incandescent floor lamps, rustic wooden table, relaxed cozy coffeehouse aesthetic.",
+        "pixar_studio": "3D Stylized Pixar Broadcast Desk with bold vibrant colors, oversized cartoon condenser microphones, playful geometric acoustic wall panels, glossy Octane 3D lighting."
+    }
+    studio_desc = archetype_map.get(studio_archetype, archetype_map["dark_acoustic"])
+
+    # Discussion Dynamic Mapping
+    dynamic_map = {
+        "heated_debate": "High-intensity intellectual clash. Host 1 takes a polarizing, provocative stance. Host 2 challenges assumptions with hard counter-arguments, spicy rebuttals, and passionate pushback. Respectful but high tension.",
+        "interviewer_expert": "Mastermind interview. Host 1 asks penetrating, uncomfortable questions that cut through surface fluff. Host 2 shares deep, vulnerable stories, tactical secrets, and revelatory insights.",
+        "unfiltered_banter": "Raw, funny, authentic chemistry. Casual storytelling, witty banter, interruptions, genuine laughter, playful roasting, and relatable admissions.",
+        "philosophical_chill": "Deep reflective late-night exploration. Thought-provoking questions on human nature, consciousness, ambition, and life lessons with calm, mesmerizing pacing."
+    }
+    dynamic_desc = dynamic_map.get(discussion_dynamic, dynamic_map["heated_debate"])
+
+    # Topic Setup
+    if topic_mode == "custom" and custom_topic:
+        topic_spec = f"TOPIC: {custom_topic}\n"
+        if user_perspective:
+            topic_spec += f"CREATOR'S PERSPECTIVE / ANGLE: {user_perspective}\n(Preserve this exact perception as the core thesis of the episode.)\n"
+    else:
+        topic_spec = f"CATEGORY: {category}\nTASK: Invent an original, highly polarizing, viral podcast topic from this category that immediately sparks curiosity and strong opinions.\n"
+
+    target_aspect = "9:16 vertical split/portrait" if "9:16" in str(aspect_ratio) else "16:9 widescreen"
+
+    system_instruction = f"""You are the Executive Showrunner and Lead Multi-Cam Director for elite short-form video podcasts (specializing in TikTok, YouTube Shorts, and Reels viral formats).
+Your job is to generate a complete, studio-grade video podcast episode package.
+
+CRITICAL PRODUCTION RULES:
+1. THE 3-SECOND BOMBSHELL HOOK:
+   - Scene 1 MUST open with an explosive, high-tension statement or unresolved provocative question.
+   - Zero boring pleasantries ('welcome back guys', 'today we talk about'). Jump straight into the conflict.
+2. DYNAMIC & PACING:
+   - {dynamic_desc}
+   - Pacing must be punchy: 8 to 12 scenes total, each scene representing a fast 5 to 10 second camera cut.
+3. MULTI-CAMERA SWITCHING:
+   - Explicitly label every scene with camera view:
+     - [CAM A: Host 1 Tight Close-Up] (Speaking, intense direct delivery or microphone lean)
+     - [CAM B: Host 2 Reaction Cutaway] (Listening, nodding, smirking, shocked eye contact, incredulous objection)
+     - [CAM C: Studio Wide Two-Shot] (Establishing both hosts, table, microphones, and studio ambiance)
+     - [SPLIT SCREEN: Vertical Multi-Cam] (Simultaneous Host 1 speaking / Host 2 reacting)
+4. BRANDING WATERMARK:
+   - Naturally integrate the channel name '{channel_name}' into the background studio set: glowing neon sign, coffee mugs, or microphone flag clips.
+5. VOICE & AUDIO PERFORMANCE NOTES:
+   - Include vocal delivery notes in parentheses for every spoken line (e.g., '(leaning into microphone, quiet intense cadence)').
+   - Include ambient audio cues (e.g., '[Audio: Deep sub-bass hit, soft mic breath, distant studio acoustic decay]').
+6. VISUAL STYLE:
+   - Visual Style: {'Human Photorealistic (85mm f/1.8 lens, 8k, cinematic rim lighting)' if visual_style == 'human_realistic' else '3D Pixar and Disney animation CGI render, Octane render, subsurface scattering'}.
+   - Aspect Ratio: {target_aspect}.
+
+STRICT JSON OUTPUT FORMAT ONLY:
+{{
+  "title": "Short punchy viral episode title",
+  "category": "{category}",
+  "hook": "The exact 3-second opening hook line",
+  "discussion_dynamic": "{discussion_dynamic}",
+  "studio_archetype": "{studio_archetype}",
+  "visual_style": "{visual_style}",
+  "aspect_ratio": "{aspect_ratio}",
+  "channel_name": "{channel_name}",
+  "host_format": "{host_format}",
+  "studio_environment": "{studio_desc}",
+  "channel_branding": "Exact description of how '{channel_name}' is integrated across neon sign, mugs, and mic clips",
+  "runtime_detail": "8-12 Multi-Cam Scenes (~60-90s Short)",
+  "hosts": [
+    {{
+      "name": "Host 1 (Lead Host)",
+      "role": "Host 1 role description",
+      "gender": "{h1_gender}",
+      "ethnicity": "{h1_eth}",
+      "accent": "{h1_accent}",
+      "wardrobe_lock": "Detailed description of exact outfit, accessories, and grooming",
+      "locked_visual_description": "Full-body and portrait identity prompt for Host 1 locking face, hair, and build",
+      "vocal_profile": "Vocal pitch, cadence, and delivery guide for ElevenLabs / TTS"
+    }}
+    {f''',
+    {{
+      "name": "Host 2 (Co-Host / Guest)",
+      "role": "Host 2 counterpoint role description",
+      "gender": "{h2_gender}",
+      "ethnicity": "{h2_eth}",
+      "accent": "{h2_accent}",
+      "wardrobe_lock": "Detailed description of exact outfit, accessories, and grooming",
+      "locked_visual_description": "Full-body and portrait identity prompt for Host 2 locking face, hair, and build",
+      "vocal_profile": "Vocal pitch, cadence, and delivery guide for ElevenLabs / TTS"
+    }}''' if is_two_host else ''}
+  ],
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "camera_shot": "CAM A: Host 1 Tight Close-Up",
+      "speaker": "Host 1",
+      "delivery_cues": "leaning into mic, intense gaze, deliberate cadence",
+      "dialogue": "Spoken dialogue for scene 1",
+      "audio_cues": "Deep sub-bass impact, soft room decay",
+      "estimated_duration": "7s",
+      "image_prompt": "Photorealistic or 3D scene prompt with exact camera view, host likeness, and studio backdrop with channel neon sign --ar {aspect_ratio.replace(' Vertical', '').replace(' Widescreen', '')}",
+      "video_prompt": "Camera motion prompt for Kling/Runway with speech gestures, head tilts, and micro-expressions"
+    }}
+  ]
+}}
+"""
+
+    prompt = f"""GENERATE PODCAST STUDIO PRODUCTION PACKAGE:
+{topic_spec}
+Host Format: {'Two Hosts (Banter, debate, reaction cutaways)' if is_two_host else 'Single Host (Direct address, camera punch-ins)'}
+Visual Style: {visual_style}
+Studio Archetype: {studio_archetype}
+Aspect Ratio: {aspect_ratio}
+Channel Name: {channel_name}
+Host 1 Identity: {h1_desc} | Accent: {h1_accent}
+{'Host 2 Identity: ' + h2_desc + ' | Accent: ' + h2_accent if is_two_host else ''}
+
+Generate exactly 8 to 12 fast-paced multi-camera scenes. Ensure every scene has distinct copy-ready image and video motion prompts. Return valid JSON only."""
+
+    raw_response = generate_ai_completion(
+        preferred_model=model,
+        system_instruction=system_instruction,
+        prompt=prompt,
+        temperature=0.65,
+        json_mode=True,
+        user_keys=user_keys,
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(raw_response)
+    if not isinstance(data, dict):
+        data = {
+            "title": "Podcast Episode",
+            "scenes": [],
+            "hosts": []
+        }
+    return data

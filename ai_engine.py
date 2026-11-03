@@ -1826,15 +1826,32 @@ async def generate_podcast_package(
 
     h1_gender = h1.get("gender", "Male")
     h1_eth = h1.get("ethnicity", "Black")
-    h1_desc = h1.get("description", "").strip() or f"{h1_eth} {h1_gender.lower()} in modern tailored minimalist attire"
-    h1_accent = h1.get("accent", "Nigerian English")
+    h1_custom_accent = h1.get("custom_accent", "").strip()
+    h1_accent = h1_custom_accent if (h1.get("accent") == "Custom" and h1_custom_accent) else h1.get("accent", "Nigerian English")
+    h1_has_portrait = bool(h1.get("has_portrait", False))
+    h1_desc_raw = h1.get("description", "").strip()
+    if h1_has_portrait:
+        h1_portrait_lock = "[IDENTITY LOCK: Character reference portrait provided. Lock facial structure, facial features, and skin tone to reference. Consistent studio hairstyle, wardrobe, and grooming.]"
+        h1_desc = f"{h1_portrait_lock} {h1_desc_raw}" if h1_desc_raw else f"{h1_portrait_lock} {h1_eth} {h1_gender.lower()} in modern tailored minimalist attire"
+    else:
+        h1_desc = h1_desc_raw or f"{h1_eth} {h1_gender.lower()} in modern tailored minimalist attire"
 
     is_two_host = (host_format != "single_host")
 
     h2_gender = h2.get("gender", "Female") if is_two_host else "None"
     h2_eth = h2.get("ethnicity", "Black") if is_two_host else "None"
-    h2_desc = h2.get("description", "").strip() or f"{h2_eth} {h2_gender.lower()} in stylish studio wardrobe" if is_two_host else "None"
-    h2_accent = h2.get("accent", "American English") if is_two_host else "None"
+    h2_custom_accent = h2.get("custom_accent", "").strip() if is_two_host else ""
+    h2_accent = h2_custom_accent if (h2.get("accent") == "Custom" and h2_custom_accent) else h2.get("accent", "American English") if is_two_host else "None"
+    h2_has_portrait = bool(h2.get("has_portrait", False)) if is_two_host else False
+    h2_desc_raw = h2.get("description", "").strip() if is_two_host else ""
+    if is_two_host:
+        if h2_has_portrait:
+            h2_portrait_lock = "[IDENTITY LOCK: Character reference portrait provided. Lock facial structure, facial features, and skin tone to reference. Consistent studio hairstyle, wardrobe, and grooming.]"
+            h2_desc = f"{h2_portrait_lock} {h2_desc_raw}" if h2_desc_raw else f"{h2_portrait_lock} {h2_eth} {h2_gender.lower()} in stylish studio wardrobe"
+        else:
+            h2_desc = h2_desc_raw or f"{h2_eth} {h2_gender.lower()} in stylish studio wardrobe"
+    else:
+        h2_desc = "None"
 
     # Studio Archetype Mapping
     archetype_map = {

@@ -32,7 +32,7 @@ AVAILABLE_MODELS = {
     "claude-3-7-sonnet": "Claude 3.5 Sonnet (Narrative Depth & Rich Dialogue)"
 }
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 def get_model_provider(model_name: str) -> str:
     """Returns 'gemini', 'gpt', or 'claude' based on the requested model name."""
@@ -130,7 +130,7 @@ def get_provider_availability(user_dict=None) -> dict:
     }
 
 # Fallback chain for Gemini
-FALLBACK_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-2.5-flash"]
+FALLBACK_CHAIN = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-flash-latest", "gemini-2.5-flash"]
 
 def clean_json_loads(text: str):
     """Safely extracts and parses JSON even if wrapped in markdown code fences, with trailing text, or truncated mid-stream."""

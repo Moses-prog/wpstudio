@@ -1472,6 +1472,55 @@
 
         /* Story Adapter Multi-Step & Visual Styling */
         /* Polished Unified Stepper Bar across ToonCraft, Podcast Studio & History */
+        #pod-stepper-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            padding: 6px;
+            background: rgba(125, 125, 125, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            white-space: nowrap;
+        }
+        #pod-stepper-bar .step-tab {
+            flex: 0 0 auto;
+            min-width: auto;
+            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+        }
+        .accent-chip {
+            cursor: pointer;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.16s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .accent-chip:hover {
+            border-color: rgba(229,169,60,0.5);
+            color: var(--text-main);
+        }
+        .accent-chip.active {
+            border-color: #e5a93c;
+            background: rgba(229,169,60,0.12);
+            color: #e5a93c;
+            box-shadow: 0 0 8px rgba(229,169,60,0.2);
+        }
+
         .adapter-step-bar {
             display: flex;
             align-items: center;
@@ -3136,7 +3185,7 @@
                 <button class="btn-submit" onclick="goToPodcastStep(2)" style="margin-top:10px;">Next &rarr;</button>
             </div>
 
-            <!-- STEP 2: FORMAT & VISUAL STYLE -->
+                        <!-- STEP 2: FORMAT & VISUAL STYLE -->
             <div id="pod-step-2" class="toon-step-pane" style="display:none;">
                 <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">PODCAST STUDIO</div>
                 <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Format &amp; Visual Style</div>
@@ -3160,7 +3209,8 @@
                     <div class="form-hint" style="font-size:11px;">The selected look stays locked across the full episode.</div>
                 </div>
 
-                <div class="form-card" style="margin-bottom:14px;">
+                <!-- Discussion dynamic is only applicable for 2-host episodes -->
+                <div id="pod-dynamic-card" class="form-card" style="margin-bottom:14px;">
                     <div class="form-label">HOST DISCUSSION DYNAMIC</div>
                     <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
                         <div class="pill-btn active" data-dyn="heated_debate" onclick="setPodcastDynamic('heated_debate', this)">Heated Debate</div>
@@ -3170,31 +3220,27 @@
                     </div>
                 </div>
 
+                <!-- Studio set & framing: stacked cleanly with 100% width so mobile margins are never broken -->
                 <div class="form-card" style="margin-bottom:16px;">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                        <div>
-                            <div class="form-label">STUDIO SET</div>
-                            <select id="pod-sel-studio-set" class="form-input" onchange="setPodcastStudioSet(this.value, null)">
-                                <option value="dark_acoustic" selected>Dark Slate Acoustic</option>
-                                <option value="neon_cyber">Neon Cyber Lounge</option>
-                                <option value="luxury_penthouse">Luxury Penthouse</option>
-                                <option value="cozy_loft">Cozy Living Room</option>
-                                <option value="pixar_studio">Pixar 3D Broadcast</option>
-                            </select>
-                        </div>
-                        <div>
-                            <div class="form-label">TARGET FRAMING</div>
-                            <select id="pod-sel-aspect-ratio" class="form-input" onchange="setPodcastAspect(this.value, null)">
-                                <option value="9:16 Vertical" selected>9:16 Vertical (Shorts/TikTok)</option>
-                                <option value="16:9 Widescreen">16:9 Widescreen (YouTube)</option>
-                            </select>
-                        </div>
-                    </div>
+                    <div class="form-label">STUDIO SET ARCHETYPE</div>
+                    <select id="pod-sel-studio-set" class="form-input" onchange="setPodcastStudioSet(this.value, null)" style="margin-bottom:12px; width:100%; box-sizing:border-box;">
+                        <option value="dark_acoustic" selected>Dark Slate Acoustic (Pro Studio)</option>
+                        <option value="neon_cyber">Neon Cyber Lounge (Modern LED)</option>
+                        <option value="luxury_penthouse">Luxury Penthouse (City Skyline)</option>
+                        <option value="cozy_loft">Cozy Living Room (Casual Fireside)</option>
+                        <option value="pixar_studio">Pixar 3D Broadcast (Stylized Set)</option>
+                    </select>
+
+                    <div class="form-label">TARGET FRAMING</div>
+                    <select id="pod-sel-aspect-ratio" class="form-input" onchange="setPodcastAspect(this.value, null)" style="width:100%; box-sizing:border-box;">
+                        <option value="9:16 Vertical" selected>9:16 Vertical (Shorts / Reels / TikTok)</option>
+                        <option value="16:9 Widescreen">16:9 Widescreen (YouTube Longform)</option>
+                    </select>
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
-                    <button class="btn-cancel" onclick="goToPodcastStep(1)" style="flex:1;">&larr; Back</button>
-                    <button class="btn-submit" onclick="goToPodcastStep(3)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                    <button class="btn-cancel" onclick="goToPodcastStep(1)" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(3)" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">Next &rarr;</button>
                 </div>
             </div>
 
@@ -3208,45 +3254,41 @@
                     Upload clear character portraits to lock facial identity. The AI may design one consistent hairstyle, outfit, makeup, jewelry and accessories, but the face remains unchanged. Leave both empty to create characters from scratch.
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div id="pod-portraits-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
                     <!-- Host 1 Portrait -->
-                    <div class="form-card">
-                        <div class="form-label" style="color:#e5a93c;">HOST 1 PORTRAIT</div>
-                        <div style="border: 1.5px dashed var(--border-color); border-radius: 10px; padding: 20px 10px; text-align: center; background: rgba(0,0,0,0.2); cursor: pointer;" onclick="document.getElementById('pod-h1-file').click()">
-                            <input type="file" id="pod-h1-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(1, event)">
-                            <div id="pod-h1-upload-prompt">
-                                <div style="color:#e5a93c; font-weight:700; font-size:12.5px; margin-bottom:4px;">Upload portrait</div>
-                                <div style="color:var(--text-muted); font-size:10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
-                            </div>
-                            <div id="pod-h1-preview-wrap" style="display:none; text-align:center;">
-                                <img id="pod-h1-preview-img" src="" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #e5a93c; margin-bottom:6px;">
-                                <div id="pod-h1-preview-name" style="font-size:11px; font-weight:600; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
-                                <button type="button" onclick="event.stopPropagation(); removeHostPortrait(1);" style="background:none; border:none; color:#ff453a; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
-                            </div>
+                    <div class="form-card" style="margin-bottom:0;">
+                        <div class="form-label">HOST 1 PORTRAIT</div>
+                        <input type="file" id="pod-h1-file" accept="image/*" style="display:none;" onchange="handleHostPortraitUpload(1, event)">
+                        <div id="pod-h1-upload-prompt" onclick="document.getElementById('pod-h1-file').click()" style="border: 2px dashed rgba(229, 169, 60, 0.4); border-radius: 8px; padding: 24px 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                            <div style="color: #e5a93c; font-size: 13px; font-weight: 700; margin-bottom: 4px;">Upload portrait</div>
+                            <div style="color: var(--text-muted); font-size: 10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                        </div>
+                        <div id="pod-h1-preview-wrap" style="display:none; text-align:center;">
+                            <img id="pod-h1-preview-img" style="width:100%; height:110px; object-fit:cover; border-radius:6px; border:1px solid #e5a93c; margin-bottom:6px;">
+                            <div id="pod-h1-preview-name" style="font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:6px;"></div>
+                            <button class="btn-cancel" onclick="removeHostPortrait(1)" style="padding:3px 8px; font-size:10px; color:#ff453a;">Remove</button>
                         </div>
                     </div>
 
                     <!-- Host 2 Portrait -->
-                    <div id="pod-h2-portrait-box" class="form-card">
-                        <div class="form-label" style="color:#e5a93c;">HOST 2 PORTRAIT</div>
-                        <div style="border: 1.5px dashed var(--border-color); border-radius: 10px; padding: 20px 10px; text-align: center; background: rgba(0,0,0,0.2); cursor: pointer;" onclick="document.getElementById('pod-h2-file').click()">
-                            <input type="file" id="pod-h2-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleHostPortraitUpload(2, event)">
-                            <div id="pod-h2-upload-prompt">
-                                <div style="color:#e5a93c; font-weight:700; font-size:12.5px; margin-bottom:4px;">Upload portrait</div>
-                                <div style="color:var(--text-muted); font-size:10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
-                            </div>
-                            <div id="pod-h2-preview-wrap" style="display:none; text-align:center;">
-                                <img id="pod-h2-preview-img" src="" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #e5a93c; margin-bottom:6px;">
-                                <div id="pod-h2-preview-name" style="font-size:11px; font-weight:600; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">portrait.png</div>
-                                <button type="button" onclick="event.stopPropagation(); removeHostPortrait(2);" style="background:none; border:none; color:#ff453a; font-size:11px; cursor:pointer; text-decoration:underline; margin-top:4px;">Remove</button>
-                            </div>
+                    <div id="pod-h2-portrait-box" class="form-card" style="margin-bottom:0;">
+                        <div class="form-label">HOST 2 PORTRAIT</div>
+                        <input type="file" id="pod-h2-file" accept="image/*" style="display:none;" onchange="handleHostPortraitUpload(2, event)">
+                        <div id="pod-h2-upload-prompt" onclick="document.getElementById('pod-h2-file').click()" style="border: 2px dashed rgba(229, 169, 60, 0.4); border-radius: 8px; padding: 24px 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                            <div style="color: #e5a93c; font-size: 13px; font-weight: 700; margin-bottom: 4px;">Upload portrait</div>
+                            <div style="color: var(--text-muted); font-size: 10px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                        </div>
+                        <div id="pod-h2-preview-wrap" style="display:none; text-align:center;">
+                            <img id="pod-h2-preview-img" style="width:100%; height:110px; object-fit:cover; border-radius:6px; border:1px solid #e5a93c; margin-bottom:6px;">
+                            <div id="pod-h2-preview-name" style="font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:6px;"></div>
+                            <button class="btn-cancel" onclick="removeHostPortrait(2)" style="padding:3px 8px; font-size:10px; color:#ff453a;">Remove</button>
                         </div>
                     </div>
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
-                    <button class="btn-cancel" onclick="goToPodcastStep(2)" style="flex:1;">&larr; Back</button>
-                    <button class="btn-submit" onclick="goToPodcastStep(4)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                    <button class="btn-cancel" onclick="goToPodcastStep(2)" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(4)" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">Next &rarr;</button>
                 </div>
             </div>
 
@@ -3284,8 +3326,8 @@
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
-                    <button class="btn-cancel" onclick="goToPodcastStep(3)" style="flex:1;">&larr; Back</button>
-                    <button class="btn-submit" onclick="goToPodcastStep(5)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                    <button class="btn-cancel" onclick="goToPodcastStep(3)" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(5)" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">Next &rarr;</button>
                 </div>
             </div>
 
@@ -3298,22 +3340,40 @@
                 <div class="form-card" style="margin-bottom:14px;">
                     <div class="form-label">ACCENT</div>
                     <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
-                        <div class="pill-btn active" onclick="setH1Accent('Nigerian English', this)">Nigerian English</div>
-                        <div class="pill-btn" onclick="setH1Accent('American English', this)">American English</div>
-                        <div class="pill-btn" onclick="setH1Accent('British English', this)">British English</div>
-                        <div class="pill-btn" onclick="setH1Accent('Custom', this)">Custom</div>
+                        <div class="pill-btn active" data-acc="Nigerian English" onclick="setH1Accent('Nigerian English', this)">Nigerian English</div>
+                        <div class="pill-btn" data-acc="American English" onclick="setH1Accent('American English', this)">American English</div>
+                        <div class="pill-btn" data-acc="British English" onclick="setH1Accent('British English', this)">British English</div>
+                        <div class="pill-btn" data-acc="Custom" onclick="setH1Accent('Custom', this)">Custom</div>
                     </div>
                     <div class="form-hint" style="font-size:11px;">Dialogue remains in English; only vocal delivery follows the accent.</div>
                 </div>
 
                 <div class="form-card" style="margin-bottom:16px;">
                     <div class="form-label">CUSTOM HOST 1 ACCENT <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
-                    <input type="text" id="pod-h1-custom-accent" class="form-input" placeholder="Example: Jamaican accent, Indian accent, Korean accent">
+                    <input type="text" id="pod-h1-custom-accent" class="form-input" placeholder="Type accent or select from suggestions below..." oninput="onCustomAccentTyped(1, this.value)">
+
+                    <div style="margin-top:12px;">
+                        <div style="font-size:10.5px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">POPULAR ACCENT SUGGESTIONS</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            <span class="chip accent-chip" data-val="Jamaican Patois" onclick="selectAccentSuggestion(1, 'Jamaican Patois')">Jamaican Patois</span>
+                            <span class="chip accent-chip" data-val="South African" onclick="selectAccentSuggestion(1, 'South African')">South African</span>
+                            <span class="chip accent-chip" data-val="Australian English" onclick="selectAccentSuggestion(1, 'Australian English')">Australian</span>
+                            <span class="chip accent-chip" data-val="Canadian English" onclick="selectAccentSuggestion(1, 'Canadian English')">Canadian</span>
+                            <span class="chip accent-chip" data-val="Indian English" onclick="selectAccentSuggestion(1, 'Indian English')">Indian English</span>
+                            <span class="chip accent-chip" data-val="Ghanaian English" onclick="selectAccentSuggestion(1, 'Ghanaian English')">Ghanaian English</span>
+                            <span class="chip accent-chip" data-val="Irish Accent" onclick="selectAccentSuggestion(1, 'Irish Accent')">Irish Accent</span>
+                            <span class="chip accent-chip" data-val="Scottish Accent" onclick="selectAccentSuggestion(1, 'Scottish Accent')">Scottish Accent</span>
+                            <span class="chip accent-chip" data-val="French English" onclick="selectAccentSuggestion(1, 'French English')">French Accent</span>
+                            <span class="chip accent-chip" data-val="German English" onclick="selectAccentSuggestion(1, 'German English')">German Accent</span>
+                            <span class="chip accent-chip" data-val="Spanish / Latino" onclick="selectAccentSuggestion(1, 'Spanish / Latino')">Spanish / Latino</span>
+                            <span class="chip accent-chip" data-val="Japanese Accent" onclick="selectAccentSuggestion(1, 'Japanese Accent')">Japanese Accent</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
-                    <button class="btn-cancel" onclick="goToPodcastStep(4)" style="flex:1;">&larr; Back</button>
-                    <button class="btn-submit" onclick="handleStep5Next()" style="flex:2; margin-top:0;">Next &rarr;</button>
+                    <button class="btn-cancel" onclick="goToPodcastStep(4)" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button class="btn-submit" onclick="handleStep5Next()" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">Next &rarr;</button>
                 </div>
             </div>
 
@@ -3353,18 +3413,37 @@
                 <div class="form-card" style="margin-bottom:16px;">
                     <div class="form-label">ACCENT</div>
                     <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px; margin-bottom:8px;">
-                        <div class="pill-btn" onclick="setH2Accent('Nigerian English', this)">Nigerian English</div>
-                        <div class="pill-btn active" onclick="setH2Accent('American English', this)">American English</div>
-                        <div class="pill-btn" onclick="setH2Accent('British English', this)">British English</div>
-                        <div class="pill-btn" onclick="setH2Accent('Custom', this)">Custom</div>
+                        <div class="pill-btn" data-acc="Nigerian English" onclick="setH2Accent('Nigerian English', this)">Nigerian English</div>
+                        <div class="pill-btn active" data-acc="American English" onclick="setH2Accent('American English', this)">American English</div>
+                        <div class="pill-btn" data-acc="British English" onclick="setH2Accent('British English', this)">British English</div>
+                        <div class="pill-btn" data-acc="Custom" onclick="setH2Accent('Custom', this)">Custom</div>
                     </div>
+
                     <div class="form-label" style="font-size:11px; margin-top:10px;">CUSTOM HOST 2 ACCENT <em style="font-size:10.5px; font-weight:normal; color:var(--text-muted); font-style:normal;">(OPTIONAL)</em></div>
-                    <input type="text" id="pod-h2-custom-accent" class="form-input" placeholder="Example: Jamaican accent, Indian accent, Korean accent">
+                    <input type="text" id="pod-h2-custom-accent" class="form-input" placeholder="Type accent or select from suggestions below..." oninput="onCustomAccentTyped(2, this.value)">
+
+                    <div style="margin-top:12px;">
+                        <div style="font-size:10.5px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">POPULAR ACCENT SUGGESTIONS</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            <span class="chip accent-chip" data-val="Jamaican Patois" onclick="selectAccentSuggestion(2, 'Jamaican Patois')">Jamaican Patois</span>
+                            <span class="chip accent-chip" data-val="South African" onclick="selectAccentSuggestion(2, 'South African')">South African</span>
+                            <span class="chip accent-chip" data-val="Australian English" onclick="selectAccentSuggestion(2, 'Australian English')">Australian</span>
+                            <span class="chip accent-chip" data-val="Canadian English" onclick="selectAccentSuggestion(2, 'Canadian English')">Canadian</span>
+                            <span class="chip accent-chip" data-val="Indian English" onclick="selectAccentSuggestion(2, 'Indian English')">Indian English</span>
+                            <span class="chip accent-chip" data-val="Ghanaian English" onclick="selectAccentSuggestion(2, 'Ghanaian English')">Ghanaian English</span>
+                            <span class="chip accent-chip" data-val="Irish Accent" onclick="selectAccentSuggestion(2, 'Irish Accent')">Irish Accent</span>
+                            <span class="chip accent-chip" data-val="Scottish Accent" onclick="selectAccentSuggestion(2, 'Scottish Accent')">Scottish Accent</span>
+                            <span class="chip accent-chip" data-val="French English" onclick="selectAccentSuggestion(2, 'French English')">French Accent</span>
+                            <span class="chip accent-chip" data-val="German English" onclick="selectAccentSuggestion(2, 'German English')">German Accent</span>
+                            <span class="chip accent-chip" data-val="Spanish / Latino" onclick="selectAccentSuggestion(2, 'Spanish / Latino')">Spanish / Latino</span>
+                            <span class="chip accent-chip" data-val="Japanese Accent" onclick="selectAccentSuggestion(2, 'Japanese Accent')">Japanese Accent</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:14px;">
-                    <button class="btn-cancel" onclick="goToPodcastStep(5)" style="flex:1;">&larr; Back</button>
-                    <button class="btn-submit" onclick="goToPodcastStep(7)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                    <button class="btn-cancel" onclick="goToPodcastStep(5)" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button class="btn-submit" onclick="goToPodcastStep(7)" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">Next &rarr;</button>
                 </div>
             </div>
 
@@ -3392,7 +3471,7 @@
                         <div>Set Archetype: <strong id="pod-rev-set" style="color:var(--text-main);">Dark Slate Acoustic</strong></div>
                         <div>Visual Style: <strong id="pod-rev-style" style="color:var(--text-main);">Human Realistic</strong> &middot; <span id="pod-rev-ar">9:16 Vertical</span></div>
                         <div>Format: <strong id="pod-rev-fmt" style="color:var(--text-main);">Two Hosts</strong></div>
-                        <div>Deliverables: <strong>8&ndash;12 Multi-Cam Cuts, Script &amp; 3 Executive PDFs</strong></div>
+                        <div>Deliverables: <strong id="pod-rev-deliv">8&ndash;12 Multi-Cam Cuts, Script &amp; 3 Executive PDFs</strong></div>
                     </div>
                 </div>
 
@@ -3406,8 +3485,8 @@
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-cancel" onclick="handleStep7Back()" style="flex:1;">&larr; Back</button>
-                    <button id="btn-podcast-generate" class="btn-submit" onclick="submitPodcast()" style="flex:2; margin-top:0;">
+                    <button class="btn-cancel" onclick="handleStep7Back()" style="flex:1; padding:12px 14px; border-radius:10px; box-sizing:border-box;">&larr; Back</button>
+                    <button id="btn-podcast-generate" class="btn-submit" onclick="submitPodcast()" style="flex:2; margin-top:0; padding:12px 14px; border-radius:10px; box-sizing:border-box;">
                         Generate Podcast &mdash; 25 Credits
                     </button>
                 </div>
@@ -4259,7 +4338,8 @@
 
                     const rawProgress = elapsedMs / stageDurationMs;
                     const activeIdx = Math.min(totalStages - 1, Math.floor(rawProgress));
-                    const stageFraction = Math.min(1.0, rawProgress - activeIdx);
+                    const isLastStage = (activeIdx === totalStages - 1);
+                    const stageFraction = isLastStage ? 1.0 : Math.min(1.0, rawProgress - activeIdx);
 
                     if (activeIdx !== this.currentStageIdx) {
                         this.currentStageIdx = activeIdx;
@@ -4267,6 +4347,21 @@
                         const statusEl = document.getElementById('hud-status-text');
                         if (statusEl && activeStage) {
                             statusEl.innerText = activeStage.desc || "Generating high-fidelity studio assets...";
+                        }
+                    }
+
+                    // In the final stage, continuously update status subtext so it never appears frozen
+                    if (isLastStage) {
+                        const statusEl = document.getElementById('hud-status-text');
+                        const lastStageElapsed = elapsedMs - (totalStages - 1) * stageDurationMs;
+                        if (statusEl) {
+                            if (lastStageElapsed > 18000) {
+                                statusEl.innerText = "Assembling multi-cam direction and camera cues...";
+                            } else if (lastStageElapsed > 10000) {
+                                statusEl.innerText = "Directing host continuity and dialogue performance...";
+                            } else if (lastStageElapsed > 4000) {
+                                statusEl.innerText = "Compiling executive production blueprint & PDFs...";
+                            }
                         }
                     }
 
@@ -4293,13 +4388,18 @@
                                 if (chip) chip.innerText = 'Active';
                                 if (icon) icon.innerHTML = '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>';
                             }
-                            // Smooth percentage fill from left to right:
-                            // All generations start at card 0, and the final card stays in fluid motion (capped at 90%) until server complete() arrives
-                            const maxFill = (i === totalStages - 1) ? 90 : 100;
-                            const currentPct = Math.min(maxFill, Math.max(0, Math.round(stageFraction * 100)));
+
+                            let currentPct = 0;
+                            if (isLastStage) {
+                                // Final card continuously creeps forward from 15% to 96% asymptotically so it NEVER freezes
+                                const extraMs = Math.max(0, elapsedMs - (totalStages - 1) * stageDurationMs);
+                                currentPct = Math.min(96, Math.max(15, Math.round(15 + 81 * (1 - Math.exp(-extraMs / 14000)))));
+                            } else {
+                                currentPct = Math.min(100, Math.max(0, Math.round(stageFraction * 100)));
+                            }
                             fill.style.width = `${currentPct}%`;
 
-                            if (currentPct >= 99 && activeIdx < totalStages - 1) {
+                            if (currentPct >= 99 && !isLastStage) {
                                 if (chip) chip.innerText = 'Done';
                             }
                         } else {
@@ -8104,11 +8204,57 @@
             currentData: null
         };
 
+        function selectAccentSuggestion(hostNum, accentName) {
+            try { if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e){}
+            const hostObj = (hostNum === 1) ? podcastState.host1 : podcastState.host2;
+            hostObj.accent = 'Custom';
+            hostObj.customAccent = accentName;
+
+            const input = document.getElementById(`pod-h${hostNum}-custom-accent`);
+            if (input) {
+                input.value = accentName;
+            }
+
+            const stepPaneId = (hostNum === 1) ? 'pod-step-5' : 'pod-step-6';
+            const pane = document.getElementById(stepPaneId);
+            if (pane) {
+                pane.querySelectorAll('.pill-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-acc') === 'Custom');
+                });
+                pane.querySelectorAll('.accent-chip').forEach(ch => {
+                    ch.classList.toggle('active', ch.getAttribute('data-val') === accentName);
+                });
+            }
+        }
+
+        function onCustomAccentTyped(hostNum, val) {
+            const hostObj = (hostNum === 1) ? podcastState.host1 : podcastState.host2;
+            hostObj.accent = 'Custom';
+            hostObj.customAccent = val;
+
+            const stepPaneId = (hostNum === 1) ? 'pod-step-5' : 'pod-step-6';
+            const pane = document.getElementById(stepPaneId);
+            if (pane) {
+                pane.querySelectorAll('.pill-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-acc') === 'Custom');
+                });
+                pane.querySelectorAll('.accent-chip').forEach(ch => {
+                    ch.classList.toggle('active', ch.getAttribute('data-val') === val);
+                });
+            }
+        }
+
         function goToPodcastStep(step) {
             try { if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e){}
-            podcastState.currentStep = step;
 
             const isTwo = (podcastState.hostFormat !== 'single_host');
+
+            // Strictly prevent visiting Step 6 when in Single Host mode
+            if (!isTwo && step === 6) {
+                step = 7;
+            }
+            podcastState.currentStep = step;
+
             const visibleSteps = isTwo ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5, 7];
 
             for (let i = 1; i <= 7; i++) {
@@ -8118,8 +8264,19 @@
             const resPane = document.getElementById('pod-step-results');
             if (resPane) resPane.style.display = (step === 8) ? 'block' : 'none';
 
+            // Synchronize host 2 UI visibility across tabs and panes
             const tab6 = document.getElementById('pod-tab-6');
-            if (tab6) tab6.style.display = isTwo ? 'flex' : 'none';
+            if (tab6) tab6.style.display = isTwo ? 'inline-flex' : 'none';
+
+            const dynamicCard = document.getElementById('pod-dynamic-card');
+            if (dynamicCard) dynamicCard.style.display = isTwo ? 'block' : 'none';
+
+            const portraitsGrid = document.getElementById('pod-portraits-grid');
+            if (portraitsGrid) {
+                portraitsGrid.style.gridTemplateColumns = isTwo ? '1fr 1fr' : '1fr';
+            }
+            const h2PortraitBox = document.getElementById('pod-h2-portrait-box');
+            if (h2PortraitBox) h2PortraitBox.style.display = isTwo ? 'block' : 'none';
 
             const tab7Circle = document.getElementById('pod-tab-7-circle');
             if (tab7Circle) tab7Circle.innerText = isTwo ? '7' : '6';
@@ -8134,6 +8291,9 @@
                     tab.classList.add('active');
                     tab.classList.remove('completed');
                     if (circle) circle.innerText = displayNum;
+                    try {
+                        tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    } catch(e){}
                 } else if (step > sIdx || (step === 7 && sIdx < 7) || (step === 8)) {
                     tab.classList.remove('active');
                     tab.classList.add('completed');
@@ -8204,12 +8364,28 @@
                 btnTwo.classList.toggle('active', hfmt === 'two_host');
             }
             const isTwo = (hfmt !== 'single_host');
+
+            // Hide discussion dynamic card when single host is chosen
+            const dynamicCard = document.getElementById('pod-dynamic-card');
+            if (dynamicCard) dynamicCard.style.display = isTwo ? 'block' : 'none';
+
+            // Step 3 portrait grid: single host gets full width, two hosts get 2 columns
+            const portraitsGrid = document.getElementById('pod-portraits-grid');
+            if (portraitsGrid) {
+                portraitsGrid.style.gridTemplateColumns = isTwo ? '1fr 1fr' : '1fr';
+            }
             const h2PortraitBox = document.getElementById('pod-h2-portrait-box');
             if (h2PortraitBox) h2PortraitBox.style.display = isTwo ? 'block' : 'none';
+
+            // Step bar Tab 6: hide for single host
             const tab6 = document.getElementById('pod-tab-6');
-            if (tab6) tab6.style.display = isTwo ? 'flex' : 'none';
+            if (tab6) tab6.style.display = isTwo ? 'inline-flex' : 'none';
+
+            // Tab 7 numbering
             const tab7Circle = document.getElementById('pod-tab-7-circle');
             if (tab7Circle) tab7Circle.innerText = isTwo ? '7' : '6';
+
+            updatePodcastReview();
         }
 
         function setPodcastVisual(vstyle, el) {
@@ -8315,6 +8491,10 @@
                 el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
+            if (acc !== 'Custom') {
+                const pane = document.getElementById('pod-step-5');
+                if (pane) pane.querySelectorAll('.accent-chip').forEach(ch => ch.classList.remove('active'));
+            }
         }
 
         function setH2Gender(g, el) {
@@ -8339,6 +8519,10 @@
                 el.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 el.classList.add('active');
             }
+            if (acc !== 'Custom') {
+                const pane = document.getElementById('pod-step-6');
+                if (pane) pane.querySelectorAll('.accent-chip').forEach(ch => ch.classList.remove('active'));
+            }
         }
 
         function updatePodcastReview() {
@@ -8348,15 +8532,21 @@
             const cEl = document.getElementById('pod-rev-cat');
             if (cEl) cEl.innerText = podcastState.category;
 
+            const isTwo = (podcastState.hostFormat !== 'single_host');
+
             const dEl = document.getElementById('pod-rev-dyn');
             if (dEl) {
-                const map = {
-                    'heated_debate': 'Heated Debate',
-                    'interviewer_expert': 'Interviewer & Expert',
-                    'unfiltered_banter': 'Unfiltered Banter',
-                    'philosophical_chill': 'Deep Philosophical'
-                };
-                dEl.innerText = map[podcastState.discussionDynamic] || podcastState.discussionDynamic;
+                if (!isTwo) {
+                    dEl.innerText = 'Solo Host Direct Address';
+                } else {
+                    const map = {
+                        'heated_debate': 'Heated Debate',
+                        'interviewer_expert': 'Interviewer & Expert',
+                        'unfiltered_banter': 'Unfiltered Banter',
+                        'philosophical_chill': 'Deep Philosophical'
+                    };
+                    dEl.innerText = map[podcastState.discussionDynamic] || podcastState.discussionDynamic;
+                }
             }
 
             const sEl = document.getElementById('pod-rev-set');
@@ -8378,7 +8568,12 @@
             if (arEl) arEl.innerText = podcastState.aspectRatio;
 
             const fEl = document.getElementById('pod-rev-fmt');
-            if (fEl) fEl.innerText = (podcastState.hostFormat === 'two_host') ? 'Two Hosts' : 'Single Host';
+            if (fEl) fEl.innerText = isTwo ? 'Two Hosts' : 'Single Host';
+
+            const delivEl = document.getElementById('pod-rev-deliv');
+            if (delivEl) {
+                delivEl.innerText = isTwo ? '8–12 Multi-Cam Cuts, Script & 3 Executive PDFs' : '8–12 Solo Cuts, Script & 3 Executive PDFs';
+            }
 
             const uCredits = document.getElementById('pod-user-credits');
             if (uCredits && currentUser) {
@@ -8411,23 +8606,24 @@
             if (chInput && chInput.value.trim()) podcastState.channelName = chInput.value.trim();
 
             const h1CustomAcc = document.getElementById('pod-h1-custom-accent')?.value.trim() || '';
-            podcastState.host1.customAccent = h1CustomAcc;
+            if (h1CustomAcc) podcastState.host1.customAccent = h1CustomAcc;
 
             const h1Desc = document.getElementById('pod-h1-desc')?.value.trim() || '';
             podcastState.host1.description = h1Desc;
 
-            if (podcastState.hostFormat !== 'single_host') {
+            const isTwo = (podcastState.hostFormat !== 'single_host');
+            if (isTwo) {
                 const h2CustomAcc = document.getElementById('pod-h2-custom-accent')?.value.trim() || '';
-                podcastState.host2.customAccent = h2CustomAcc;
+                if (h2CustomAcc) podcastState.host2.customAccent = h2CustomAcc;
 
                 const h2Desc = document.getElementById('pod-h2-desc')?.value.trim() || '';
                 podcastState.host2.description = h2Desc;
             }
 
-            // Start Executive Obsidian Progress Tracker
+            // Start Executive Obsidian Progress Tracker with 30s pacing and never-freezing wave
             AIProgressTracker.start(
                 "Podcast Studio",
-                25,
+                30,
                 [
                     { title: "3-Second Viral Hook & Episode Arc", desc: "Formulating high-tension opening hook & debate thesis..." },
                     { title: "Host & Studio Continuity", desc: "Locking Host 1 & Host 2 identities, lighting & channel branding..." },
@@ -8452,7 +8648,7 @@
                         user_perspective: podcastState.userPerspective,
                         host_format: podcastState.hostFormat,
                         visual_style: podcastState.visualStyle,
-                        discussion_dynamic: podcastState.discussionDynamic,
+                        discussion_dynamic: isTwo ? podcastState.discussionDynamic : 'solo_monologue',
                         studio_archetype: podcastState.studioArchetype,
                         aspect_ratio: podcastState.aspectRatio,
                         channel_name: podcastState.channelName,
@@ -8465,14 +8661,14 @@
                             description: podcastState.host1.description,
                             has_portrait: podcastState.host1.hasPortrait
                         },
-                        host_2: {
+                        host_2: isTwo ? {
                             gender: podcastState.host2.gender,
                             ethnicity: podcastState.host2.ethnicity,
                             accent: podcastState.host2.accent,
                             custom_accent: podcastState.host2.customAccent,
                             description: podcastState.host2.description,
                             has_portrait: podcastState.host2.hasPortrait
-                        }
+                        } : null
                     })
                 });
 

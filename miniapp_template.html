@@ -4693,6 +4693,8 @@
         }
 
         // Render Dashboard UI Elements
+        function updateUserDisplay() { renderDashboard(); }
+
         function renderDashboard() {
             if (!currentUser) return;
             const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
@@ -8167,7 +8169,7 @@
 
                 if (data.credits_remaining !== undefined && currentUser) {
                     currentUser.credits = data.credits_remaining;
-                    updateUserDisplay();
+                    renderDashboard();
                 }
 
                 podcastState.currentData = data.podcast;

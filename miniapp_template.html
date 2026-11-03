@@ -4201,8 +4201,10 @@
                                 if (chip) chip.innerText = 'Active';
                                 if (icon) icon.innerHTML = '<span style="width:5px; height:5px; border-radius:50%; background:#e5a93c;"></span>';
                             }
-                            // Smooth percentage fill from left to right
-                            const currentPct = Math.min(100, Math.max(0, Math.round(stageFraction * 100)));
+                            // Smooth percentage fill from left to right:
+                            // All generations start at card 0, and the final card stays in fluid motion (capped at 90%) until server complete() arrives
+                            const maxFill = (i === totalStages - 1) ? 90 : 100;
+                            const currentPct = Math.min(maxFill, Math.max(0, Math.round(stageFraction * 100)));
                             fill.style.width = `${currentPct}%`;
 
                             if (currentPct >= 99 && activeIdx < totalStages - 1) {
@@ -4312,6 +4314,10 @@
             fail(errorText) {
                 this.stop();
                 showToast(errorText || "Operation failed", false);
+            },
+
+            error(errorText) {
+                this.fail(errorText);
             }
         };
 
@@ -8149,7 +8155,7 @@
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
-                    AIProgressTracker.error(data.error || 'Failed to generate podcast package.');
+                    AIProgressTracker.fail(data.error || 'Failed to generate podcast package.');
                     if (btn) {
                         btn.disabled = false;
                         btn.innerText = 'Generate Podcast Episode - 25 Credits';
@@ -8173,9 +8179,9 @@
             } catch (err) {
                 clearTimeout(timeoutId);
                 if (err.name === 'AbortError') {
-                    AIProgressTracker.error('Request timed out. Please retry with a shorter premise.');
+                    AIProgressTracker.fail('Request timed out. Please retry with a shorter premise.');
                 } else {
-                    AIProgressTracker.error(err.message || 'Network connection failed.');
+                    AIProgressTracker.fail(err.message || 'Network connection failed.');
                 }
             } finally {
                 if (btn) {

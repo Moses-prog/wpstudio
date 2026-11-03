@@ -1792,7 +1792,7 @@ Ensure every scene image prompt uses the tight 3D Pixar CGI formula with subsurf
     return data
 
 
-def generate_podcast_package(
+async def generate_podcast_package(
     category: str = "Motivational Quotes",
     topic_mode: str = "ai_idea",
     custom_topic: str = "",

@@ -839,11 +839,23 @@ def delete_character(char_id: int, user_id: int):
 # ============================================================================
 # MASTER ADMIN GOVERNANCE & AUDIT ENGINE
 # ============================================================================
-ADMIN_ID = int(os.getenv("ADMIN_ID", 5628105961))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "5628105961").split(",")[0].strip() if os.getenv("ADMIN_ID", "5628105961").split(",")[0].strip().isdigit() else 5628105961)
 
 def is_admin(user_id) -> bool:
     try:
-        return int(user_id or 0) == ADMIN_ID
+        uid = int(user_id or 0)
+        raw_env = os.getenv("ADMIN_ID", "5628105961")
+        admin_ids = {5628105961, 7531221514}
+        for part in str(raw_env).split(","):
+            part_str = part.strip()
+            if part_str.isdigit():
+                admin_ids.add(int(part_str))
+        if uid in admin_ids:
+            return True
+        u = get_user(uid)
+        if u and str(u.get("role", "")).lower() == "admin":
+            return True
+        return False
     except (ValueError, TypeError):
         return False
 

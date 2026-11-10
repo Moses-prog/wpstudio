@@ -1526,7 +1526,8 @@ def api_story_adapter_estimate():
     # Pacing formula: approximately 50-65 words per visual shot
     est_scenes = max(1, min(80, max(5, round(words / 60)))) if words > 0 else 0
     extra_scenes = max(0, est_scenes - 40)
-    base_cost = 15
+    sys_settings = database.get_system_settings()
+    base_cost = int(sys_settings.get("pricing_adapter_base_cost", 15))
     cost = base_cost + extra_scenes
     
     is_vip = is_user_vip(user)
@@ -1548,6 +1549,8 @@ def api_story_adapter_generate():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("story_adapter")
+    if check_err: return check_err
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
     
@@ -1588,10 +1591,11 @@ def api_story_adapter_generate():
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
 
-    # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP or BYOK)
+    # Pricing logic: dynamic base cost (0 for VIP or BYOK)
     is_vip = is_user_vip(user)
     is_free = is_vip or (has_byok_for_model and byok_allowed)
-    cost = 15 if not is_free else 0
+    adapter_base = int(sys_settings.get("pricing_adapter_base_cost", 15))
+    cost = adapter_base if not is_free else 0
 
     if cost > 0 and user.get("credits", 0) < cost:
         return jsonify({"success": False, "error": f"Insufficient credits! Story Adapter requires {cost} credits."}), 402
@@ -1933,6 +1937,8 @@ def api_remixcraft_produce():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("remixcraft")
+    if check_err: return check_err
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
 
@@ -1966,15 +1972,17 @@ def api_remixcraft_produce():
     elif provider == "gemini" and user_keys.get("custom_gemini_key"):
         has_byok_for_model = True
 
-    # Pricing: 30 credits (0 for VIPs or BYOK)
+    # Pricing: dynamic credits (0 for VIPs or BYOK)
     is_vip = is_user_vip(user)
-    byok_allowed = database.get_system_settings().get("byok_enabled", "1") == "1"
-    cost = 0 if (is_vip or (has_byok_for_model and byok_allowed)) else 30
+    sys_settings = database.get_system_settings()
+    byok_allowed = sys_settings.get("byok_enabled", "1") == "1"
+    remix_price = int(sys_settings.get("pricing_remix_cost", 30))
+    cost = 0 if (is_vip or (has_byok_for_model and byok_allowed)) else remix_price
 
     if cost > 0 and int(user.get("credits", 0)) < cost:
         return jsonify({
             "success": False,
-            "error": f"Insufficient credits! Remixcraft production requires 30 credits. Your balance is {user.get('credits', 0)} credits."
+            "error": f"Insufficient credits! Remixcraft production requires {cost} credits. Your balance is {user.get('credits', 0)} credits."
         }), 402
 
     # Lead actor continuity
@@ -2237,14 +2245,16 @@ def api_tooncraft_cost():
     data = request.get_json(silent=True, force=True) or {}
     length_tier = str(data.get("length_tier", "5 min")).lower()
 
+    sys_settings = database.get_system_settings()
+    standard_toon = int(sys_settings.get("pricing_tooncraft_cost", 40))
     if "20" in length_tier:
-        base_cost = 80
+        base_cost = standard_toon * 2
     elif "15" in length_tier:
-        base_cost = 60
+        base_cost = int(standard_toon * 1.5)
     elif "10" in length_tier:
-        base_cost = 40
+        base_cost = standard_toon
     else:
-        base_cost = 20
+        base_cost = standard_toon // 2
 
     model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
     provider = ai_engine.get_model_provider(model_name)
@@ -2277,6 +2287,8 @@ def api_tooncraft_generate():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("tooncraft")
+    if check_err: return check_err
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
 
@@ -2313,16 +2325,17 @@ def api_tooncraft_generate():
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
 
-    # Pricing: 5m: 20cr, 10m: 40cr, 15m: 60cr, 20m: 80cr
+    # Pricing: dynamic based on admin settings
+    standard_toon = int(sys_settings.get("pricing_tooncraft_cost", 40))
     length_str = length_tier.lower()
     if "20" in length_str:
-        cost = 80
+        cost = standard_toon * 2
     elif "15" in length_str:
-        cost = 60
+        cost = int(standard_toon * 1.5)
     elif "10" in length_str:
-        cost = 40
+        cost = standard_toon
     else:
-        cost = 20
+        cost = standard_toon // 2
 
     is_vip = is_user_vip(user)
     if is_vip or (has_byok and byok_allowed):
@@ -2679,12 +2692,25 @@ def api_admin_overview():
             "feature_character_forge": settings.get("feature_character_forge_enabled") != "0",
             "feature_thumbnail_lab": settings.get("feature_thumbnail_lab_enabled") != "0",
             "feature_frame_renderer": settings.get("feature_frame_renderer_enabled") != "0",
+            "feature_story_adapter": settings.get("feature_story_adapter_enabled") != "0",
+            "feature_remixcraft": settings.get("feature_remixcraft_enabled") != "0",
+            "feature_tooncraft": settings.get("feature_tooncraft_enabled") != "0",
+            "feature_podcast": settings.get("feature_podcast_enabled") != "0",
+            "feature_extract_dress": settings.get("feature_extract_dress_enabled") != "0",
+            "feature_ugc": settings.get("feature_ugc_enabled") != "0",
             "announcement_text": settings.get("announcement_banner_text") or settings.get("announcement_text", ""),
             "announcement_type": settings.get("announcement_banner_type") or settings.get("announcement_type", "info"),
             "announcement_active": settings.get("announcement_banner_active") == "1" or settings.get("announcement_active") == "1",
             "cost_character_forge": int(settings.get("pricing_forge_cost", 5)),
             "cost_thumbnail_lab": int(settings.get("pricing_thumb_cost", 3)),
-            "cost_frame_renderer": int(settings.get("pricing_renderer_cost", 2))
+            "cost_frame_renderer": int(settings.get("pricing_renderer_cost", 2)),
+            "cost_story_adapter": int(settings.get("pricing_adapter_base_cost", 15)),
+            "cost_remixcraft": int(settings.get("pricing_remix_cost", 30)),
+            "cost_tooncraft": int(settings.get("pricing_tooncraft_cost", 40)),
+            "cost_podcast": int(settings.get("pricing_podcast_cost", 25)),
+            "cost_extract_dress": int(settings.get("pricing_extract_dress_cost", 5)),
+            "cost_ugc_standard": int(settings.get("pricing_ugc_standard_cost", 30)),
+            "cost_ugc_pm": int(settings.get("pricing_ugc_pm_cost", 70))
         },
         "pricing": pricing,
         "raw_pricing": {
@@ -2696,7 +2722,14 @@ def api_admin_overview():
             "long_pdfs": int(settings.get("pricing_long_pdfs", 300)),
             "forge_cost": int(settings.get("pricing_forge_cost", 5)),
             "thumb_cost": int(settings.get("pricing_thumb_cost", 3)),
-            "renderer_cost": int(settings.get("pricing_renderer_cost", 2))
+            "renderer_cost": int(settings.get("pricing_renderer_cost", 2)),
+            "adapter_cost": int(settings.get("pricing_adapter_base_cost", 15)),
+            "remix_cost": int(settings.get("pricing_remix_cost", 30)),
+            "tooncraft_cost": int(settings.get("pricing_tooncraft_cost", 40)),
+            "podcast_cost": int(settings.get("pricing_podcast_cost", 25)),
+            "extract_dress_cost": int(settings.get("pricing_extract_dress_cost", 5)),
+            "ugc_standard_cost": int(settings.get("pricing_ugc_standard_cost", 30)),
+            "ugc_pm_cost": int(settings.get("pricing_ugc_pm_cost", 70))
         },
         "transactions": transactions
     })
@@ -2722,6 +2755,8 @@ def api_admin_modify_credits():
     data = request.get_json(silent=True, force=True) or {}
     target_id = data.get("target_user_id") or data.get("user_id") or data.get("id")
     action = data.get("action", "add")
+    if action == "set_exact":
+        action = "set"
     amount = data.get("amount", 0)
     reason = str(data.get("reason", "")).strip()
 
@@ -2811,8 +2846,12 @@ def api_admin_update_settings():
     if "maintenance_message" in data:
         updates["maintenance_message"] = str(data["maintenance_message"]).strip()
 
-    # Feature Toggles
-    for feat in ["storycraft", "character_forge", "thumbnail_lab", "frame_renderer"]:
+    # Feature Toggles for all 10 tools
+    all_studio_features = [
+        "storycraft", "character_forge", "thumbnail_lab", "frame_renderer",
+        "story_adapter", "remixcraft", "tooncraft", "podcast", "extract_dress", "ugc"
+    ]
+    for feat in all_studio_features:
         if feat in data:
             updates[f"feature_{feat}_enabled"] = "1" if data[feat] in [True, 1, "1"] else "0"
         elif f"feature_{feat}" in data:
@@ -2820,7 +2859,7 @@ def api_admin_update_settings():
         elif f"feature_{feat}_enabled" in data:
             updates[f"feature_{feat}_enabled"] = "1" if data[f"feature_{feat}_enabled"] in [True, 1, "1"] else "0"
 
-    # Pricing Config
+    # Pricing Config for StoryCraft
     if "pricing_tiers" in data and isinstance(data["pricing_tiers"], dict):
         tiers = data["pricing_tiers"]
         if "Short" in tiers:
@@ -2833,20 +2872,33 @@ def api_admin_update_settings():
             updates["pricing_long_concepts"] = str(int(tiers["Long"].get("concepts_cost", 100)))
             updates["pricing_long_pdfs"] = str(int(tiers["Long"].get("pdfs_cost", 300)))
 
-    for p in ["short_concepts", "short_pdfs", "medium_concepts", "medium_pdfs", "long_concepts", "long_pdfs", "forge_cost", "thumb_cost", "renderer_cost"]:
-        key = f"pricing_{p}"
-        if key in data:
-            try:
-                updates[key] = str(int(data[key]))
-            except ValueError:
-                pass
+    pricing_mapping = {
+        "pricing_short_concepts": ["pricing_short_concepts", "short_concepts", "price_story_short_concept"],
+        "pricing_short_pdfs": ["pricing_short_pdfs", "short_pdfs", "price_story_short_pdf"],
+        "pricing_medium_concepts": ["pricing_medium_concepts", "medium_concepts", "price_story_med_concept"],
+        "pricing_medium_pdfs": ["pricing_medium_pdfs", "medium_pdfs", "price_story_med_pdf"],
+        "pricing_long_concepts": ["pricing_long_concepts", "long_concepts", "price_story_long_concept"],
+        "pricing_long_pdfs": ["pricing_long_pdfs", "long_pdfs", "price_story_long_pdf"],
+        "pricing_forge_cost": ["pricing_forge_cost", "forge_cost", "cost_character_forge", "price_forge"],
+        "pricing_thumb_cost": ["pricing_thumb_cost", "thumb_cost", "cost_thumbnail_lab", "price_thumbnail"],
+        "pricing_renderer_cost": ["pricing_renderer_cost", "renderer_cost", "cost_frame_renderer", "price_renderer"],
+        "pricing_adapter_base_cost": ["pricing_adapter_base_cost", "adapter_cost", "cost_story_adapter", "price_adapter"],
+        "pricing_remix_cost": ["pricing_remix_cost", "remix_cost", "cost_remixcraft", "price_remix"],
+        "pricing_tooncraft_cost": ["pricing_tooncraft_cost", "tooncraft_cost", "cost_tooncraft", "price_tooncraft"],
+        "pricing_podcast_cost": ["pricing_podcast_cost", "podcast_cost", "cost_podcast", "price_podcast"],
+        "pricing_extract_dress_cost": ["pricing_extract_dress_cost", "extract_dress_cost", "cost_extract_dress", "price_dress"],
+        "pricing_ugc_standard_cost": ["pricing_ugc_standard_cost", "ugc_standard_cost", "cost_ugc_standard", "price_ugc_standard"],
+        "pricing_ugc_pm_cost": ["pricing_ugc_pm_cost", "ugc_pm_cost", "cost_ugc_pm", "price_ugc_pm"]
+    }
 
-    if "cost_character_forge" in data:
-        updates["pricing_forge_cost"] = str(int(data["cost_character_forge"]))
-    if "cost_thumbnail_lab" in data:
-        updates["pricing_thumb_cost"] = str(int(data["cost_thumbnail_lab"]))
-    if "cost_frame_renderer" in data:
-        updates["pricing_renderer_cost"] = str(int(data["cost_frame_renderer"]))
+    for db_k, aliases in pricing_mapping.items():
+        for alias in aliases:
+            if alias in data and data[alias] is not None:
+                try:
+                    updates[db_k] = str(int(data[alias]))
+                    break
+                except (ValueError, TypeError):
+                    pass
 
     # Announcement Banner
     if "announcement_text" in data or "announcement_banner_text" in data:
@@ -2879,7 +2931,7 @@ def api_admin_broadcast_telegram():
     if not message:
         return jsonify({"success": False, "error": "Please enter a message to broadcast."}), 400
 
-    update_banner = data.get("update_banner", True)
+    update_banner = data.get("update_banner", False)
     banner_type = str(data.get("banner_type", "info")).strip()
 
     if update_banner:
@@ -2931,6 +2983,23 @@ def api_admin_broadcast_telegram():
         "failed": failed
     })
 
+@app.route('/api/admin/clear_user_keys', methods=['POST'])
+def api_admin_clear_user_keys():
+    user = get_current_user()
+    if not user or not database.is_admin(user["user_id"]):
+        return jsonify({"success": False, "error": "Unauthorized: Master Admin access required."}), 403
+
+    data = request.get_json(silent=True, force=True) or {}
+    target_id = data.get("target_user_id") or data.get("user_id")
+    if not target_id:
+        return jsonify({"success": False, "error": "Missing target_user_id."}), 400
+    try:
+        t_id = int(target_id)
+        database.update_user_custom_keys(t_id, gemini_key="", openai_key="", claude_key="")
+        return jsonify({"success": True, "message": f"Custom API keys cleared for user #{t_id}."})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/admin/jobs', methods=['GET'])
 def api_admin_jobs():
     user = get_current_user()
@@ -2958,7 +3027,8 @@ def api_podcast_cost():
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
 
-    base_cost = 25  # Standard Podcast Studio generation cost
+    sys_settings = database.get_system_settings()
+    base_cost = int(sys_settings.get("pricing_podcast_cost", 25))
 
     model_name = str(data.get("model_name") or user.get("selected_model", ai_engine.DEFAULT_MODEL)).strip()
     provider = ai_engine.get_model_provider(model_name)
@@ -2988,6 +3058,8 @@ def api_podcast_generate():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("podcast")
+    if check_err: return check_err
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
 
@@ -3026,7 +3098,7 @@ def api_podcast_generate():
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
 
-    cost = 25
+    cost = int(sys_settings.get("pricing_podcast_cost", 25))
     is_vip = is_user_vip(user)
     if is_vip or (has_byok and byok_allowed):
         cost = 0
@@ -3184,6 +3256,8 @@ def api_extract_dress_generate():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("extract_dress")
+    if check_err: return check_err
     user_id = user["user_id"]
 
     image_bytes = None
@@ -3217,7 +3291,8 @@ def api_extract_dress_generate():
     if not image_bytes:
         return jsonify({"success": False, "error": "Please upload a clear garment image."}), 400
 
-    cost = 5
+    sys_settings = database.get_system_settings()
+    cost = int(sys_settings.get("pricing_extract_dress_cost", 5))
     is_vip = is_user_vip(user)
     if is_vip:
         cost = 0
@@ -3255,13 +3330,16 @@ def api_ugc_generate():
     user = get_current_user()
     if not user:
         return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    check_err = check_maintenance_and_feature("ugc")
+    if check_err: return check_err
     user_id = user["user_id"]
     data = request.get_json(silent=True, force=True) or {}
 
     mode = str(data.get("mode", "standard")).strip().lower()
     is_pm = (mode == "product_marketing")
 
-    cost = 70 if is_pm else 30
+    sys_settings = database.get_system_settings()
+    cost = int(sys_settings.get("pricing_ugc_pm_cost", 70)) if is_pm else int(sys_settings.get("pricing_ugc_standard_cost", 30))
     is_vip = is_user_vip(user)
     if is_vip:
         cost = 0

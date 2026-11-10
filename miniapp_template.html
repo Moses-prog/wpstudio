@@ -10468,7 +10468,7 @@
             } catch(e) {}
         }
 
-        // =====================================================================
+// =====================================================================
         // MASTER ADMIN CONTROLLER (WP RELAY DESIGN PATTERN)
         // =====================================================================
         let adminCachedData = null;
@@ -10476,6 +10476,9 @@
         let adminSelectedUser = null;
         let adminUserSearchQuery = '';
         let adminUserSearchResults = [];
+        let adminCachedJobs = null;
+        let adminJobsSearchQuery = '';
+        let adminBroadcastStatus = null;
 
         async function openAdminModal() {
             if (!currentUser || !currentUser.is_admin) {
@@ -10523,6 +10526,9 @@
             if (tabName === 'creators' && (!adminUserSearchResults || adminUserSearchResults.length === 0)) {
                 adminSearchUsers();
             }
+            if (tabName === 'jobs' && (!adminCachedJobs || adminCachedJobs.length === 0)) {
+                adminLoadJobs();
+            }
         }
 
         async function loadAdminOverview() {
@@ -10561,6 +10567,25 @@
             }
         }
 
+        async function adminLoadJobs() {
+            const listEl = document.getElementById('admin-jobs-list');
+            if (listEl) {
+                listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><div class="spinner" style="margin: 0 auto 8px; width:20px; height:20px; border:2px solid var(--border-color); border-top-color:var(--text-main); border-radius:50%; animation: spin 0.8s linear infinite;"></div>Loading jobs from ledger...</div>';
+            }
+            try {
+                const res = await fetch('/api/admin/jobs', { headers: getHeaders() });
+                const d = await res.json();
+                if (d.success) {
+                    adminCachedJobs = d.jobs || [];
+                    renderAdminModalContent();
+                } else {
+                    if (listEl) listEl.innerHTML = `<div class="empty-state"><div class="empty-title">Error</div><div>${d.error || 'Failed to load jobs'}</div></div>`;
+                }
+            } catch (err) {
+                if (listEl) listEl.innerHTML = '<div class="empty-state"><div class="empty-title">Network Error</div><div>Unable to fetch jobs.</div></div>';
+            }
+        }
+
         function renderAdminModalContent() {
             const body = document.getElementById('admin-modal-body');
             const d = adminCachedData;
@@ -10572,10 +10597,11 @@
             const fKey = keys.fallback || {};
             const settings = d.settings || {};
             const pricing = d.pricing || {};
-            const recentTxs = d.recent_transactions || [];
+            const recentTxs = d.transactions || d.recent_transactions || [];
 
             const tabs = [
                 { id: 'overview', label: 'Overview' },
+                { id: 'jobs', label: 'Jobs' },
                 { id: 'keys', label: 'API Keys' },
                 { id: 'locks', label: 'Locks & BYOK' },
                 { id: 'creators', label: 'Creators' },
@@ -10587,12 +10613,12 @@
 
             // 1. OVERVIEW TAB
             if (currentAdminTab === 'overview') {
-                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1);
-                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1);
+                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1 || settings.byok_enabled === true);
+                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1 || settings.maintenance_mode === true);
 
                 let txRows = '';
                 if (recentTxs.length === 0) {
-                    txRows = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No credit changes yet.</div>';
+                    txRows = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No credit changes recorded yet.</div>';
                 } else {
                     txRows = recentTxs.slice(0, 5).map(t => {
                         const dateStr = t.created_at ? t.created_at.slice(5, 16) : '';
@@ -10644,27 +10670,27 @@
                             <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">Primary Gemini API Key</div>
-                                    <div class="item-subtitle">${pKey.configured ? `Configured (${pKey.preview})` : 'Missing master API key'}</div>
+                                    <div class="item-subtitle">${settings.has_primary_key ? `Configured (${settings.primary_key_preview || 'Active'})` : (pKey.configured ? `Configured (${pKey.preview})` : 'Missing master API key')}</div>
                                 </div>
-                                <span class="chip ${pKey.configured ? 'ready' : 'danger'}" style="font-size:10px;">${pKey.configured ? 'ACTIVE' : 'MISSING'}</span>
+                                <span class="chip ${(settings.has_primary_key || pKey.configured) ? 'ready' : 'danger'}" style="font-size:10px;">${(settings.has_primary_key || pKey.configured) ? 'ACTIVE' : 'MISSING'}</span>
                             </div>
                             <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">Fallback Key (Backup)</div>
-                                    <div class="item-subtitle">${fKey.configured ? `Configured (${fKey.preview})` : 'No backup key'}</div>
+                                    <div class="item-subtitle">${settings.has_fallback_key ? `Configured (${settings.fallback_key_preview || 'Active'})` : (fKey.configured ? `Configured (${fKey.preview})` : 'No backup key')}</div>
                                 </div>
-                                <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'ACTIVE' : 'UNSET'}</span>
+                                <span class="chip ${(settings.has_fallback_key || fKey.configured) ? 'ready' : 'model'}" style="font-size:10px;">${(settings.has_fallback_key || fKey.configured) ? 'ACTIVE' : 'UNSET'}</span>
                             </div>
                             <div class="list-item" style="padding:10px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
-                                    <div class="item-title">Custom Key Access</div>
-                                    <div class="item-subtitle">${byokAllowed ? 'Users can use their own Gemini keys' : 'Custom keys disabled. Credits required'}</div>
+                                    <div class="item-title">Custom Key Access (BYOK)</div>
+                                    <div class="item-subtitle">${byokAllowed ? 'Users can use personal Gemini/OpenAI keys' : 'Custom keys disabled. Credits strictly required'}</div>
                                 </div>
                                 <span class="chip ${byokAllowed ? 'ready' : 'byok'}" style="font-size:10px;">${byokAllowed ? 'OPEN' : 'LOCKED'}</span>
                             </div>
                             <div class="list-item" style="padding:10px 0;">
                                 <div class="item-text">
-                                    <div class="item-title">App Status</div>
+                                    <div class="item-title">App Maintenance Status</div>
                                     <div class="item-subtitle">${maintActive ? (settings.maintenance_message || 'Maintenance lock active') : 'All services online and working'}</div>
                                 </div>
                                 <span class="chip ${maintActive ? 'danger' : 'ready'}" style="font-size:10px;">${maintActive ? 'MAINTENANCE' : 'ONLINE'}</span>
@@ -10679,14 +10705,94 @@
                     </div>
                 `;
 
-            // 2. API KEYS TAB
+            // 2. JOBS TAB (LIVE GENERATION LEDGER)
+            } else if (currentAdminTab === 'jobs') {
+                const q = (adminJobsSearchQuery || '').toLowerCase().trim();
+                const allJobs = adminCachedJobs || [];
+                const jobs = allJobs.filter(j => {
+                    if (!q) return true;
+                    return String(j.job_id || '').includes(q) ||
+                           String(j.user_id || '').includes(q) ||
+                           String(j.username || '').toLowerCase().includes(q) ||
+                           String(j.source_title || '').toLowerCase().includes(q) ||
+                           String(j.genre || '').toLowerCase().includes(q) ||
+                           String(j.length_tier || '').toLowerCase().includes(q);
+                });
+
+                let jobRows = '';
+                if (!adminCachedJobs) {
+                    jobRows = '<div style="text-align:center; padding:24px; color:var(--text-muted);"><div class="spinner" style="margin: 0 auto 8px; width:20px; height:20px; border:2px solid var(--border-color); border-top-color:var(--text-main); border-radius:50%; animation: spin 0.8s linear infinite;"></div>Loading jobs from ledger...</div>';
+                } else if (jobs.length === 0) {
+                    jobRows = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:12px;">No generation jobs found.</div>';
+                } else {
+                    jobRows = jobs.map(j => {
+                        const status = (j.status || 'completed').toLowerCase();
+                        let chipClass = 'ready';
+                        if (status.includes('fail') || status.includes('error')) chipClass = 'danger';
+                        else if (status.includes('progress') || status.includes('pend')) chipClass = 'model';
+
+                        const bibleName = j.story_bible_pdf ? j.story_bible_pdf.split('/').pop().split('\\').pop() : '';
+                        const sceneName = j.scene_prompts_pdf ? j.scene_prompts_pdf.split('/').pop().split('\\').pop() : '';
+
+                        let downloadButtons = '';
+                        if (bibleName) {
+                            downloadButtons += `<a href="/download/${encodeURIComponent(bibleName)}" target="_blank" class="btn-sm-action" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:4px 8px;">Story Bible</a>`;
+                        }
+                        if (sceneName) {
+                            downloadButtons += `<a href="/download/${encodeURIComponent(sceneName)}" target="_blank" class="btn-sm-action" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:4px 8px;">Prompts PDF</a>`;
+                        }
+
+                        const dateStr = j.created_at ? j.created_at.slice(0, 16).replace('T', ' ') : '';
+
+                        return `
+                            <div class="item-row" style="padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:10px; flex-direction:column; align-items:stretch; gap:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="font-weight:700; font-size:13px; color:var(--accent, #e5a93c);">#${j.job_id}</span>
+                                        <span style="font-size:11px; color:var(--text-muted);">${j.username || 'Creator'} (#${j.user_id})</span>
+                                    </div>
+                                    <span class="chip ${chipClass}" style="font-size:10px; text-transform:uppercase;">${j.status || 'COMPLETED'}</span>
+                                </div>
+                                <div style="font-size:13px; font-weight:600; color:var(--text-main); line-height:1.3;">
+                                    ${j.source_title || 'Untitled Generation Job'}
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                                    <div style="font-size:11px; color:var(--text-muted);">
+                                        ${j.length_tier || ''} ${j.genre ? '&bull; ' + j.genre : ''} ${j.culture ? '&bull; ' + j.culture : ''} &bull; ${dateStr}
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        ${downloadButtons}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                tabHtml = `
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="form-label" style="margin-bottom:0;">Live Platform Generation Jobs</div>
+                            <button class="btn-sm-action" onclick="adminLoadJobs()">Refresh Jobs</button>
+                        </div>
+                        <input type="text" id="admin-jobs-search-input" class="form-input" placeholder="Filter by creator, title, ID or genre..." value="${(adminJobsSearchQuery || '').replace(/"/g, '&quot;')}" oninput="adminJobsSearchQuery = this.value; renderAdminModalContent();">
+                    </div>
+                    <div class="form-card">
+                        <div class="form-label" style="margin-bottom:8px;">Recent Jobs (${jobs.length})</div>
+                        <div id="admin-jobs-list">
+                            ${jobRows}
+                        </div>
+                    </div>
+                `;
+
+            // 3. API KEYS TAB
             } else if (currentAdminTab === 'keys') {
                 tabHtml = `
                     <!-- PRIMARY KEY -->
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <div class="form-label" style="margin-bottom:0;">Primary Google GenAI Key</div>
-                            <span class="chip ${pKey.configured ? 'ready' : 'danger'}" style="font-size:10px;">${pKey.configured ? 'CONFIGURED' : 'UNSET'}</span>
+                            <span class="chip ${(settings.has_primary_key || pKey.configured) ? 'ready' : 'danger'}" style="font-size:10px;">${(settings.has_primary_key || pKey.configured) ? 'CONFIGURED' : 'UNSET'}</span>
                         </div>
                         <div class="form-hint" style="margin-bottom:10px;">Default master key utilized across all StoryCraft screenplays, Character Forge sheets, and Thumbnail Lab covers.</div>
                         <input type="password" id="admin-key-primary" class="form-input" placeholder="Paste new AIzaSy... key to update" style="margin-bottom:10px; font-family:monospace;">
@@ -10700,7 +10806,7 @@
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <div class="form-label" style="margin-bottom:0;">Fallback Key (429 Failover Pool)</div>
-                            <span class="chip ${fKey.configured ? 'ready' : 'model'}" style="font-size:10px;">${fKey.configured ? 'CONFIGURED' : 'UNSET'}</span>
+                            <span class="chip ${(settings.has_fallback_key || fKey.configured) ? 'ready' : 'model'}" style="font-size:10px;">${(settings.has_fallback_key || fKey.configured) ? 'CONFIGURED' : 'UNSET'}</span>
                         </div>
                         <div class="form-hint" style="margin-bottom:10px;">Secondary key automatically rotated in if the primary key triggers quota exhaustion or rate limits.</div>
                         <input type="password" id="admin-key-fallback" class="form-input" placeholder="Paste new fallback AIzaSy... key" style="margin-bottom:10px; font-family:monospace;">
@@ -10725,14 +10831,12 @@
                     </div>
                 `;
 
-            // 3. LOCKS & BYOK TAB
+            // 4. LOCKS & BYOK TAB (ALL 10 STUDIO MODULES)
             } else if (currentAdminTab === 'locks') {
-                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1);
-                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1);
-                const craftActive = (settings.feature_storycraft === '1' || settings.feature_storycraft === 1 || settings.feature_storycraft === undefined);
-                const forgeActive = (settings.feature_character_forge === '1' || settings.feature_character_forge === 1 || settings.feature_character_forge === undefined);
-                const thumbActive = (settings.feature_thumbnail_lab === '1' || settings.feature_thumbnail_lab === 1 || settings.feature_thumbnail_lab === undefined);
-                const frameActive = (settings.feature_frame_renderer === '1' || settings.feature_frame_renderer === 1 || settings.feature_frame_renderer === undefined);
+                const maintActive = (settings.maintenance_mode === '1' || settings.maintenance_mode === 1 || settings.maintenance_mode === true);
+                const byokAllowed = (settings.byok_enabled === '1' || settings.byok_enabled === 1 || settings.byok_enabled === true);
+
+                const isFeatureOn = (f) => (settings[f] !== false && settings[f] !== '0' && settings[f] !== 0);
 
                 tabHtml = `
                     <!-- MAINTENANCE MODE -->
@@ -10751,7 +10855,7 @@
                     <!-- CUSTOM KEYS GOVERNANCE -->
                     <div class="form-card" style="margin-bottom:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="form-label" style="margin-bottom:0;">Custom API Keys Policy</span>
+                            <span class="form-label" style="margin-bottom:0;">Custom API Keys Policy (BYOK)</span>
                             <label class="switch">
                                 <input type="checkbox" id="admin-lock-byok" ${byokAllowed ? 'checked' : ''}>
                                 <span class="slider"></span>
@@ -10770,7 +10874,7 @@
                                     <div class="item-subtitle">Gemini 3.8 Flash, 2.5 Flash</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-model-gemini" ${settings.model_gemini_enabled !== false ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-model-gemini" ${settings.model_gemini_enabled !== false && settings.model_gemini_enabled !== '0' ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
@@ -10780,7 +10884,7 @@
                                     <div class="item-subtitle">GPT-4o, GPT-4o Mini</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-model-gpt" ${settings.model_gpt_enabled !== false ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-model-gpt" ${settings.model_gpt_enabled !== false && settings.model_gpt_enabled !== '0' ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
@@ -10790,54 +10894,124 @@
                                     <div class="item-subtitle">Claude 3.5 Sonnet, Haiku</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-model-claude" ${settings.model_claude_enabled !== false ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-model-claude" ${settings.model_claude_enabled !== false && settings.model_claude_enabled !== '0' ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- GRANULAR FEATURE KILL-SWITCHES -->
+                    <!-- GRANULAR FEATURE KILL-SWITCHES (ALL 10 MODULES) -->
                     <div class="form-card" style="margin-bottom:14px;">
-                        <div class="form-label" style="margin-bottom:10px;">Feature Kill-Switches</div>
+                        <div class="form-label" style="margin-bottom:10px;">Granular Feature Kill-Switches</div>
                         <div class="list-group" style="margin:0;">
+                            <!-- 1. StoryCraft -->
                             <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">StoryCraft Studio</div>
                                     <div class="item-subtitle">Short, Medium & Long screenplay generator</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-storycraft" ${craftActive ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-storycraft" ${isFeatureOn('feature_storycraft') ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                            <!-- 2. Character Forge -->
                             <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">Character Forge</div>
                                     <div class="item-subtitle">Multi-angle visual character sheet generator</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-character-forge" ${forgeActive ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-character-forge" ${isFeatureOn('feature_character_forge') ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                            <!-- 3. Thumbnail Lab -->
                             <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">Thumbnail Lab</div>
                                     <div class="item-subtitle">High-CTR YouTube cover generator</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-thumbnail-lab" ${thumbActive ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-thumbnail-lab" ${isFeatureOn('feature_thumbnail_lab') ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                            <div class="list-item" style="padding:8px 0;">
+                            <!-- 4. Frame Renderer -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
                                 <div class="item-text">
                                     <div class="item-title">Frame Renderer</div>
                                     <div class="item-subtitle">Single scene camera frame generator</div>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="admin-toggle-frame-renderer" ${frameActive ? 'checked' : ''}>
+                                    <input type="checkbox" id="admin-toggle-frame-renderer" ${isFeatureOn('feature_frame_renderer') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 5. Story Adapter -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Story Adapter</div>
+                                    <div class="item-subtitle">Script-to-scenes adaptation and PDF generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-story-adapter" ${isFeatureOn('feature_story_adapter') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 6. RemixCraft -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">RemixCraft Studio</div>
+                                    <div class="item-subtitle">Source material remodeling and recast production</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-remixcraft" ${isFeatureOn('feature_remixcraft') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 7. ToonCraft -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">ToonCraft Studio</div>
+                                    <div class="item-subtitle">Kids 3D cartoon screenplay and song package</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-tooncraft" ${isFeatureOn('feature_tooncraft') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 8. Podcast Studio -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Podcast Studio</div>
+                                    <div class="item-subtitle">AI audio & video co-host dialogue generator</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-podcast" ${isFeatureOn('feature_podcast') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 9. Extract Dress -->
+                            <div class="list-item" style="padding:8px 0; border-bottom:1px solid var(--border-color);">
+                                <div class="item-text">
+                                    <div class="item-title">Extract Dress (Wardrobe Lock)</div>
+                                    <div class="item-subtitle">Multimodal garment analysis and prompt extractor</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-extract-dress" ${isFeatureOn('feature_extract_dress') ? 'checked' : ''}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- 10. UGC Content -->
+                            <div class="list-item" style="padding:8px 0;">
+                                <div class="item-text">
+                                    <div class="item-title">UGC Content Studio</div>
+                                    <div class="item-subtitle">6-clip vertical viral commercial ad packages</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-toggle-ugc" ${isFeatureOn('feature_ugc') ? 'checked' : ''}>
                                     <span class="slider"></span>
                                 </label>
                             </div>
@@ -10847,7 +11021,7 @@
                     <button class="btn-submit" onclick="adminSaveGovernance()">Save Governance & Locks</button>
                 `;
 
-            // 4. CREATORS & LEDGER TAB
+            // 5. CREATORS TAB
             } else if (currentAdminTab === 'creators') {
                 let userCardsHtml = '';
                 if (adminUserSearchResults.length === 0) {
@@ -10893,13 +11067,12 @@
                             </div>
 
                             <!-- QUICK ADJUST PILLS -->
-                            <div class="form-label" style="font-size:11px; margin-bottom:6px;">Quick Add / Deduct</div>
+                            <div class="form-label" style="font-size:11px; margin-bottom:6px;">Quick Adjust Balance</div>
                             <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; margin-bottom:12px;">
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 50)">+50</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 100)">+100</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 500)">+500</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--success); background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); text-align:center;" onclick="adminQuickCredits('add', 1000)">+1k</button>
-                                <button class="btn-sm-action" style="padding:6px 4px; font-size:11px; font-weight:800; color:var(--accent, #e5a93c); background:rgba(229,169,60,0.15); border:1px solid rgba(229,169,60,0.4); text-align:center;" onclick="adminGrantUnlimitedCredits()">UNLIMITED (VIP)</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 50)">-50</button>
                                 <button class="btn-sm-action" style="padding:6px 2px; font-size:11px; font-weight:700; color:var(--danger); background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); text-align:center;" onclick="adminQuickCredits('deduct', 100)">-100</button>
                             </div>
@@ -10911,24 +11084,24 @@
                                     <select id="admin-user-action" class="form-input" style="font-size:12px; padding:7px 8px;" onchange="onAdminCreditActionChange()">
                                         <option value="add">Add (+)</option>
                                         <option value="deduct">Deduct (-)</option>
-                                        <option value="set">Set Balance (=)</option>
+                                        <option value="set">Set Exact Balance (=)</option>
                                         <option value="unlimited">Grant Unlimited (VIP)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <div class="form-label" style="font-size:10px; margin-bottom:4px;">Amount</div>
-                                    <input type="number" id="admin-user-amount" class="form-input" placeholder="e.g. 250" style="font-size:12px; padding:7px 8px;">
+                                    <div class="form-label" style="font-size:10px; margin-bottom:4px;">Amount / Balance</div>
+                                    <input type="number" id="admin-user-amount" class="form-input" placeholder="e.g. 500" style="font-size:12px; padding:7px 8px;">
                                 </div>
                             </div>
-                            <input type="text" id="admin-user-reason" class="form-input" placeholder="Audit note (e.g. Contest winner reward)" style="font-size:12px; margin-bottom:8px;">
-                            <div style="display:flex; gap:6px;">
+                            <input type="text" id="admin-user-reason" class="form-input" placeholder="Audit note (e.g. Creator pass granted)" style="font-size:12px; margin-bottom:8px;">
+                            <div style="display:flex; gap:6px; margin-bottom:8px;">
                                 <button class="btn-submit" style="margin-top:0; padding:8px; font-size:12px; flex:1;" onclick="adminApplyCreditAction()">Apply Modification</button>
-                                <button type="button" class="btn-secondary" style="padding:8px 10px; font-size:11px; font-weight:700; border-color:rgba(229,169,60,0.4); color:var(--accent, #e5a93c); white-space:nowrap;" onclick="adminGrantUnlimitedCredits()">1-Tap Unlimited</button>
+                                <button type="button" class="btn-secondary" style="padding:8px 10px; font-size:11px; font-weight:700; border-color:rgba(229,169,60,0.4); color:var(--accent, #e5a93c); white-space:nowrap;" onclick="adminGrantUnlimitedCredits()">1-Tap VIP Unlimited</button>
                             </div>
 
-                            <!-- TIER SELECTOR -->
-                            <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; gap:8px; align-items:center;">
-                                <div style="flex:1;">
+                            <!-- TIER SELECTOR & CLEAR KEYS -->
+                            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:120px;">
                                     <div class="form-label" style="font-size:10px; margin-bottom:4px;">Creator Tier</div>
                                     <select id="admin-user-tier-sel" class="form-input" style="font-size:12px; padding:7px 8px;">
                                         <option value="Builder" ${u.tier==='Builder'?'selected':''}>Builder</option>
@@ -10937,7 +11110,8 @@
                                         <option value="VIP" ${u.tier==='VIP'?'selected':''}>VIP</option>
                                     </select>
                                 </div>
-                                <button class="btn-sm-action" style="align-self:flex-end; padding:8px 14px; font-size:12px;" onclick="adminApplyUserTier()">Set Tier</button>
+                                <button class="btn-sm-action" style="padding:8px 12px; font-size:12px;" onclick="adminApplyUserTier()">Set Tier</button>
+                                <button class="btn-secondary" style="padding:8px 10px; font-size:11px; color:var(--danger); border-color:rgba(255,69,58,0.3);" onclick="adminClearSelectedUserKeys()">Clear Custom Keys</button>
                             </div>
                         </div>
                     `;
@@ -10964,24 +11138,24 @@
                     </div>
                 `;
 
-            // 5. PRICING TAB
+            // 6. PRICING TAB (COMPREHENSIVE MATRIX FOR ALL 10 TOOLS)
             } else if (currentAdminTab === 'pricing') {
                 const sTier = pricing.Short || { concepts_cost: 10, pdfs_cost: 40 };
                 const mTier = pricing.Medium || { concepts_cost: 50, pdfs_cost: 250 };
                 const lTier = pricing.Long || { concepts_cost: 100, pdfs_cost: 300 };
 
                 tabHtml = `
-                    <!-- STORY GENERATION MATRIX -->
+                    <!-- 1. STORYCRAFT STUDIO -->
                     <div class="form-card" style="margin-bottom:12px;">
-                        <div class="form-label" style="margin-bottom:8px;">StoryCraft Credit Matrix</div>
-                        <div class="form-hint" style="margin-bottom:12px;">Set the cost in platform credits for generating concept beats vs final dual PDFs.</div>
+                        <div class="form-label" style="margin-bottom:4px;">1. StoryCraft Screenplay Studio</div>
+                        <div class="form-hint" style="margin-bottom:12px;">Credit costs for concept beats vs production dual PDFs.</div>
 
-                        <!-- SHORT -->
+                        <!-- Short -->
                         <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
                             <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Short Format (~3-5 Mins | 8-12 scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
-                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concepts (Cr)</span>
                                     <input type="number" id="price-story-short-concept" class="form-input" value="${sTier.concepts_cost ?? 10}">
                                 </div>
                                 <div>
@@ -10991,12 +11165,12 @@
                             </div>
                         </div>
 
-                        <!-- MEDIUM -->
+                        <!-- Medium -->
                         <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
                             <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Medium Format (~10-15 Mins | 18-26 scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
-                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concepts (Cr)</span>
                                     <input type="number" id="price-story-med-concept" class="form-input" value="${mTier.concepts_cost ?? 50}">
                                 </div>
                                 <div>
@@ -11006,12 +11180,12 @@
                             </div>
                         </div>
 
-                        <!-- LONG -->
-                        <div style="margin-bottom:6px;">
-                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Movie Feature (~1-2+ Hours | 50-60 Deep Scenes)</div>
+                        <!-- Long -->
+                        <div style="margin-bottom:4px;">
+                            <div style="font-weight:700; font-size:12px; color:var(--text-main); margin-bottom:6px;">Feature Movie (~1-2+ Hours | 50-60 Deep Scenes)</div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                                 <div>
-                                    <span style="font-size:10px; color:var(--text-muted);">Concept Beats (Cr)</span>
+                                    <span style="font-size:10px; color:var(--text-muted);">Concepts (Cr)</span>
                                     <input type="number" id="price-story-long-concept" class="form-input" value="${lTier.concepts_cost ?? 100}">
                                 </div>
                                 <div>
@@ -11022,21 +11196,65 @@
                         </div>
                     </div>
 
-                    <!-- VISUAL LAB COSTS -->
-                    <div class="form-card" style="margin-bottom:14px;">
-                        <div class="form-label" style="margin-bottom:8px;">Visual Engine Tool Costs</div>
+                    <!-- 2. VISUAL LABS -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div class="form-label" style="margin-bottom:8px;">2. Visual Engine Labs</div>
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
                             <div>
-                                <span style="font-size:10px; color:var(--text-muted);">Forge Sheet</span>
+                                <span style="font-size:10px; color:var(--text-muted);">Character Forge</span>
                                 <input type="number" id="price-forge" class="form-input" value="${settings.cost_character_forge ?? 5}">
                             </div>
                             <div>
-                                <span style="font-size:10px; color:var(--text-muted);">Thumb Lab</span>
+                                <span style="font-size:10px; color:var(--text-muted);">Thumbnail Lab</span>
                                 <input type="number" id="price-thumbnail" class="form-input" value="${settings.cost_thumbnail_lab ?? 3}">
                             </div>
                             <div>
-                                <span style="font-size:10px; color:var(--text-muted);">Frame Render</span>
+                                <span style="font-size:10px; color:var(--text-muted);">Frame Renderer</span>
                                 <input type="number" id="price-renderer" class="form-input" value="${settings.cost_frame_renderer ?? 2}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. AUDIO & ADAPTATION STUDIOS -->
+                    <div class="form-card" style="margin-bottom:12px;">
+                        <div class="form-label" style="margin-bottom:8px;">3. Audio & Adaptation Studios</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Story Adapter (Base Cr)</span>
+                                <input type="number" id="price-adapter" class="form-input" value="${settings.cost_story_adapter ?? 15}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">RemixCraft Remodel</span>
+                                <input type="number" id="price-remix" class="form-input" value="${settings.cost_remixcraft ?? 30}">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">ToonCraft Kids (10m Base)</span>
+                                <input type="number" id="price-tooncraft" class="form-input" value="${settings.cost_tooncraft ?? 40}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Podcast Studio</span>
+                                <input type="number" id="price-podcast" class="form-input" value="${settings.cost_podcast ?? 25}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. WARDROBE & COMMERCIAL STUDIOS -->
+                    <div class="form-card" style="margin-bottom:14px;">
+                        <div class="form-label" style="margin-bottom:8px;">4. Wardrobe & Commercial Studios</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">Extract Dress</span>
+                                <input type="number" id="price-dress" class="form-input" value="${settings.cost_extract_dress ?? 5}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">UGC Standard (6-clip)</span>
+                                <input type="number" id="price-ugc-standard" class="form-input" value="${settings.cost_ugc_standard ?? 30}">
+                            </div>
+                            <div>
+                                <span style="font-size:10px; color:var(--text-muted);">UGC Product Marketing</span>
+                                <input type="number" id="price-ugc-pm" class="form-input" value="${settings.cost_ugc_pm ?? 70}">
                             </div>
                         </div>
                     </div>
@@ -11044,37 +11262,77 @@
                     <button class="btn-submit" onclick="adminSavePricing()">Save Dynamic Pricing Matrix</button>
                 `;
 
-            // 6. BROADCAST TAB
+            // 7. BROADCAST TAB (BOTH BROADCASTS: TOP BANNER & TELEGRAM PUSH)
             } else if (currentAdminTab === 'broadcast') {
-                const bcActive = (settings.announcement_active === '1' || settings.announcement_active === 1 || settings.announcement_banner_active === '1' || settings.announcement_banner_active === 1);
+                const bcActive = (settings.announcement_active === '1' || settings.announcement_active === 1 || settings.announcement_active === true || settings.announcement_banner_active === '1' || settings.announcement_banner_active === 1);
                 const bcType = settings.announcement_type || settings.announcement_banner_type || 'info';
                 const bcText = settings.announcement_text || settings.announcement_banner_text || '';
 
+                let statusNotice = '';
+                if (adminBroadcastStatus) {
+                    statusNotice = `
+                        <div style="padding:10px 12px; margin-bottom:12px; border-radius:8px; background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.3); font-size:12px; color:var(--text-main); line-height:1.5;">
+                            <strong>Broadcast Report:</strong> ${adminBroadcastStatus.sent} sent, ${adminBroadcastStatus.blocked || 0} blocked, ${adminBroadcastStatus.failed || 0} failed (Total: ${adminBroadcastStatus.total || 0}).
+                        </div>
+                    `;
+                }
+
                 tabHtml = `
-                    <div class="form-card" style="margin-bottom:12px;">
+                    <!-- SECTION 1: IN-APP TOP ANNOUNCEMENT BANNER -->
+                    <div class="form-card" style="margin-bottom:14px; border:1px solid var(--border-color);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="form-label" style="margin-bottom:0;">Live Top Banner</span>
+                            <div class="form-label" style="margin-bottom:0; font-size:13px; font-weight:700;">1. In-App Top Announcement Banner</div>
                             <label class="switch">
                                 <input type="checkbox" id="admin-toggle-broadcast-active" ${bcActive ? 'checked' : ''}>
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="form-hint" style="margin-bottom:12px;">Show a notice bar to all creators at the top of the app in real time.</div>
+                        <div class="form-hint" style="margin-bottom:10px;">Renders an active sticky notice across the top of the Studio miniapp for all creators.</div>
 
-                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Color</div>
-                        <select id="admin-broadcast-type" class="form-input" style="margin-bottom:12px;">
-                            <option value="info" ${bcType==='info'?'selected':''}>Blue (Information)</option>
-                            <option value="warning" ${bcType==='warning'?'selected':''}>Orange (Important Notice)</option>
-                            <option value="success" ${bcType==='success'?'selected':''}>Green (New Release)</option>
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Theme Style</div>
+                        <select id="admin-broadcast-type" class="form-input" style="margin-bottom:10px;" onchange="updateAdminBannerPreview()">
+                            <option value="info" ${bcType==='info'?'selected':''}>Blue (Information / Guide)</option>
+                            <option value="warning" ${bcType==='warning'?'selected':''}>Amber / Orange (Important Notice)</option>
+                            <option value="success" ${bcType==='success'?'selected':''}>Green (New Release & Features)</option>
+                            <option value="danger" ${bcType==='danger'?'selected':''}>Red (Urgent Alert)</option>
                         </select>
 
-                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Message Text</div>
-                        <textarea id="admin-broadcast-text" class="form-input" style="height:90px; resize:vertical; margin-bottom:14px;" placeholder="Write message to send to creators...">${bcText}</textarea>
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Banner Message Text</div>
+                        <textarea id="admin-broadcast-text" class="form-input" style="height:70px; resize:vertical; margin-bottom:10px;" placeholder="Write message shown at top of app..." oninput="updateAdminBannerPreview()">${bcText}</textarea>
 
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            <button class="btn-submit" onclick="adminSaveAnnouncement()">Publish Top Banner</button>
-                            <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="background:var(--accent-blue, #0a84ff);">Send Message to Users Who Sent /start</button>
+                        <!-- LIVE PREVIEW BOX -->
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Live Banner Preview</div>
+                        <div id="admin-banner-preview" class="announcement-banner ${bcType}" style="margin-bottom:12px; display:flex;">
+                            <span id="admin-banner-preview-text">${bcText || 'Preview banner text will appear here...'}</span>
                         </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button class="btn-submit" style="margin-top:0;" onclick="adminSaveAnnouncement()">Publish In-App Banner</button>
+                            <button class="btn-secondary" style="margin-top:0;" onclick="adminDisableAnnouncement()">Deactivate Banner</button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: MASS TELEGRAM BOT PUSH BROADCAST -->
+                    <div class="form-card" style="border:1px solid rgba(10,132,255,0.3); background:rgba(10,132,255,0.02);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div class="form-label" style="margin-bottom:0; font-size:13px; font-weight:700; color:var(--text-main);">2. Mass Telegram Chat Broadcast</div>
+                            <span class="chip ready" style="font-size:10px;">${stats.total_users ?? 0} CREATORS</span>
+                        </div>
+                        <div class="form-hint" style="margin-bottom:10px;">Directly message all creators who interacted with the bot. Supports HTML formatting (&lt;b&gt;, &lt;i&gt;, &lt;a href="..."&gt;, &lt;code&gt;).</div>
+
+                        ${statusNotice}
+
+                        <div class="form-label" style="font-size:11px; margin-bottom:4px;">Telegram Broadcast Message</div>
+                        <textarea id="admin-tg-broadcast-text" class="form-input" style="height:100px; resize:vertical; margin-bottom:10px; font-family:inherit;" placeholder="<b>Announcement from WP Studio</b>&#10;&#10;We have just released new features!">${bcText}</textarea>
+
+                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:12px; color:var(--text-main); cursor:pointer;">
+                            <input type="checkbox" id="admin-tg-sync-banner" style="width:16px; height:16px; accent-color:var(--accent);">
+                            Also sync & activate this message on the In-App Top Banner
+                        </label>
+
+                        <button class="btn-submit" id="btn-admin-broadcast-telegram" onclick="adminBroadcastToTelegram()" style="margin-top:0; background:var(--accent-blue, #0a84ff); font-weight:700;">
+                            Send Broadcast to All Bot Users
+                        </button>
                     </div>
                 `;
             }
@@ -11086,6 +11344,20 @@
                 </div>
                 ${tabHtml}
             `;
+        }
+
+        function updateAdminBannerPreview() {
+            const previewEl = document.getElementById('admin-banner-preview');
+            const textEl = document.getElementById('admin-banner-preview-text');
+            const inputEl = document.getElementById('admin-broadcast-text');
+            const typeEl = document.getElementById('admin-broadcast-type');
+
+            if (!previewEl || !textEl) return;
+            const text = inputEl ? inputEl.value.trim() : '';
+            const type = typeEl ? typeEl.value : 'info';
+
+            textEl.innerText = text || 'Preview banner text will appear here...';
+            previewEl.className = `announcement-banner ${type}`;
         }
 
         async function adminSaveKeys() {
@@ -11165,25 +11437,29 @@
             const maintCheck = document.getElementById('admin-lock-maintenance');
             const maintMsg = document.getElementById('admin-maintenance-msg');
             const byokCheck = document.getElementById('admin-lock-byok');
-            const craftCheck = document.getElementById('admin-toggle-storycraft');
-            const forgeCheck = document.getElementById('admin-toggle-character-forge');
-            const thumbCheck = document.getElementById('admin-toggle-thumbnail-lab');
-            const frameCheck = document.getElementById('admin-toggle-frame-renderer');
-            const geminiModelCheck = document.getElementById('admin-toggle-model-gemini');
-            const gptModelCheck = document.getElementById('admin-toggle-model-gpt');
-            const claudeModelCheck = document.getElementById('admin-toggle-model-claude');
+
+            const getCheckVal = (id) => {
+                const el = document.getElementById(id);
+                return (el && el.checked) ? 1 : 0;
+            };
 
             const payload = {
                 maintenance_mode: (maintCheck && maintCheck.checked) ? 1 : 0,
                 maintenance_message: (maintMsg ? maintMsg.value.trim() : ''),
                 byok_enabled: (byokCheck && byokCheck.checked) ? 1 : 0,
-                feature_storycraft: (craftCheck && craftCheck.checked) ? 1 : 0,
-                feature_character_forge: (forgeCheck && forgeCheck.checked) ? 1 : 0,
-                feature_thumbnail_lab: (thumbCheck && thumbCheck.checked) ? 1 : 0,
-                feature_frame_renderer: (frameCheck && frameCheck.checked) ? 1 : 0,
-                model_gemini_enabled: (geminiModelCheck && geminiModelCheck.checked) ? 1 : 0,
-                model_gpt_enabled: (gptModelCheck && gptModelCheck.checked) ? 1 : 0,
-                model_claude_enabled: (claudeModelCheck && claudeModelCheck.checked) ? 1 : 0
+                feature_storycraft: getCheckVal('admin-toggle-storycraft'),
+                feature_character_forge: getCheckVal('admin-toggle-character-forge'),
+                feature_thumbnail_lab: getCheckVal('admin-toggle-thumbnail-lab'),
+                feature_frame_renderer: getCheckVal('admin-toggle-frame-renderer'),
+                feature_story_adapter: getCheckVal('admin-toggle-story-adapter'),
+                feature_remixcraft: getCheckVal('admin-toggle-remixcraft'),
+                feature_tooncraft: getCheckVal('admin-toggle-tooncraft'),
+                feature_podcast: getCheckVal('admin-toggle-podcast'),
+                feature_extract_dress: getCheckVal('admin-toggle-extract-dress'),
+                feature_ugc: getCheckVal('admin-toggle-ugc'),
+                model_gemini_enabled: getCheckVal('admin-toggle-model-gemini'),
+                model_gpt_enabled: getCheckVal('admin-toggle-model-gpt'),
+                model_claude_enabled: getCheckVal('admin-toggle-model-claude')
             };
 
             try {
@@ -11374,6 +11650,31 @@
             }
         }
 
+        async function adminClearSelectedUserKeys() {
+            if (!adminSelectedUser) {
+                showToast("Please select a creator from the list first.", false);
+                return;
+            }
+            const uid = adminSelectedUser.user_id || adminSelectedUser.id;
+            try {
+                const res = await fetch('/api/admin/clear_user_keys', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ target_user_id: uid })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(`Custom keys cleared for user #${uid}!`);
+                    adminSelectedUser.has_custom_key = false;
+                    renderAdminModalContent();
+                } else {
+                    showToast(d.error || 'Failed to clear user keys', false);
+                }
+            } catch (err) {
+                showToast("Network error clearing keys", false);
+            }
+        }
+
         async function adminSavePricing() {
             const sConcept = parseInt(document.getElementById('price-story-short-concept')?.value, 10) || 10;
             const sPdf = parseInt(document.getElementById('price-story-short-pdf')?.value, 10) || 40;
@@ -11385,6 +11686,15 @@
             const forgeCost = parseInt(document.getElementById('price-forge')?.value, 10) || 5;
             const thumbCost = parseInt(document.getElementById('price-thumbnail')?.value, 10) || 3;
             const frameCost = parseInt(document.getElementById('price-renderer')?.value, 10) || 2;
+
+            const adapterCost = parseInt(document.getElementById('price-adapter')?.value, 10) || 15;
+            const remixCost = parseInt(document.getElementById('price-remix')?.value, 10) || 30;
+            const toonCost = parseInt(document.getElementById('price-tooncraft')?.value, 10) || 40;
+            const podCost = parseInt(document.getElementById('price-podcast')?.value, 10) || 25;
+
+            const dressCost = parseInt(document.getElementById('price-dress')?.value, 10) || 5;
+            const ugcStdCost = parseInt(document.getElementById('price-ugc-standard')?.value, 10) || 30;
+            const ugcPmCost = parseInt(document.getElementById('price-ugc-pm')?.value, 10) || 70;
 
             const pricingPayload = {
                 pricing_tiers: {
@@ -11416,9 +11726,16 @@
                         scenes: "50-60 deep sequence scenes (~1 to 2+ hours, ceiling 65)"
                     }
                 },
-                cost_character_forge: forgeCost,
-                cost_thumbnail_lab: thumbCost,
-                cost_frame_renderer: frameCost
+                pricing_forge_cost: forgeCost,
+                pricing_thumb_cost: thumbCost,
+                pricing_renderer_cost: frameCost,
+                pricing_adapter_base_cost: adapterCost,
+                pricing_remix_cost: remixCost,
+                pricing_tooncraft_cost: toonCost,
+                pricing_podcast_cost: podCost,
+                pricing_extract_dress_cost: dressCost,
+                pricing_ugc_standard_cost: ugcStdCost,
+                pricing_ugc_pm_cost: ugcPmCost
             };
 
             try {
@@ -11476,21 +11793,48 @@
             }
         }
 
+        async function adminDisableAnnouncement() {
+            const activeEl = document.getElementById('admin-toggle-broadcast-active');
+            if (activeEl) activeEl.checked = false;
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ announcement_active: 0 })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    if (studioMeta && studioMeta.announcement) {
+                        studioMeta.announcement.active = 0;
+                    }
+                    renderAnnouncementBanner();
+                    showTelegramAlert("Top banner deactivated!");
+                    await loadAdminOverview();
+                } else {
+                    showTelegramAlert(d.error || 'Failed to deactivate top banner');
+                }
+            } catch (err) {
+                showTelegramAlert("Network error updating banner");
+            }
+        }
+
         async function adminBroadcastToTelegram() {
-            const textEl = document.getElementById('admin-broadcast-text');
-            const typeEl = document.getElementById('admin-broadcast-type');
+            const textEl = document.getElementById('admin-tg-broadcast-text');
+            const syncEl = document.getElementById('admin-tg-sync-banner');
             const msg = textEl ? textEl.value.trim() : '';
 
             if (!msg) {
-                showTelegramAlert("Please write a message to send first.");
+                showTelegramAlert("Please write a message to broadcast first.");
                 return;
             }
 
-            showTelegramConfirm("Send this message to all users who sent /start to the bot?", async () => {
+            const shouldSyncBanner = syncEl ? syncEl.checked : false;
+
+            showTelegramConfirm("Send this broadcast message to all users in the bot database?", async () => {
                 const btn = document.getElementById('btn-admin-broadcast-telegram');
                 if (btn) {
                     btn.disabled = true;
-                    btn.innerText = "Sending broadcast...";
+                    btn.innerText = "Broadcasting to Telegram users...";
                 }
                 try {
                     const res = await fetch('/api/admin/broadcast_telegram', {
@@ -11498,21 +11842,23 @@
                         headers: getHeaders(),
                         body: JSON.stringify({
                             message: msg,
-                            banner_type: typeEl ? typeEl.value : 'info',
-                            update_banner: true
+                            banner_type: 'info',
+                            update_banner: shouldSyncBanner
                         })
                     });
                     const d = await res.json();
                     if (d.success) {
-                        if (studioMeta) {
+                        adminBroadcastStatus = d;
+                        if (shouldSyncBanner && studioMeta) {
                             studioMeta.announcement = {
                                 active: 1,
-                                type: typeEl ? typeEl.value : 'info',
+                                type: 'info',
                                 text: msg
                             };
+                            renderAnnouncementBanner();
                         }
-                        renderAnnouncementBanner();
-                        showTelegramAlert(`Broadcast complete!\n\nSent: ${d.sent} users\nBlocked: ${d.blocked || 0} users\nFailed: ${d.failed || 0} users`);
+                        showTelegramAlert(`Broadcast complete!\n\nSent: ${d.sent} users\nBlocked: ${d.blocked || 0} users\nFailed: ${d.failed || 0} users\nTotal: ${d.total || 0} users`);
+                        renderAdminModalContent();
                         await loadAdminOverview();
                     } else {
                         showTelegramAlert(d.error || 'Failed to send broadcast');
@@ -11523,7 +11869,7 @@
                     const btn = document.getElementById('btn-admin-broadcast-telegram');
                     if (btn) {
                         btn.disabled = false;
-                        btn.innerText = "Send Message to Users Who Sent /start";
+                        btn.innerText = "Send Broadcast to All Bot Users";
                     }
                 }
             });

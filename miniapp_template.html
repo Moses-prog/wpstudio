@@ -5004,7 +5004,9 @@
                 if (lockEl) lockEl.style.display = 'none';
 
                 currentUser = d.user;
+                window.currentUser = d.user;
                 studioMeta = d;
+                if (typeof initExtractDressModal === 'function') initExtractDressModal();
                 savedCharacters = d.characters || [];
                 storyHistory = d.history || [];
                 renderDashboard();
@@ -9038,12 +9040,46 @@
             currentResult: null
         };
 
+        function getActiveUserObj() {
+            if (typeof currentUser !== 'undefined' && currentUser) return currentUser;
+            if (window.currentUser) return window.currentUser;
+            return null;
+        }
+
+        function isExtractDressVip() {
+            const u = getActiveUserObj();
+            if (!u) {
+                if (typeof studioMeta !== 'undefined' && studioMeta && studioMeta.is_admin) return true;
+                return false;
+            }
+            return !!(
+                parseInt(u.credits || 0) >= 999999 ||
+                String(u.tier || '').toUpperCase() === 'VIP' ||
+                String(u.tier || '').toUpperCase().includes('VIP') ||
+                u.is_admin ||
+                u.is_vip ||
+                u.role === 'admin' ||
+                u.role === 'vip' ||
+                (typeof studioMeta !== 'undefined' && studioMeta && studioMeta.is_admin)
+            );
+        }
+
+        function getExtractDressCredits() {
+            const u = getActiveUserObj();
+            if (!u) return 0;
+            return parseInt(u.credits || 0);
+        }
+
         function initExtractDressModal() {
-            const rawCredits = (window.currentUser && window.currentUser.credits !== undefined) ? window.currentUser.credits : 0;
-            const isUnlimited = (rawCredits >= 999999);
+            const isVip = isExtractDressVip();
+            const rawCredits = getExtractDressCredits();
             const crElem = document.getElementById('dress-user-credits');
             if (crElem) {
-                crElem.innerText = isUnlimited ? 'Unlimited (VIP)' : `${rawCredits} credits`;
+                crElem.innerText = isVip ? 'Unlimited (VIP Access)' : `${rawCredits.toLocaleString()} credits`;
+            }
+            const btn = document.getElementById('btn-extract-dress');
+            if (btn) {
+                btn.innerHTML = isVip ? 'Extract Outfit &mdash; VIP Access' : 'Extract Outfit &mdash; 5 Credits';
             }
         }
 
@@ -9194,9 +9230,9 @@
                 return;
             }
 
-            const rawCredits = (window.currentUser && window.currentUser.credits !== undefined) ? window.currentUser.credits : 0;
-            const isUnlimited = (rawCredits >= 999999);
-            if (!isUnlimited && rawCredits < 5) {
+            const isVip = isExtractDressVip();
+            const rawCredits = getExtractDressCredits();
+            if (!isVip && rawCredits < 5) {
                 showToast('Insufficient credits! Outfit extraction requires 5 credits.', false);
                 return;
             }
@@ -9242,8 +9278,13 @@
                     return;
                 }
 
-                if (data.credits_remaining !== undefined && window.currentUser) {
-                    window.currentUser.credits = data.credits_remaining;
+                if (data.credits_remaining !== undefined) {
+                    if (typeof currentUser !== 'undefined' && currentUser) {
+                        currentUser.credits = data.credits_remaining;
+                    }
+                    if (window.currentUser) {
+                        window.currentUser.credits = data.credits_remaining;
+                    }
                     if (typeof updateHeaderUserInfo === 'function') updateHeaderUserInfo();
                     initExtractDressModal();
                 }

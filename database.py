@@ -322,7 +322,12 @@ def deduct_credits(user_id: int, cost: int) -> bool:
         return False
 
     # VIP / Admin Unlimited Credits: Never deplete balance
-    if int(user.get("credits", 0)) >= 999999:
+    if (
+        int(user.get("credits", 0)) >= 999999
+        or str(user.get("tier", "")).strip().upper() == "VIP"
+        or is_admin(user_id)
+        or bool(user.get("is_vip"))
+    ):
         return True
 
     if user["credits"] < cost:

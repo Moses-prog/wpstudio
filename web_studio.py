@@ -338,6 +338,25 @@ def get_current_user():
     return user
 
 
+def is_user_vip(user: dict) -> bool:
+    if not user:
+        return False
+    user_id = user.get("user_id")
+    try:
+        if int(user.get("credits", 0)) >= 999999:
+            return True
+    except (ValueError, TypeError):
+        pass
+    tier = str(user.get("tier", "")).strip().upper()
+    if tier == "VIP" or "VIP" in tier:
+        return True
+    if user.get("is_vip") or str(user.get("role", "")).lower() in ["admin", "vip"]:
+        return True
+    if user_id and database.is_admin(user_id):
+        return True
+    return False
+
+
 def run_async(coro):
     """Helper to run async coroutines inside sync Flask views safely."""
     try:
@@ -1510,7 +1529,7 @@ def api_story_adapter_estimate():
     base_cost = 15
     cost = base_cost + extra_scenes
     
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     if is_vip:
         cost = 0
 
@@ -1570,7 +1589,7 @@ def api_story_adapter_generate():
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
 
     # Pricing logic: 15 base + 1 per scene above 40 (0 for VIP or BYOK)
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     is_free = is_vip or (has_byok_for_model and byok_allowed)
     cost = 15 if not is_free else 0
 
@@ -1948,7 +1967,7 @@ def api_remixcraft_produce():
         has_byok_for_model = True
 
     # Pricing: 30 credits (0 for VIPs or BYOK)
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     byok_allowed = database.get_system_settings().get("byok_enabled", "1") == "1"
     cost = 0 if (is_vip or (has_byok_for_model and byok_allowed)) else 30
 
@@ -2240,7 +2259,7 @@ def api_tooncraft_cost():
 
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     is_free = is_vip or (has_byok and byok_allowed)
     cost = 0 if is_free else base_cost
 
@@ -2305,7 +2324,7 @@ def api_tooncraft_generate():
     else:
         cost = 20
 
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     if is_vip or (has_byok and byok_allowed):
         cost = 0
 
@@ -2954,7 +2973,7 @@ def api_podcast_cost():
 
     sys_settings = database.get_system_settings()
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     cost = 0 if (is_vip or (has_byok and byok_allowed)) else base_cost
 
     return jsonify({
@@ -3008,7 +3027,7 @@ def api_podcast_generate():
     byok_allowed = (sys_settings.get("byok_enabled") == "1" or database.is_admin(user_id))
 
     cost = 25
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     if is_vip or (has_byok and byok_allowed):
         cost = 0
 
@@ -3199,7 +3218,7 @@ def api_extract_dress_generate():
         return jsonify({"success": False, "error": "Please upload a clear garment image."}), 400
 
     cost = 5
-    is_vip = int(user.get("credits", 0)) >= 999999
+    is_vip = is_user_vip(user)
     if is_vip:
         cost = 0
 

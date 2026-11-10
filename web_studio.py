@@ -2849,7 +2849,7 @@ def api_admin_update_settings():
     # Feature Toggles for all 10 tools
     all_studio_features = [
         "storycraft", "character_forge", "thumbnail_lab", "frame_renderer",
-        "story_adapter", "remixcraft", "tooncraft", "podcast", "extract_dress", "ugc"
+        "story_adapter", "remixcraft", "tooncraft", "podcast", "extract_dress", "dresscraft", "ugc", "adcraft"
     ]
     for feat in all_studio_features:
         if feat in data:
@@ -2886,9 +2886,9 @@ def api_admin_update_settings():
         "pricing_remix_cost": ["pricing_remix_cost", "remix_cost", "cost_remixcraft", "price_remix"],
         "pricing_tooncraft_cost": ["pricing_tooncraft_cost", "tooncraft_cost", "cost_tooncraft", "price_tooncraft"],
         "pricing_podcast_cost": ["pricing_podcast_cost", "podcast_cost", "cost_podcast", "price_podcast"],
-        "pricing_extract_dress_cost": ["pricing_extract_dress_cost", "extract_dress_cost", "cost_extract_dress", "price_dress"],
-        "pricing_ugc_standard_cost": ["pricing_ugc_standard_cost", "ugc_standard_cost", "cost_ugc_standard", "price_ugc_standard"],
-        "pricing_ugc_pm_cost": ["pricing_ugc_pm_cost", "ugc_pm_cost", "cost_ugc_pm", "price_ugc_pm"]
+        "pricing_extract_dress_cost": ["pricing_extract_dress_cost", "extract_dress_cost", "cost_extract_dress", "price_dress", "pricing_dresscraft_cost", "cost_dresscraft"],
+        "pricing_ugc_standard_cost": ["pricing_ugc_standard_cost", "ugc_standard_cost", "cost_ugc_standard", "price_ugc_standard", "pricing_adcraft_cost", "cost_adcraft"],
+        "pricing_ugc_pm_cost": ["pricing_ugc_pm_cost", "ugc_pm_cost", "cost_ugc_pm", "price_ugc_pm", "pricing_adcraft_pm_cost", "cost_adcraft_pm"]
     }
 
     for db_k, aliases in pricing_mapping.items():
@@ -3251,6 +3251,7 @@ def api_podcast_send_to_telegram():
     except Exception as e:
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
+@app.route("/api/dresscraft/generate", methods=["POST"])
 @app.route("/api/extract-dress/generate", methods=["POST"])
 def api_extract_dress_generate():
     user = get_current_user()
@@ -3325,6 +3326,7 @@ def api_extract_dress_generate():
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
 
+@app.route('/api/adcraft/generate', methods=['POST'])
 @app.route('/api/ugc/generate', methods=['POST'])
 def api_ugc_generate():
     user = get_current_user()
@@ -3416,6 +3418,31 @@ def api_ugc_generate():
             model_name=ai_engine.DEFAULT_MODEL
         ))
 
+        # Generate the 2 PDFs right away so they are ready for download and saved to history!
+        script_pdf_url = ""
+        prompts_pdf_url = ""
+        script_pdf_name = ""
+        prompts_pdf_name = ""
+        try:
+            script_pdf, prompts_pdf = pdf_generator.generate_ugc_pdfs(
+                ugc_data=result,
+                timezone=user.get("timezone", "Africa/Lagos")
+            )
+            script_pdf_name = os.path.basename(script_pdf)
+            prompts_pdf_name = os.path.basename(prompts_pdf)
+            script_pdf_url = f"/api/download_pdf/{script_pdf_name}"
+            prompts_pdf_url = f"/api/download_pdf/{prompts_pdf_name}"
+            database.save_ugc_history(
+                user_id=user_id,
+                campaign_title=result.get("campaign_title", "UGC Video Commercial"),
+                mode=mode,
+                brand=result.get("brand_or_product", ""),
+                script_pdf=script_pdf_name,
+                prompts_pdf=prompts_pdf_name
+            )
+        except Exception as pdf_err:
+            print(f"[UGC PDF GEN WARNING]: {pdf_err}")
+
         if cost > 0:
             database.deduct_credits(user_id, cost)
 
@@ -3423,6 +3450,10 @@ def api_ugc_generate():
         return jsonify({
             "success": True,
             "credits_remaining": rem_credits,
+            "script_pdf_url": script_pdf_url,
+            "prompts_pdf_url": prompts_pdf_url,
+            "script_pdf_name": script_pdf_name,
+            "prompts_pdf_name": prompts_pdf_name,
             "result": result
         })
     except Exception as e:
@@ -3430,6 +3461,7 @@ def api_ugc_generate():
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
 
 
+@app.route('/api/adcraft/send_to_telegram', methods=['POST'])
 @app.route('/api/ugc/send_to_telegram', methods=['POST'])
 def api_ugc_send_to_telegram():
     user = get_current_user()
@@ -3462,4 +3494,35 @@ def api_ugc_send_to_telegram():
         return jsonify({"success": True, "message": "UGC PDFs sent to Telegram successfully!"})
     except Exception as e:
         print(f"[UGC SEND TELEGRAM ERROR]: {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+
+@app.route('/api/adcraft/history', methods=['GET'])
+@app.route('/api/ugc/history', methods=['GET'])
+def api_ugc_history():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    history = database.get_user_ugc_history(user["user_id"])
+    return jsonify({"success": True, "history": history})
+
+@app.route('/api/adcraft/send_history_to_telegram', methods=['POST'])
+@app.route('/api/ugc/send_history_to_telegram', methods=['POST'])
+def api_ugc_send_history_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    pdf_filename = data.get("pdf_filename", "")
+    caption = data.get("caption", "UGC PDF Document")
+    if not pdf_filename:
+        return jsonify({"success": False, "error": "No PDF filename provided"}), 400
+    file_path = os.path.join(PDF_DIR, os.path.basename(pdf_filename))
+    if not os.path.exists(file_path):
+        return jsonify({"success": False, "error": "File not found"}), 404
+    try:
+        send_telegram_document_sync(user_id, file_path, caption=caption)
+        return jsonify({"success": True, "message": "PDF sent to Telegram!"})
+    except Exception as e:
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500

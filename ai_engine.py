@@ -2296,3 +2296,8 @@ async def generate_ugc_ad(
             "performance_tips": "Deliver lines with high conversational energy. Maintain continuous eye contact with the smartphone camera lens, not your own reflection on screen. Keep transitions under 0.3 seconds in editing."
         }
     return data
+
+
+# Proprietary ecosystem aliases
+dresscraft_isolate_wardrobe = extract_dress_prompt
+generate_adcraft_ad = generate_ugc_ad

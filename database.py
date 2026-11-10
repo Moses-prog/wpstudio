@@ -45,6 +45,18 @@ def init_db():
     )
     """)
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ugc_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        campaign_title TEXT,
+        mode TEXT,
+        brand_or_product TEXT,
+        script_pdf_filename TEXT,
+        prompts_pdf_filename TEXT,
+        created_at TEXT
+    )
+    """)
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS story_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -1101,3 +1113,42 @@ def get_all_recent_jobs(limit: int = 30) -> list:
 
 # Initialize on import
 init_db()
+
+
+def save_ugc_history(user_id: int, campaign_title: str, mode: str, brand: str, script_pdf: str, prompts_pdf: str):
+    from datetime import datetime
+    now = datetime.utcnow().isoformat()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO ugc_history (user_id, campaign_title, mode, brand_or_product, script_pdf_filename, prompts_pdf_filename, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, campaign_title, mode, brand, os.path.basename(script_pdf) if script_pdf else "", os.path.basename(prompts_pdf) if prompts_pdf else "", now))
+    conn.commit()
+    conn.close()
+
+def get_user_ugc_history(user_id: int) -> list:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, campaign_title, mode, brand_or_product, script_pdf_filename, prompts_pdf_filename, created_at
+        FROM ugc_history
+        WHERE user_id = ?
+        ORDER BY id DESC
+        LIMIT 50
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [{
+        "id": r[0],
+        "campaign_title": r[1],
+        "mode": r[2],
+        "brand_or_product": r[3],
+        "script_pdf": r[4],
+        "prompts_pdf": r[5],
+        "created_at": r[6]
+    } for r in rows]
+
+# Proprietary AdCraft Pro aliases
+save_adcraft_history = save_ugc_history
+get_user_adcraft_history = get_user_ugc_history

@@ -3159,3 +3159,73 @@ def api_podcast_send_to_telegram():
         return jsonify({"success": True, "message": "Podcast PDFs sent to Telegram successfully!"})
     except Exception as e:
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+@app.route("/api/extract-dress/generate", methods=["POST"])
+def api_extract_dress_generate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+
+    image_bytes = None
+    mime_type = "image/jpeg"
+    target_style = "photorealistic"
+    wearer_gender = "Unisex"
+
+    if request.is_json:
+        data = request.get_json(silent=True, force=True) or {}
+        image_data = str(data.get("image_data") or data.get("image_base64") or "")
+        target_style = str(data.get("target_style") or "photorealistic")
+        wearer_gender = str(data.get("wearer_gender") or "Unisex")
+        if image_data:
+            if "," in image_data:
+                header, b64_part = image_data.split(",", 1)
+                if "png" in header.lower():
+                    mime_type = "image/png"
+                elif "webp" in header.lower():
+                    mime_type = "image/webp"
+                image_bytes = base64.b64decode(b64_part)
+            else:
+                image_bytes = base64.b64decode(image_data)
+    else:
+        file = request.files.get("image_file")
+        if file:
+            image_bytes = file.read()
+            mime_type = file.mimetype or "image/jpeg"
+        target_style = request.form.get("target_style", "photorealistic")
+        wearer_gender = request.form.get("wearer_gender", "Unisex")
+
+    if not image_bytes:
+        return jsonify({"success": False, "error": "Please upload a clear garment image."}), 400
+
+    cost = 5
+    is_vip = int(user.get("credits", 0)) >= 999999
+    if is_vip:
+        cost = 0
+
+    if cost > 0 and user.get("credits", 0) < cost:
+        return jsonify({"success": False, "error": f"Insufficient credits! Outfit extraction requires {cost} credits."}), 402
+
+    try:
+        user_keys = build_user_keys(user)
+        result = run_async(ai_engine.extract_dress_prompt(
+            image_bytes=image_bytes,
+            mime_type=mime_type,
+            target_style=target_style,
+            wearer_gender=wearer_gender,
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=ai_engine.DEFAULT_MODEL
+        ))
+
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        rem_credits = database.get_user(user_id).get("credits", 0)
+        return jsonify({
+            "success": True,
+            "credits_remaining": rem_credits,
+            "result": result
+        })
+    except Exception as e:
+        print(f"[EXTRACT DRESS ERROR]: {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500

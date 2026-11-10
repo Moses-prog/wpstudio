@@ -1990,3 +1990,86 @@ Generate exactly 8 to 12 fast-paced multi-camera scenes. Ensure every scene has 
             "hosts": []
         }
     return data
+
+
+async def extract_dress_prompt(
+    image_bytes: bytes,
+    mime_type: str = "image/jpeg",
+    target_style: str = "photorealistic",
+    wearer_gender: str = "Unisex",
+    user_api_key: str = None,
+    model_name: str = None
+) -> dict:
+    """
+    Wardrobe & Outfit Consistency Lock Engine (Extract Dress):
+    Analyzes an uploaded garment/clothing image with multimodal vision AI,
+    extracts exact fabric, weave, cut, pattern, color palette, buttons, embroidery,
+    and returns a structured wardrobe lock + reusable prompt suite for Midjourney, Flux, Kling, and Pixar 3D.
+    """
+    model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+    client = get_client(user_api_key)
+
+    system_instruction = (
+        "You are an elite Hollywood costume designer, haute couture fashion archivist, and AI prompt engineer. "
+        "Your task is to analyze the uploaded garment photograph with extreme precision and extract a complete, "
+        "production-grade wardrobe specification that locks this exact outfit across any character or AI generator.\n\n"
+        "You must output STRICT JSON matching this schema:\n"
+        "{\n"
+        '  "summary": "Short evocative title (e.g., Midnight Velvet Double-Breasted Dinner Jacket)",\n'
+        '  "garment_category": "e.g., Formalwear, Streetwear, Traditional African, Haute Couture, Casual, Period Costume",\n'
+        '  "silhouette_fit": "Exact cut, structure, lapel, collar, hemline, drape, and silhouette description",\n'
+        '  "fabric_materials": "Detailed materials, weave, texture, weight, sheen (e.g., heavy structured wool crepe, raw silk lining)",\n'
+        '  "color_palette": "Primary colors, accent shades, hardware finishes, embroidery colors",\n'
+        '  "key_details": "Buttons, stitching, pockets, cuffs, trims, patterns, pleats, zippers, emblems",\n'
+        '  "midjourney_prompt": "Master prompt for Midjourney v6.1 / Flux.1: character wearing [exact garment details], photographic realism, 8k, tactile fabric texture, cinematic studio lighting",\n'
+        '  "video_motion_prompt": "Prompt for Kling / Runway Gen-3 / Sora: character in motion wearing [exact garment], realistic cloth simulation, fabric drape and natural fold dynamics, 4k",\n'
+        '  "pixar_3d_prompt": "Prompt for stylized 3D animation (Pixar/Disney/ToonCraft): character wearing [stylized garment], clean vibrant materials, tactile soft shaders"\n'
+        "}\n\n"
+        "Rules:\n"
+        "1. Focus strictly on the clothing/outfit shown in the image.\n"
+        "2. Do not copy the person's face or physical body from the image; isolate the wardrobe so it can be placed onto any character.\n"
+        "3. Provide rich, tactile sensory descriptors that AI image generators understand (fabric weight, weave pattern, sheen, stitching).\n"
+        "4. Output MUST be valid JSON only, without markdown fences or extraneous text."
+    )
+
+    prompt_text = (
+        f"Analyze this garment photo and extract the complete wardrobe specification and generation prompts.\n"
+        f"Target Style Preference: {target_style}\n"
+        f"Wearer Context: {wearer_gender}\n"
+        f"Provide the exact structured JSON response."
+    )
+
+    contents = []
+    if image_bytes:
+        try:
+            image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type or "image/jpeg")
+            contents.append(image_part)
+        except Exception as img_err:
+            logger.warning(f"Failed to attach image part: {img_err}")
+    contents.append(prompt_text)
+
+    response = generate_with_fallback(
+        client=client,
+        preferred_model=model,
+        contents=contents if len(contents) > 1 else prompt_text,
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json"
+        },
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(response.text)
+    if not isinstance(data, dict):
+        data = {
+            "summary": "Custom Extracted Outfit",
+            "garment_category": "Wardrobe",
+            "silhouette_fit": "Custom fit garment",
+            "fabric_materials": "High-quality textile",
+            "color_palette": "Custom colors",
+            "key_details": "Tailored finish",
+            "midjourney_prompt": response.text or "Detailed garment",
+            "video_motion_prompt": response.text or "Detailed garment in motion",
+            "pixar_3d_prompt": response.text or "3D stylized garment"
+        }
+    return data

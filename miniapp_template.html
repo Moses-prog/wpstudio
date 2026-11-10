@@ -1972,6 +1972,20 @@
                 <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
         </div>
+
+        <div class="list-item" onclick="openModal('extract-dress')">
+            <div class="icon-box" style="background: rgba(229, 169, 60, 0.12); color: #e5a93c;">
+                <svg viewBox="0 0 24 24"><path d="M20.38 3.46L16 2 12 5.5 8 2l-4.38 1.46a2 2 0 0 0-1.34 1.9V10a2 2 0 0 0 .8 1.6l3.92 2.94V21a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-6.46l3.92-2.94a2 2 0 0 0 .8-1.6V5.36a2 2 0 0 0-1.34-1.9z"></path></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">Extract Dress (Wardrobe Lock)</div>
+                <div class="item-subtitle">Upload garment photo to extract reusable outfit prompts &amp; fabric locks</div>
+            </div>
+            <div class="item-right">
+                <span class="chip ready" style="font-size:10px;">5 CR</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
     </div>
 
     <!-- 3. VISUAL LAB & THUMBNAILS -->
@@ -3566,6 +3580,150 @@
     <!-- ===================================================================== -->
     <!-- 3. MODAL: CASTLOCK CHARACTER STUDIO (ROSTER)                          -->
     <!-- ===================================================================== -->
+    <!-- ===================================================================== -->
+    <!-- EXTRACT DRESS (WARDROBE & OUTFIT CONSISTENCY LOCK) MODAL             -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-extract-dress">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M20.38 3.46L16 2 12 5.5 8 2l-4.38 1.46a2 2 0 0 0-1.34 1.9V10a2 2 0 0 0 .8 1.6l3.92 2.94V21a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-6.46l3.92-2.94a2 2 0 0 0 .8-1.6V5.36a2 2 0 0 0-1.34-1.9z"></path></svg>
+                    Extract Dress
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Upload a clear garment photo and receive a reusable outfit-generation prompt.</div>
+        </div>
+        <div class="modal-body">
+            <!-- INPUT SECTION -->
+            <div id="dress-input-section">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Extract Garment Details</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Isolate fabric texture, cut, silhouette, patterns and colors into reusable prompts for any AI generator.</div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">(1) UPLOAD GARMENT PHOTO</div>
+                    <input type="file" id="dress-file-input" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleDressFileUpload(event)">
+
+                    <div id="dress-upload-prompt" onclick="document.getElementById('dress-file-input').click()" style="border: 2px dashed rgba(229, 169, 60, 0.4); border-radius: 10px; padding: 28px 14px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                        <svg viewBox="0 0 24 24" style="width:28px; height:28px; stroke:#e5a93c; stroke-width:2; fill:none; margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <div style="color: #e5a93c; font-size: 14px; font-weight: 700; margin-bottom: 4px;">Choose Garment Photo</div>
+                        <div style="color: var(--text-muted); font-size: 11px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                    </div>
+
+                    <div id="dress-preview-wrap" style="display:none; text-align:center;">
+                        <img id="dress-preview-img" style="max-width:100%; max-height:220px; object-fit:contain; border-radius:8px; border:1px solid #e5a93c; margin-bottom:8px; background:#000;">
+                        <div id="dress-preview-name" style="font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:8px;"></div>
+                        <button type="button" class="btn-cancel" onclick="removeDressUpload()" style="padding:4px 12px; font-size:11px; color:#ff453a;">Remove Photo</button>
+                    </div>
+                    <div class="form-hint" style="font-size:11px; margin-top:8px;">Use a clear, well-lit image under 8 MB.</div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div class="form-label">TARGET PROMPT FORMAT</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); gap:6px;">
+                        <div class="pill-btn active" data-dstyle="photorealistic" onclick="setDressStyle('photorealistic', this)">Photorealistic</div>
+                        <div class="pill-btn" data-dstyle="video_motion" onclick="setDressStyle('video_motion', this)">Video Motion</div>
+                        <div class="pill-btn" data-dstyle="pixar_3d" onclick="setDressStyle('pixar_3d', this)">Pixar 3D</div>
+                    </div>
+                </div>
+
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div class="form-label">WEARER CONTEXT (OPTIONAL)</div>
+                    <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); gap:6px;">
+                        <div class="pill-btn active" data-dgender="Unisex" onclick="setDressGender('Unisex', this)">Unisex</div>
+                        <div class="pill-btn" data-dgender="Female" onclick="setDressGender('Female', this)">Female</div>
+                        <div class="pill-btn" data-dgender="Male" onclick="setDressGender('Male', this)">Male</div>
+                    </div>
+                </div>
+
+                <div style="border-left: 3px solid #e5a93c; background: rgba(229, 169, 60, 0.08); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                    Outfit extraction costs 5 credits. Your balance is shared across web and Telegram.<br>
+                    Your balance: <strong id="dress-user-credits" style="color:#e5a93c;">0 credits</strong>
+                </div>
+
+                <button id="btn-extract-dress" class="btn-submit" onclick="submitExtractDress()" style="margin-top:0;">
+                    Extract Outfit &mdash; 5 Credits
+                </button>
+            </div>
+
+            <!-- RESULTS SECTION -->
+            <div id="dress-result-section" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:10px; font-weight:700; color:#30d158; text-transform:uppercase; letter-spacing:0.5px;">EXTRACTION COMPLETE</div>
+                        <div id="dress-res-title" style="font-size:16px; font-weight:700; margin-top:2px;">Custom Garment Lock</div>
+                    </div>
+                    <button class="btn-cancel" onclick="resetExtractDress()" style="padding:4px 10px; font-size:11px;">Extract Another</button>
+                </div>
+
+                <div class="form-card" style="margin-bottom:12px; display:flex; gap:12px; align-items:center;">
+                    <img id="dress-res-thumb" style="width:72px; height:72px; object-fit:cover; border-radius:6px; border:1px solid rgba(229,169,60,0.4); flex-shrink:0;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
+                            <span id="dress-res-badge-cat" class="chip" style="background:rgba(229,169,60,0.15); color:#e5a93c; font-size:10px;">Formalwear</span>
+                            <span id="dress-res-badge-gender" class="chip" style="background:rgba(56,189,248,0.15); color:#38bdf8; font-size:10px;">Unisex</span>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.4;" id="dress-res-summary">Outfit details successfully extracted.</div>
+                    </div>
+                </div>
+
+                <!-- Structured Breakdown Cards -->
+                <div class="form-card" style="margin-bottom:12px; font-size:12px; line-height:1.6;">
+                    <div style="margin-bottom:6px;">
+                        <strong style="color:#e5a93c;">Silhouette &amp; Fit:</strong>
+                        <span id="dress-res-silhouette" style="color:var(--text-main); margin-left:4px;"></span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong style="color:#38bdf8;">Fabric &amp; Materials:</strong>
+                        <span id="dress-res-fabric" style="color:var(--text-main); margin-left:4px;"></span>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <strong style="color:#a78bfa;">Color Palette:</strong>
+                        <span id="dress-res-colors" style="color:var(--text-main); margin-left:4px;"></span>
+                    </div>
+                    <div>
+                        <strong style="color:#cbd5e1;">Key Details:</strong>
+                        <span id="dress-res-details" style="color:var(--text-main); margin-left:4px;"></span>
+                    </div>
+                </div>
+
+                <!-- Master Prompt Display with Format Switcher -->
+                <div class="form-card" style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div class="form-label" style="margin-bottom:0;">REUSABLE GENERATION PROMPT</div>
+                        <button id="btn-copy-dress-prompt" class="btn-cancel" onclick="copyActiveDressPrompt(this)" style="padding:4px 10px; font-size:11px; color:#e5a93c; border-color:rgba(229,169,60,0.4);">
+                            <svg viewBox="0 0 24 24" style="width:12px; height:12px; stroke:currentColor; stroke-width:2; fill:none; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy Prompt
+                        </button>
+                    </div>
+
+                    <!-- Prompt Format Tabs -->
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <button type="button" class="accent-chip active" id="dress-tab-mj" onclick="switchDressPromptTab('midjourney')">Midjourney / Flux</button>
+                        <button type="button" class="accent-chip" id="dress-tab-vid" onclick="switchDressPromptTab('video')">Kling / Runway</button>
+                        <button type="button" class="accent-chip" id="dress-tab-pix" onclick="switchDressPromptTab('pixar')">Pixar 3D</button>
+                    </div>
+
+                    <div id="dress-active-prompt-box" style="background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; font-family:monospace; font-size:11.5px; color:#cbd5e1; line-height:1.5; max-height:160px; overflow-y:auto; word-break:break-word;">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-cancel" onclick="saveDressToCastLockRoster()" style="flex:1; padding:12px; border-radius:10px;">
+                        Apply to CastLock
+                    </button>
+                    <button class="btn-submit" onclick="copyActiveDressPrompt(document.getElementById('btn-copy-dress-prompt'))" style="flex:2; margin-top:0; padding:12px; border-radius:10px;">
+                        Copy Master Prompt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="modal-characters">
         <div class="modal-drag"></div>
         <div class="modal-header">
@@ -4792,6 +4950,7 @@
                 if (id === 'remixcraft') { goToRemixStep(1); populateRemixCastDropdown(); }
                 if (id === 'tooncraft') { goToTooncraftStep(1); updateTooncraftCost(); }
                 if (id === 'podcast') { goToPodcastStep(1); updatePodcastReview(); }
+                if (id === 'extract-dress') { initExtractDressModal(); }
             }
         }
 
@@ -8867,6 +9026,283 @@
                 // VISUAL FRAME RENDERER ACTIONS (WITH DIRECT TELEGRAM PHOTO DELIVERY)
         // =====================================================================
         let lastRenderedImageData = null;
+        /* ===================================================================== */
+        /* EXTRACT DRESS (WARDROBE LOCK) JAVASCRIPT HANDLERS                     */
+        /* ===================================================================== */
+        const extractDressState = {
+            imageData: null,
+            imageFile: null,
+            targetStyle: 'photorealistic',
+            wearerGender: 'Unisex',
+            activePromptTab: 'midjourney',
+            currentResult: null
+        };
+
+        function initExtractDressModal() {
+            const rawCredits = (window.currentUser && window.currentUser.credits !== undefined) ? window.currentUser.credits : 0;
+            const isUnlimited = (rawCredits >= 999999);
+            const crElem = document.getElementById('dress-user-credits');
+            if (crElem) {
+                crElem.innerText = isUnlimited ? 'Unlimited (VIP)' : `${rawCredits} credits`;
+            }
+        }
+
+        function handleDressFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+                showToast('Please upload a PNG, JPEG, or WebP image.', false);
+                return;
+            }
+
+            if (file.size > 8 * 1024 * 1024) {
+                showToast('Image file size must be under 8 MB.', false);
+                return;
+            }
+
+            extractDressState.imageFile = file;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                extractDressState.imageData = e.target.result;
+
+                const previewWrap = document.getElementById('dress-preview-wrap');
+                const uploadPrompt = document.getElementById('dress-upload-prompt');
+                const previewImg = document.getElementById('dress-preview-img');
+                const previewName = document.getElementById('dress-preview-name');
+
+                if (previewImg) previewImg.src = e.target.result;
+                if (previewName) previewName.innerText = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                if (uploadPrompt) uploadPrompt.style.display = 'none';
+                if (previewWrap) previewWrap.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeDressUpload() {
+            extractDressState.imageData = null;
+            extractDressState.imageFile = null;
+            const input = document.getElementById('dress-file-input');
+            if (input) input.value = '';
+
+            const previewWrap = document.getElementById('dress-preview-wrap');
+            const uploadPrompt = document.getElementById('dress-upload-prompt');
+            const previewImg = document.getElementById('dress-preview-img');
+
+            if (previewImg) previewImg.src = '';
+            if (previewWrap) previewWrap.style.display = 'none';
+            if (uploadPrompt) uploadPrompt.style.display = 'block';
+        }
+
+        function setDressStyle(style, el) {
+            extractDressState.targetStyle = style;
+            document.querySelectorAll('#modal-extract-dress [data-dstyle]').forEach(btn => {
+                btn.classList.toggle('active', btn === el);
+            });
+        }
+
+        function setDressGender(gender, el) {
+            extractDressState.wearerGender = gender;
+            document.querySelectorAll('#modal-extract-dress [data-dgender]').forEach(btn => {
+                btn.classList.toggle('active', btn === el);
+            });
+        }
+
+        function switchDressPromptTab(tabKey) {
+            extractDressState.activePromptTab = tabKey;
+            const tabMj = document.getElementById('dress-tab-mj');
+            const tabVid = document.getElementById('dress-tab-vid');
+            const tabPix = document.getElementById('dress-tab-pix');
+            if (tabMj) tabMj.classList.toggle('active', tabKey === 'midjourney');
+            if (tabVid) tabVid.classList.toggle('active', tabKey === 'video');
+            if (tabPix) tabPix.classList.toggle('active', tabKey === 'pixar');
+
+            const promptBox = document.getElementById('dress-active-prompt-box');
+            if (!promptBox || !extractDressState.currentResult) return;
+
+            if (tabKey === 'midjourney') {
+                promptBox.innerText = extractDressState.currentResult.midjourney_prompt || '';
+            } else if (tabKey === 'video') {
+                promptBox.innerText = extractDressState.currentResult.video_motion_prompt || '';
+            } else if (tabKey === 'pixar') {
+                promptBox.innerText = extractDressState.currentResult.pixar_3d_prompt || '';
+            }
+        }
+
+        function copyActiveDressPrompt(btn) {
+            if (!extractDressState.currentResult) {
+                showToast('No prompt available to copy.', false);
+                return;
+            }
+            let text = '';
+            const tabKey = extractDressState.activePromptTab;
+            if (tabKey === 'midjourney') {
+                text = extractDressState.currentResult.midjourney_prompt || '';
+            } else if (tabKey === 'video') {
+                text = extractDressState.currentResult.video_motion_prompt || '';
+            } else if (tabKey === 'pixar') {
+                text = extractDressState.currentResult.pixar_3d_prompt || '';
+            }
+
+            if (!text) {
+                showToast('Empty prompt.', false);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                if (btn) {
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = 'Copied!';
+                    setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+                }
+                showToast('Wardrobe prompt copied to clipboard!', true);
+            }).catch(() => {
+                showToast('Failed to copy to clipboard.', false);
+            });
+        }
+
+        function saveDressToCastLockRoster() {
+            if (!extractDressState.currentResult) {
+                showToast('No garment extracted yet.', false);
+                return;
+            }
+            const res = extractDressState.currentResult;
+            const outfitLock = `${res.summary || 'Custom Outfit'} | Cut: ${res.silhouette_fit || 'Standard'} | Fabric: ${res.fabric_materials || 'Textile'} | Colors: ${res.color_palette || 'Original'}`;
+
+            openModal('new-character');
+            const refInstruction = document.getElementById('forge-ref-instruction');
+            if (refInstruction) {
+                refInstruction.value = `Wardrobe Lock: ${outfitLock}`;
+            }
+
+            showToast('Outfit locked to CastLock Character Studio!', true);
+        }
+
+        function resetExtractDress() {
+            extractDressState.currentResult = null;
+            removeDressUpload();
+            const inSection = document.getElementById('dress-input-section');
+            const resSection = document.getElementById('dress-result-section');
+            if (inSection) inSection.style.display = 'block';
+            if (resSection) resSection.style.display = 'none';
+        }
+
+        async function submitExtractDress() {
+            if (!extractDressState.imageData) {
+                showToast('Please upload a garment photo first.', false);
+                return;
+            }
+
+            const rawCredits = (window.currentUser && window.currentUser.credits !== undefined) ? window.currentUser.credits : 0;
+            const isUnlimited = (rawCredits >= 999999);
+            if (!isUnlimited && rawCredits < 5) {
+                showToast('Insufficient credits! Outfit extraction requires 5 credits.', false);
+                return;
+            }
+
+            const btn = document.getElementById('btn-extract-dress');
+            if (btn) btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Extracting Garment Specifications",
+                12,
+                [
+                    { at: 5, text: "Analyzing garment fabric, weave & texture..." },
+                    { at: 25, text: "Detecting cut, silhouette & pattern geometry..." },
+                    { at: 60, text: "Generating Midjourney, Kling & 3D prompt suite..." },
+                    { at: 85, text: "Finalizing wardrobe consistency locks..." }
+                ],
+                "EXTRACT DRESS"
+            );
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+            try {
+                const payload = {
+                    image_data: extractDressState.imageData,
+                    target_style: extractDressState.targetStyle,
+                    wearer_gender: extractDressState.wearerGender
+                };
+
+                const res = await fetch('/api/extract-dress/generate', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    signal: controller.signal,
+                    body: JSON.stringify(payload)
+                });
+
+                clearTimeout(timeoutId);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    AIProgressTracker.fail(data.error || 'Failed to extract dress details.');
+                    if (btn) btn.disabled = false;
+                    return;
+                }
+
+                if (data.credits_remaining !== undefined && window.currentUser) {
+                    window.currentUser.credits = data.credits_remaining;
+                    if (typeof updateHeaderUserInfo === 'function') updateHeaderUserInfo();
+                    initExtractDressModal();
+                }
+
+                AIProgressTracker.complete("Wardrobe specifications extracted successfully!");
+                renderDressResults(data.result);
+            } catch (err) {
+                clearTimeout(timeoutId);
+                console.error('[EXTRACT DRESS ERROR]', err);
+                AIProgressTracker.fail(err.name === 'AbortError' ? 'Request timed out. Please try again.' : (err.message || 'Network error occurred.'));
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function renderDressResults(result) {
+            if (!result) return;
+            extractDressState.currentResult = result;
+
+            const inSection = document.getElementById('dress-input-section');
+            const resSection = document.getElementById('dress-result-section');
+            if (inSection) inSection.style.display = 'none';
+            if (resSection) resSection.style.display = 'block';
+
+            const thumbEl = document.getElementById('dress-res-thumb');
+            if (thumbEl && extractDressState.imageData) {
+                thumbEl.src = extractDressState.imageData;
+            }
+
+            const titleEl = document.getElementById('dress-res-title');
+            if (titleEl) titleEl.innerText = result.summary || 'Custom Garment Lock';
+
+            const catEl = document.getElementById('dress-res-badge-cat');
+            if (catEl) catEl.innerText = result.garment_category || 'Wardrobe';
+
+            const genderEl = document.getElementById('dress-res-badge-gender');
+            if (genderEl) genderEl.innerText = extractDressState.wearerGender || 'Unisex';
+
+            const summaryEl = document.getElementById('dress-res-summary');
+            if (summaryEl) summaryEl.innerText = result.summary || 'Outfit details extracted.';
+
+            const silEl = document.getElementById('dress-res-silhouette');
+            if (silEl) silEl.innerText = result.silhouette_fit || 'Standard cut';
+
+            const fabEl = document.getElementById('dress-res-fabric');
+            if (fabEl) fabEl.innerText = result.fabric_materials || 'Standard textile';
+
+            const colEl = document.getElementById('dress-res-colors');
+            if (colEl) colEl.innerText = result.color_palette || 'Original tones';
+
+            const detEl = document.getElementById('dress-res-details');
+            if (detEl) detEl.innerText = result.key_details || 'Tailored finish';
+
+            let defaultTab = 'midjourney';
+            if (extractDressState.targetStyle === 'video_motion') defaultTab = 'video';
+            else if (extractDressState.targetStyle === 'pixar_3d') defaultTab = 'pixar';
+            switchDressPromptTab(defaultTab);
+        }
+
         let lastRenderedPrompt = "";
 
         async function submitRenderFrame() {

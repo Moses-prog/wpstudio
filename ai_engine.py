@@ -2073,3 +2073,226 @@ async def extract_dress_prompt(
             "pixar_3d_prompt": response.text or "3D stylized garment"
         }
     return data
+
+
+async def generate_ugc_ad(
+    mode: str = "standard",
+    business_name: str = "",
+    business_niche: str = "",
+    product_description: str = "",
+    character_count: int = 1,
+    location: str = "",
+    phone_number: str = "",
+    price: str = "",
+    website: str = "",
+    promoter_gender: str = "female",
+    skin_tone: str = "black",
+    promoter_vibe: str = "energetic_playful",
+    look_preset: str = "natural",
+    branded_wardrobe: str = "yes",
+    language_style: str = "nigerian_english",
+    narration: str = "yes",
+    custom_outfits: str = "",
+    additional_notes: str = "",
+    product_name: str = "",
+    call_to_action: str = "link_in_bio",
+    shoot_location: str = "",
+    product_images_data: list = None,
+    creator_image_bytes: bytes = None,
+    creator_image_mime: str = "image/jpeg",
+    user_api_key: str = None,
+    model_name: str = None
+) -> dict:
+    """
+    UGC Content & Viral Video Commercial Studio Engine:
+    Creates a 6-clip vertical advertisement package for TikTok, Instagram Reels, and YouTube Shorts.
+    Supports Standard Mode (Business + Promoters) and Product Marketing Mode (Direct-to-Consumer / E-Commerce).
+    """
+    model = model_name if model_name in AVAILABLE_MODELS else DEFAULT_MODEL
+    client = get_client(user_api_key)
+
+    system_instruction = (
+        "You are an elite viral advertising creative director, direct-response copywriter, and AI video prompt engineer "
+        "specializing in 9:16 vertical short-form video ads for TikTok, Instagram Reels, and YouTube Shorts.\n\n"
+        "Your task is to create an authentic, high-converting 6-clip UGC advertisement package that stops the scroll, "
+        "builds emotional trust, demonstrates the product/business convincingly, and drives immediate action.\n\n"
+        "You must output STRICT JSON matching this schema:\n"
+        "{\n"
+        '  "campaign_title": "Catchy campaign title",\n'
+        '  "brand_or_product": "Name of brand/product",\n'
+        '  "target_audience": "Target demographic profile",\n'
+        '  "hook_variations": [\n'
+        '    "Hook 1: High curiosity / shocking statement",\n'
+        '    "Hook 2: Relatable problem / negative hook",\n'
+        '    "Hook 3: Life hack / secret reveal hook"\n'
+        '  ],\n'
+        '  "clips": [\n'
+        '    {\n'
+        '      "clip_number": 1,\n'
+        '      "title": "Clip title (e.g., 3-Second Scroll-Stopping Hook)",\n'
+        '      "duration": "0:00 - 0:04",\n'
+        '      "spoken_script": "Exact words spoken by the promoter or voiceover. Natural, punchy, conversational.",\n'
+        '      "creator_action": "Body language, facial expression, eye contact, and camera framing directions.",\n'
+        '      "on_screen_text": "Large bold text caption overlay for silent scrollers.",\n'
+        '      "audio_foley": "Sound effects, background music mood, or transition sounds.",\n'
+        '      "image_prompt": "Midjourney v6.1 / Flux.1 image prompt: 9:16 vertical portrait of promoter, tactile realism, natural smartphone camera quality, cinematic casual lighting.",\n'
+        '      "video_motion_prompt": "Kling / Runway Gen-3 video prompt: realistic camera movement, hand gesture, natural facial expression, 9:16 vertical, smooth 30fps."\n'
+        '    }\n'
+        '  ],\n'
+        '  "full_voiceover_script": "Complete continuous script of all 6 clips together for easy reading.",\n'
+        '  "performance_tips": "Key coaching notes for pacing, energy, lighting, and delivery."\n'
+        "}\n\n"
+        "Rules:\n"
+        "1. Exactly 6 clips: Clip 1 (Hook), Clip 2 (Problem/Agitation), Clip 3 (Discovery/Solution), Clip 4 (Demo/Proof), Clip 5 (Emotional Transformation/Benefit), Clip 6 (Call to Action with urgency).\n"
+        "2. Authentic UGC tone: avoid stiff corporate jargon. Make it sound like a real person talking directly to their phone camera.\n"
+        "3. Match the requested Language Style, Promoter Vibe, and Demographics accurately.\n"
+        "4. Prompts must be production-ready for Midjourney/Flux and Kling/Runway with tactile sensory details.\n"
+        "5. Output MUST be valid JSON only, without markdown fences or extraneous text."
+    )
+
+    is_pm = (mode == "product_marketing")
+    target_name = (product_name or business_name or "Premium Brand").strip()
+    target_desc = (product_description or "Quality product designed to solve everyday challenges with maximum efficiency.").strip()
+
+    prompt_text = (
+        f"Generate a complete 6-clip vertical UGC advertising package for:\n"
+        f"Mode: {'Product Marketing (Direct E-Commerce)' if is_pm else 'Standard Business Commercial'}\n"
+        f"Brand / Product: {target_name}\n"
+        f"Niche / Category: {business_niche or 'Consumer Goods & Lifestyle'}\n"
+        f"Product / Offer Description: {target_desc}\n"
+        f"Price / Promotion: {price or 'Special Limited Offer'}\n"
+        f"Location / Setting: {location or shoot_location or 'Natural real-world environment (lifestyle, home, office)'}\n"
+        f"Website / Contact: {website or phone_number or 'Link in bio'}\n"
+        f"Call to Action: {call_to_action}\n\n"
+        f"Promoter Profile:\n"
+        f"- Number of Promoters: {character_count}\n"
+        f"- Gender: {promoter_gender}\n"
+        f"- Skin Tone: {skin_tone}\n"
+        f"- Vibe & Energy: {promoter_vibe}\n"
+        f"- Look Preset: {look_preset}\n"
+        f"- Wardrobe: {branded_wardrobe} (Custom Outfits: {custom_outfits or 'None'})\n"
+        f"- Language & Accent: {language_style}\n"
+        f"- Include Spoken Dialogue/Narration: {narration}\n"
+        f"- Additional Creative Notes: {additional_notes or 'Focus on genuine emotion and high conversion.'}\n\n"
+        f"Produce the full 6-clip vertical UGC commercial package in strict JSON."
+    )
+
+    contents = []
+    # Attach creator image if provided
+    if creator_image_bytes:
+        try:
+            part = types.Part.from_bytes(data=creator_image_bytes, mime_type=creator_image_mime or "image/jpeg")
+            contents.append(part)
+        except Exception as e:
+            logger.warning(f"Failed to attach creator image part: {e}")
+
+    # Attach product images if provided
+    if product_images_data and isinstance(product_images_data, list):
+        for img_item in product_images_data[:3]:
+            try:
+                b_data = img_item.get("bytes") if isinstance(img_item, dict) else img_item
+                m_type = img_item.get("mime", "image/jpeg") if isinstance(img_item, dict) else "image/jpeg"
+                if b_data:
+                    p = types.Part.from_bytes(data=b_data, mime_type=m_type)
+                    contents.append(p)
+            except Exception as e:
+                logger.warning(f"Failed to attach product image part: {e}")
+
+    contents.append(prompt_text)
+
+    response = generate_with_fallback(
+        client=client,
+        preferred_model=model,
+        contents=contents if len(contents) > 1 else prompt_text,
+        config={
+            "system_instruction": system_instruction,
+            "response_mime_type": "application/json"
+        },
+        user_api_key=user_api_key
+    )
+
+    data = clean_json_loads(response.text)
+    if not isinstance(data, dict) or not data.get("clips"):
+        # Graceful fallback builder
+        brand = target_name
+        data = {
+            "campaign_title": f"{brand} Viral UGC Campaign",
+            "brand_or_product": brand,
+            "target_audience": "Digital consumers seeking quality and convenience",
+            "hook_variations": [
+                f"Stop scrolling if you have been struggling with finding the right {business_niche or 'solution'}!",
+                f"I honestly didn't think {brand} would work until I tried this myself...",
+                f"The viral {brand} everyone has been talking about: here is my honest review."
+            ],
+            "clips": [
+                {
+                    "clip_number": 1,
+                    "title": "3-Second Scroll-Stopping Hook",
+                    "duration": "0:00 - 0:04",
+                    "spoken_script": f"If you're still doing this the old way, you need to stop right now. Look at this.",
+                    "creator_action": "Holding phone at eye level, direct eye contact with camera, expression of disbelief.",
+                    "on_screen_text": "STOP DOING THIS THE OLD WAY",
+                    "audio_foley": "Bass drop followed by upbeat lo-fi hip hop beat.",
+                    "image_prompt": f"9:16 vertical smartphone camera shot of {skin_tone} {promoter_gender} creator looking directly into the camera holding {brand}, tactile realistic lighting.",
+                    "video_motion_prompt": f"Smartphone camera subtle zoom in, {promoter_gender} creator raises hand to camera with authentic surprised reaction, 9:16 vertical, smooth 30fps."
+                },
+                {
+                    "clip_number": 2,
+                    "title": "Problem & Agitation",
+                    "duration": "0:04 - 0:09",
+                    "spoken_script": f"I used to spend so much time and money trying different alternatives and none of them actually lasted.",
+                    "creator_action": "Shaking head in frustration, gesturing with hands, natural candid angle.",
+                    "on_screen_text": "I was wasting so much money...",
+                    "audio_foley": "Subtle downbeat transition sound.",
+                    "image_prompt": f"9:16 vertical close-up of {skin_tone} {promoter_gender} creator with frustrated expression, natural indoor lighting.",
+                    "video_motion_prompt": f"Hand gestures showing frustration, quick natural head shake, handheld camera micro-movement."
+                },
+                {
+                    "clip_number": 3,
+                    "title": "Solution & Product Reveal",
+                    "duration": "0:09 - 0:15",
+                    "spoken_script": f"Then I discovered {brand}. Literally within the first time using it, everything changed.",
+                    "creator_action": "Brightening up, bringing {brand} into the foreground frame, genuine smile.",
+                    "on_screen_text": f"Found {brand} & everything changed",
+                    "audio_foley": "Uplifting musical riser, chime sound effect.",
+                    "image_prompt": f"9:16 vertical hero shot of {brand} packaging held gracefully in hand, shallow depth of field, sharp product focus.",
+                    "video_motion_prompt": f"Smooth tilt down from creator face to product in hand, crisp focus pull to packaging."
+                },
+                {
+                    "clip_number": 4,
+                    "title": "Hands-On Demonstration in Action",
+                    "duration": "0:15 - 0:21",
+                    "spoken_script": f"{target_desc[:120]}. You can see how smooth and effortless this is.",
+                    "creator_action": "Active demonstration showing real usage, POV camera angle looking down at hands.",
+                    "on_screen_text": "Watch how effortlessly it works",
+                    "audio_foley": "Tactile interaction sound, crisp foley.",
+                    "image_prompt": f"9:16 vertical macro close-up of {brand} being used in real time, hands interacting naturally, natural studio daylight.",
+                    "video_motion_prompt": f"Macro video shot of product in active use, natural finger motion, realistic texture, 60fps slow motion."
+                },
+                {
+                    "clip_number": 5,
+                    "title": "Emotional Transformation & Proof",
+                    "duration": "0:21 - 0:26",
+                    "spoken_script": f"My results have been unbelievable. Honestly, I am never going back to anything else.",
+                    "creator_action": "Stepping back, glowing confident posture, admiring results in mirror or camera.",
+                    "on_screen_text": "Never going back! Real results",
+                    "audio_foley": "Energetic upbeat chorus kick in.",
+                    "image_prompt": f"9:16 vertical medium portrait of happy confident {promoter_gender} creator beaming with satisfaction, warm aesthetic lighting.",
+                    "video_motion_prompt": f"Creator smiles genuinely at camera, nods with confidence, soft cinematic bokeh in background."
+                },
+                {
+                    "clip_number": 6,
+                    "title": "Strong Call to Action & Offer",
+                    "duration": "0:26 - 0:30",
+                    "spoken_script": f"Check out {website or 'the link in my bio'} right now to get yours before they sell out!",
+                    "creator_action": "Pointing towards bottom of screen, energetic sign-off wave.",
+                    "on_screen_text": f"TAP LINK IN BIO / {price or 'ORDER NOW'}",
+                    "audio_foley": "Crisp click sound effect, music fade out with echo.",
+                    "image_prompt": f"9:16 vertical dynamic creator pointing downward towards call-to-action area, enthusiastic expression.",
+                    "video_motion_prompt": f"Dynamic point to link below, quick wink or thumbs up, quick camera zoom out."
+                }
+            ],
+            "full_voiceover_script": f"If you're still doing this the old way, you need to stop right now. Look at this. I used to spend so much time and money trying different alternatives and none of them actually lasted. Then I discovered {brand}. Literally within the first time using it, everything changed. {target_desc[:120]}. You can see how smooth and effortless this is. My results have been unbelievable. Honestly, I am never going back to anything else. Check out {website or 'the link in my bio'} right now to get yours before they sell out!",
+            "performance_tips": "Deliver lines with high conversational energy. Maintain continuous eye contact with the smartphone camera lens, not your own reflection on screen. Keep transitions under 0.3 seconds in editing."
+        }
+    return data

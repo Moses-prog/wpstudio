@@ -3248,3 +3248,140 @@ def api_extract_dress_generate():
     except Exception as e:
         print(f"[EXTRACT DRESS ERROR]: {e}")
         return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+
+@app.route('/api/ugc/generate', methods=['POST'])
+def api_ugc_generate():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized: Telegram authentication required."}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+
+    mode = str(data.get("mode", "standard")).strip().lower()
+    is_pm = (mode == "product_marketing")
+
+    cost = 70 if is_pm else 30
+    is_vip = is_user_vip(user)
+    if is_vip:
+        cost = 0
+
+    if cost > 0 and user.get("credits", 0) < cost:
+        return jsonify({
+            "success": False,
+            "error": f"Insufficient credits! UGC {'Product Marketing' if is_pm else 'Standard'} requires {cost} credits."
+        }), 402
+
+    # Parse images
+    creator_bytes = None
+    creator_mime = "image/jpeg"
+    creator_b64 = str(data.get("creator_image") or "")
+    if creator_b64:
+        try:
+            if "," in creator_b64:
+                hdr, b64_part = creator_b64.split(",", 1)
+                if "png" in hdr.lower(): creator_mime = "image/png"
+                elif "webp" in hdr.lower(): creator_mime = "image/webp"
+                creator_bytes = base64.b64decode(b64_part)
+            else:
+                creator_bytes = base64.b64decode(creator_b64)
+        except Exception as e:
+            logger.warning(f"Failed to parse creator image: {e}")
+
+    product_images_data = []
+    raw_prod_images = data.get("product_images") or []
+    if isinstance(raw_prod_images, list):
+        for img_b64 in raw_prod_images[:3]:
+            if not img_b64: continue
+            try:
+                p_mime = "image/jpeg"
+                if "," in str(img_b64):
+                    hdr, b64_part = str(img_b64).split(",", 1)
+                    if "png" in hdr.lower(): p_mime = "image/png"
+                    elif "webp" in hdr.lower(): p_mime = "image/webp"
+                    p_bytes = base64.b64decode(b64_part)
+                else:
+                    p_bytes = base64.b64decode(str(img_b64))
+                product_images_data.append({"bytes": p_bytes, "mime": p_mime})
+            except Exception as e:
+                logger.warning(f"Failed to parse product image: {e}")
+
+    user_keys = build_user_keys(user)
+
+    try:
+        result = run_async(ai_engine.generate_ugc_ad(
+            mode=mode,
+            business_name=str(data.get("business_name", "")),
+            business_niche=str(data.get("business_niche", "")),
+            product_description=str(data.get("product_description", "")),
+            character_count=int(data.get("character_count", 1)),
+            location=str(data.get("location", "")),
+            phone_number=str(data.get("phone_number", "")),
+            price=str(data.get("price", "")),
+            website=str(data.get("website", "")),
+            promoter_gender=str(data.get("promoter_gender", "female")),
+            skin_tone=str(data.get("skin_tone", "black")),
+            promoter_vibe=str(data.get("promoter_vibe", "energetic_playful")),
+            look_preset=str(data.get("look_preset", "natural")),
+            branded_wardrobe=str(data.get("branded_wardrobe", "yes")),
+            language_style=str(data.get("language_style", "nigerian_english")),
+            narration=str(data.get("narration", "yes")),
+            custom_outfits=str(data.get("custom_outfits", "")),
+            additional_notes=str(data.get("additional_notes", "")),
+            product_name=str(data.get("product_name", "")),
+            call_to_action=str(data.get("call_to_action", "link_in_bio")),
+            shoot_location=str(data.get("shoot_location", "")),
+            product_images_data=product_images_data,
+            creator_image_bytes=creator_bytes,
+            creator_image_mime=creator_mime,
+            user_api_key=user_keys.get("custom_gemini_key"),
+            model_name=ai_engine.DEFAULT_MODEL
+        ))
+
+        if cost > 0:
+            database.deduct_credits(user_id, cost)
+
+        rem_credits = user.get("credits", 0) if is_vip else database.get_user(user_id).get("credits", 0)
+        return jsonify({
+            "success": True,
+            "credits_remaining": rem_credits,
+            "result": result
+        })
+    except Exception as e:
+        print(f"[UGC GENERATE ERROR]: {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500
+
+
+@app.route('/api/ugc/send_to_telegram', methods=['POST'])
+def api_ugc_send_to_telegram():
+    user = get_current_user()
+    if not user:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    user_id = user["user_id"]
+    data = request.get_json(silent=True, force=True) or {}
+    ugc_data = data.get("ugc_data", {})
+    pdf_type = str(data.get("pdf_type", "all")).strip().lower()
+
+    if not ugc_data or not ugc_data.get("clips"):
+        return jsonify({"success": False, "error": "No UGC campaign data found to send"}), 400
+
+    title = ugc_data.get("campaign_title", "UGC Video Commercial")
+
+    try:
+        script_pdf, prompts_pdf = pdf_generator.generate_ugc_pdfs(
+            ugc_data=ugc_data,
+            timezone="Africa/Lagos"
+        )
+
+        if pdf_type == "script":
+            send_telegram_document_sync(user_id, script_pdf, caption=f"**{title}** - Video Script & Director Blueprint")
+        elif pdf_type == "prompts":
+            send_telegram_document_sync(user_id, prompts_pdf, caption=f"**{title}** - AI Video & Image Prompts Suite")
+        else:
+            send_telegram_document_sync(user_id, script_pdf, caption=f"**{title}** - Video Script & Director Blueprint")
+            send_telegram_document_sync(user_id, prompts_pdf, caption=f"**{title}** - AI Video & Image Prompts Suite")
+
+        return jsonify({"success": True, "message": "UGC PDFs sent to Telegram successfully!"})
+    except Exception as e:
+        print(f"[UGC SEND TELEGRAM ERROR]: {e}")
+        return jsonify({"success": False, "error": sanitize_user_error(e)}), 500

@@ -1925,6 +1925,20 @@
             </div>
         </div>
 
+        <div class="list-item" onclick="openModal('ugc')">
+            <div class="icon-box">
+                <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            </div>
+            <div class="item-text">
+                <div class="item-title">UGC Content (Viral Ad Studio)</div>
+                <div class="item-subtitle">Create a six-clip vertical advertisement package for a real business</div>
+            </div>
+            <div class="item-right">
+                <span class="chip ready" style="font-size:10px;">30 CR</span>
+                <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+        </div>
+
 
 
         <div class="list-item" onclick="openModal('history')">
@@ -3581,6 +3595,373 @@
     <!-- 3. MODAL: CASTLOCK CHARACTER STUDIO (ROSTER)                          -->
     <!-- ===================================================================== -->
     <!-- ===================================================================== -->
+    <!-- UGC CONTENT (VIRAL VIDEO AD STUDIO) MODAL                             -->
+    <!-- ===================================================================== -->
+    <div class="modal" id="modal-ugc">
+        <div class="modal-drag"></div>
+        <div class="modal-header">
+            <div class="modal-header-top">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    UGC Content
+                </div>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-subtitle">Create a six-clip vertical advertisement package for a real business.</div>
+        </div>
+        <div class="modal-body">
+            <!-- INPUT WRAPPER -->
+            <div id="ugc-input-wrapper">
+                <div style="font-size:10px; font-weight:700; color:#e5a93c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">CREATIVE STUDIO</div>
+                <div style="font-size:20px; font-weight:700; margin-bottom:4px;">UGC Content</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Create a six-clip vertical advertisement package for a real business.</div>
+
+                <!-- MODE SWITCHER -->
+                <div class="pills-grid" style="grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:14px;">
+                    <div class="pill-btn active" id="ugc-tab-standard" onclick="setUgcMode('standard')">Standard</div>
+                    <div class="pill-btn" id="ugc-tab-pm" onclick="setUgcMode('product_marketing')">Product Marketing</div>
+                </div>
+
+                <!-- ================= STANDARD MODE PANEL ================= -->
+                <div id="ugc-standard-panel">
+                    <!-- 5-STEP INDICATOR -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; overflow-x:auto; padding-bottom:4px; gap:6px;">
+                        <div id="ugc-step-dot-1" class="accent-chip active" onclick="goToUgcStep(1)" style="cursor:pointer; font-size:10.5px;">(1) Business</div>
+                        <div id="ugc-step-dot-2" class="accent-chip" onclick="goToUgcStep(2)" style="cursor:pointer; font-size:10.5px;">(2) Contact</div>
+                        <div id="ugc-step-dot-3" class="accent-chip" onclick="goToUgcStep(3)" style="cursor:pointer; font-size:10.5px;">(3) Promoter</div>
+                        <div id="ugc-step-dot-4" class="accent-chip" onclick="goToUgcStep(4)" style="cursor:pointer; font-size:10.5px;">(4) Voiceover</div>
+                        <div id="ugc-step-dot-5" class="accent-chip" onclick="goToUgcStep(5)" style="cursor:pointer; font-size:10.5px;">(5) Assets</div>
+                    </div>
+
+                    <!-- STEP 1: BUSINESS DETAILS -->
+                    <div id="ugc-step-1" class="form-card" style="margin-bottom:14px;">
+                        <div class="form-label">(1) BUSINESS DETAILS</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                            <div>
+                                <div class="form-label" style="font-size:10px;">BUSINESS NAME *</div>
+                                <input type="text" id="ugc-biz-name" class="form-input" placeholder="e.g. Lumina Skincare, AfroTech Hub">
+                            </div>
+                            <div>
+                                <div class="form-label" style="font-size:10px;">BUSINESS NICHE *</div>
+                                <input type="text" id="ugc-biz-niche" class="form-input" placeholder="e.g. Beauty, SaaS, Streetwear">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <div class="form-label" style="font-size:10px;">PRODUCT OR SERVICE DESCRIPTION *</div>
+                            <textarea id="ugc-biz-desc" class="form-input" rows="4" placeholder="What it is, who it is for, and the main problem it solves."></textarea>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:14px;">
+                            <div>
+                                <div class="form-label" style="font-size:10px;">NUMBER OF PROMOTERS</div>
+                                <select id="ugc-promoter-count" class="form-input">
+                                    <option value="1" selected>1 Promoter</option>
+                                    <option value="2">2 Promoters</option>
+                                    <option value="3">3 Promoters</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="form-label" style="font-size:10px;">LOCATION (OPTIONAL)</div>
+                                <input type="text" id="ugc-biz-location" class="form-input" placeholder="e.g. Lagos, London, New York">
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-submit" onclick="goToUgcStep(2)" style="margin-top:0;">Next &rarr;</button>
+                    </div>
+
+                    <!-- STEP 2: CONTACT & DEMOGRAPHICS -->
+                    <div id="ugc-step-2" class="form-card" style="display:none; margin-bottom:14px;">
+                        <div class="form-label">(2) CONTACT &amp; DEMOGRAPHICS</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                            <div>
+                                <div class="form-label" style="font-size:10px;">PHONE NUMBER (OPTIONAL)</div>
+                                <input type="text" id="ugc-phone" class="form-input" placeholder="e.g. +234 801 234 5678">
+                            </div>
+                            <div>
+                                <div class="form-label" style="font-size:10px;">PRICE (OPTIONAL)</div>
+                                <input type="text" id="ugc-price" class="form-input" placeholder="e.g. $25 or &#8358;35,000">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">WEBSITE (OPTIONAL)</div>
+                            <input type="text" id="ugc-website" class="form-input" placeholder="e.g. https://mybrand.com">
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">PROMOTER GENDER</div>
+                            <div class="pills-grid" style="grid-template-columns: 1fr 1fr; gap:6px;">
+                                <div class="pill-btn active" data-ugc-gender="female" onclick="setUgcGender('female', this)">Female</div>
+                                <div class="pill-btn" data-ugc-gender="male" onclick="setUgcGender('male', this)">Male</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:14px;">
+                            <div class="form-label" style="font-size:10px;">SKIN TONE</div>
+                            <div class="pills-grid" style="grid-template-columns: 1fr 1fr; gap:6px;">
+                                <div class="pill-btn active" data-ugc-skin="black" onclick="setUgcSkin('black', this)">Black</div>
+                                <div class="pill-btn" data-ugc-skin="white" onclick="setUgcSkin('white', this)">White</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-cancel" onclick="goToUgcStep(1)" style="flex:1;">&larr; Back</button>
+                            <button type="button" class="btn-submit" onclick="goToUgcStep(3)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: PROMOTER LOOK & VIBE -->
+                    <div id="ugc-step-3" class="form-card" style="display:none; margin-bottom:14px;">
+                        <div class="form-label">(3) PROMOTER PHOTOS &amp; VIBE</div>
+
+                        <div style="border-left: 3px solid #e5a93c; background: rgba(229, 169, 60, 0.08); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height:1.4;">
+                            Upload one photo of your promoter. Hair stays locked; clothes may change per clip; the face stays. Leave empty and AI invents.
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <input type="file" id="ugc-promoter-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleUgcPromoterUpload(event)">
+                            <div id="ugc-promoter-dropzone" onclick="document.getElementById('ugc-promoter-file').click()" style="border: 2px dashed rgba(229,169,60,0.4); border-radius: 10px; padding: 22px 14px; text-align: center; cursor: pointer;">
+                                <div style="color: #e5a93c; font-size: 13px; font-weight: 700; margin-bottom: 2px;">Upload Portrait</div>
+                                <div style="color: var(--text-muted); font-size: 11px;">PNG, JPEG or WebP &middot; max 8 MB</div>
+                            </div>
+                            <div id="ugc-promoter-preview-wrap" style="display:none; text-align:center; margin-top:8px;">
+                                <img id="ugc-promoter-preview-img" style="max-height:140px; border-radius:8px; border:1px solid #e5a93c; margin-bottom:6px;">
+                                <div id="ugc-promoter-filename" style="font-size:11px; color:var(--text-muted); margin-bottom:6px;"></div>
+                                <button type="button" class="btn-cancel" onclick="removeUgcPromoter()" style="padding:4px 10px; font-size:10.5px; color:#ff453a;">Remove Portrait</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">PROMOTER VIBE</div>
+                            <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); gap:6px;">
+                                <div class="pill-btn active" data-ugc-vibe="energetic_playful" onclick="setUgcVibe('energetic_playful', this)">Energetic &amp; Playful</div>
+                                <div class="pill-btn" data-ugc-vibe="warm_sincere" onclick="setUgcVibe('warm_sincere', this)">Warm &amp; Sincere</div>
+                                <div class="pill-btn" data-ugc-vibe="confident_bold" onclick="setUgcVibe('confident_bold', this)">Confident &amp; Bold</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">LOOK PRESET</div>
+                            <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:6px;">
+                                <div class="pill-btn active" data-ugc-look="natural" onclick="setUgcLook('natural', this)">Natural (AI diversity)</div>
+                                <div class="pill-btn" data-ugc-look="glam_curvy" onclick="setUgcLook('glam_curvy', this)">Glam &amp; Curvy</div>
+                                <div class="pill-btn" data-ugc-look="soft_pretty" onclick="setUgcLook('soft_pretty', this)">Soft &amp; Pretty</div>
+                                <div class="pill-btn" data-ugc-look="handsome_athletic" onclick="setUgcLook('handsome_athletic', this)">Handsome Athletic</div>
+                                <div class="pill-btn" data-ugc-look="rugged_handsome" onclick="setUgcLook('rugged_handsome', this)" style="grid-column: span 2;">Rugged Handsome</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:14px;">
+                            <div class="form-label" style="font-size:10px;">BRANDED WARDROBE</div>
+                            <div class="pills-grid" style="grid-template-columns: 1fr 1fr; gap:6px;">
+                                <div class="pill-btn active" data-ugc-wardrobe="yes" onclick="setUgcWardrobe('yes', this)">Yes &mdash; branded polo</div>
+                                <div class="pill-btn" data-ugc-wardrobe="no" onclick="setUgcWardrobe('no', this)">No &mdash; casual outfit</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-cancel" onclick="goToUgcStep(2)" style="flex:1;">&larr; Back</button>
+                            <button type="button" class="btn-submit" onclick="goToUgcStep(4)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: LANGUAGE & NARRATION -->
+                    <div id="ugc-step-4" class="form-card" style="display:none; margin-bottom:14px;">
+                        <div class="form-label">(4) LANGUAGE &amp; NARRATION</div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">LANGUAGE STYLE</div>
+                            <div class="pills-grid" style="grid-template-columns: repeat(2, 1fr); gap:6px;">
+                                <div class="pill-btn active" data-ugc-lang="nigerian_english" onclick="setUgcLang('nigerian_english', this)">Standard Nigerian English</div>
+                                <div class="pill-btn" data-ugc-lang="pidgin" onclick="setUgcLang('pidgin', this)">Pidgin / Naija Street</div>
+                                <div class="pill-btn" data-ugc-lang="american_english" onclick="setUgcLang('american_english', this)">American English</div>
+                                <div class="pill-btn" data-ugc-lang="british_english" onclick="setUgcLang('british_english', this)">British English</div>
+                            </div>
+                            <div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">Default is clear Standard Nigerian English with natural accent. Choose Pidgin only for street vibe.</div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">NARRATION / DIALOGUE</div>
+                            <div class="pills-grid" style="grid-template-columns: 1fr 1fr; gap:6px;">
+                                <div class="pill-btn active" data-ugc-narration="yes" onclick="setUgcNarration('yes', this)">Include Narration</div>
+                                <div class="pill-btn" data-ugc-narration="no" onclick="setUgcNarration('no', this)">No Narration</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:14px;">
+                            <div class="form-label" style="font-size:10px;">CUSTOM OUTFITS (OPTIONAL)</div>
+                            <div class="pills-grid" style="grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:8px;">
+                                <div class="pill-btn active" data-ugc-outfit-mode="none" onclick="setUgcOutfitMode('none', this)">No custom</div>
+                                <div class="pill-btn" data-ugc-outfit-mode="one" onclick="setUgcOutfitMode('one', this)">1 Outfit</div>
+                                <div class="pill-btn" data-ugc-outfit-mode="multi" onclick="setUgcOutfitMode('multi', this)">Multi Outfits</div>
+                            </div>
+                            <div id="ugc-custom-outfit-box" style="display:none;">
+                                <input type="text" id="ugc-custom-outfit-text" class="form-input" placeholder="e.g. satin emerald dress, gold hoops, nude heels">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-cancel" onclick="goToUgcStep(3)" style="flex:1;">&larr; Back</button>
+                            <button type="button" class="btn-submit" onclick="goToUgcStep(5)" style="flex:2; margin-top:0;">Next &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5: ASSETS & SUBMISSION -->
+                    <div id="ugc-step-5" class="form-card" style="display:none; margin-bottom:14px;">
+                        <div class="form-label">(5) ADDITIONAL NOTES &amp; ASSETS</div>
+
+                        <div style="margin-bottom:10px;">
+                            <div class="form-label" style="font-size:10px;">ADDITIONAL NOTES (OPTIONAL)</div>
+                            <textarea id="ugc-notes" class="form-input" rows="3" placeholder="Specific hook instructions, brand rules, or key highlights."></textarea>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">PRODUCT IMAGES (OPTIONAL &mdash; UP TO 3)</div>
+                            <input type="file" id="ugc-prod-file-input" accept="image/png,image/jpeg,image/webp" multiple style="display:none;" onchange="handleUgcProductPhotos(event)">
+                            <div onclick="document.getElementById('ugc-prod-file-input').click()" style="border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer;">
+                                <div style="font-size:12px; color:#e5a93c; font-weight:700;">Choose Product Photos</div>
+                                <div id="ugc-prod-photos-label" style="font-size:10.5px; color:var(--text-muted);">No photos selected yet</div>
+                            </div>
+                        </div>
+
+                        <div style="border-left: 3px solid #e5a93c; background: rgba(229, 169, 60, 0.08); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                            UGC Content costs 30 credits. Your balance is shared across web and Telegram.<br>
+                            Your balance: <strong id="ugc-user-credits" style="color:#e5a93c;">0 credits</strong>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-cancel" onclick="goToUgcStep(4)" style="flex:1;">&larr; Back</button>
+                            <button id="btn-submit-ugc-standard" class="btn-submit" onclick="submitUgc('standard')" style="flex:2; margin-top:0;">
+                                Generate UGC Package &mdash; 30 Credits
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= PRODUCT MARKETING PANEL ================= -->
+                <div id="ugc-pm-panel" style="display:none;">
+                    <div style="border-left: 3px solid #30d158; background: rgba(48, 209, 88, 0.08); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                        Turn one product into a ready-to-shoot UGC ad. Upload 1&ndash;3 product photos and 1 photo of your creator (their face stays locked in every clip). You get 2 PDFs: video prompts + image prompts. Costs 70 credits.
+                    </div>
+
+                    <div class="form-card" style="margin-bottom:14px;">
+                        <div style="margin-bottom:10px;">
+                            <div class="form-label" style="font-size:10px;">PRODUCT NAME *</div>
+                            <input type="text" id="ugc-pm-name" class="form-input" placeholder="e.g. Glow Vitamin C Serum">
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <div class="form-label" style="font-size:10px;">PRODUCT DESCRIPTION *</div>
+                            <textarea id="ugc-pm-desc" class="form-input" rows="3" placeholder="What it is, who it is for, and the main benefit."></textarea>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                            <div>
+                                <div class="form-label" style="font-size:10px;">PRICE (USD OR RANGE)</div>
+                                <input type="text" id="ugc-pm-price" class="form-input" placeholder="e.g. $15 or $12 - $18">
+                            </div>
+                            <div>
+                                <div class="form-label" style="font-size:10px;">VOICE LANGUAGE</div>
+                                <select id="ugc-pm-lang" class="form-input">
+                                    <option value="american_english" selected>American English</option>
+                                    <option value="british_english">British English</option>
+                                    <option value="nigerian_english">Nigerian English</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                            <div>
+                                <div class="form-label" style="font-size:10px;">CALL TO ACTION</div>
+                                <select id="ugc-pm-cta" class="form-input">
+                                    <option value="link_in_bio" selected>Link in bio</option>
+                                    <option value="shop_now">Shop now</option>
+                                    <option value="limited_discount">Claim 50% Off</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="form-label" style="font-size:10px;">SHOOT LOCATION (OPTIONAL)</div>
+                                <input type="text" id="ugc-pm-location" class="form-input" placeholder="Leave blank to let AI choose">
+                            </div>
+                        </div>
+
+                        <!-- Product Photos (1-3) -->
+                        <div style="margin-bottom:12px;">
+                            <div class="form-label" style="font-size:10px;">PRODUCT PHOTOS (1&ndash;3 REQUIRED)</div>
+                            <input type="file" id="ugc-pm-prod-files" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" onchange="handleUgcPmProductFiles(event)">
+                            <div onclick="document.getElementById('ugc-pm-prod-files').click()" style="border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer;">
+                                <div style="font-size:12px; color:#30d158; font-weight:700;">Choose Product Photos</div>
+                                <div id="ugc-pm-prod-meta" style="font-size:10.5px; color:var(--text-muted);">No photos yet</div>
+                            </div>
+                        </div>
+
+                        <!-- Creator Photo (1 locked) -->
+                        <div style="margin-bottom:14px;">
+                            <div class="form-label" style="font-size:10px;">CREATOR PHOTO (EXACTLY 1 &mdash; FACE IS LOCKED)</div>
+                            <input type="file" id="ugc-pm-creator-file" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleUgcPmCreatorFile(event)">
+                            <div onclick="document.getElementById('ugc-pm-creator-file').click()" style="border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer;">
+                                <div style="font-size:12px; color:#38bdf8; font-weight:700;">Choose Creator Photo</div>
+                                <div id="ugc-pm-creator-meta" style="font-size:10.5px; color:var(--text-muted);">No photo yet</div>
+                            </div>
+                        </div>
+
+                        <div style="border-left: 3px solid #30d158; background: rgba(48, 209, 88, 0.08); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11px; color: var(--text-main); line-height: 1.5; margin-bottom: 14px;">
+                            Product Marketing costs 70 credits. Your balance is shared across web and Telegram.<br>
+                            Your balance: <strong id="ugc-pm-user-credits" style="color:#30d158;">0 credits</strong>
+                        </div>
+
+                        <button id="btn-submit-ugc-pm" class="btn-submit" onclick="submitUgc('product_marketing')" style="margin-top:0; background:#30d158; color:#000;">
+                            Generate Product Ad &mdash; 70 Credits
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= RESULTS SECTION ================= -->
+            <div id="ugc-results-section" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:10px; font-weight:700; color:#30d158; text-transform:uppercase; letter-spacing:0.5px;">COMMERCIAL GENERATED</div>
+                        <div id="ugc-res-campaign-title" style="font-size:16px; font-weight:700; margin-top:2px;">UGC Ad Campaign</div>
+                    </div>
+                    <button class="btn-cancel" onclick="resetUgcStudio()" style="padding:4px 10px; font-size:11px;">Make Another</button>
+                </div>
+
+                <!-- 3 A/B Hooks Card -->
+                <div class="form-card" style="margin-bottom:12px;">
+                    <div class="form-label" style="color:#e5a93c;">3-SECOND SCROLL-STOPPING HOOKS (A/B TESTING)</div>
+                    <div id="ugc-res-hooks-list" style="font-size:11.5px; line-height:1.6; color:#cbd5e1;"></div>
+                </div>
+
+                <!-- 6 Clip Storyboard Cards Container -->
+                <div id="ugc-res-clips-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom:14px;"></div>
+
+                <!-- Continuous Voiceover Script Card -->
+                <div class="form-card" style="margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div class="form-label" style="margin-bottom:0;">CONTINUOUS VOICEOVER SCRIPT</div>
+                        <button type="button" class="btn-cancel" onclick="copyUgcMasterScript(this)" style="padding:4px 10px; font-size:11px; color:#e5a93c;">Copy Script</button>
+                    </div>
+                    <div id="ugc-res-full-script" style="font-size:11.5px; color:#cbd5e1; line-height:1.5; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;"></div>
+                </div>
+
+                <!-- Dual PDF Send Action Bar -->
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-cancel" onclick="sendUgcPdfsToTelegram(this)" style="flex:1; padding:12px; border-radius:10px; border-color:#e5a93c; color:#e5a93c;">
+                        Send 2 PDFs to Telegram
+                    </button>
+                    <button class="btn-submit" onclick="copyAllUgcPrompts(this)" style="flex:1; margin-top:0; padding:12px; border-radius:10px;">
+                        Copy All Prompts
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
     <!-- EXTRACT DRESS (WARDROBE & OUTFIT CONSISTENCY LOCK) MODAL             -->
     <!-- ===================================================================== -->
     <div class="modal" id="modal-extract-dress">
@@ -4951,6 +5332,7 @@
                 if (id === 'tooncraft') { goToTooncraftStep(1); updateTooncraftCost(); }
                 if (id === 'podcast') { goToPodcastStep(1); updatePodcastReview(); }
                 if (id === 'extract-dress') { initExtractDressModal(); }
+                if (id === 'ugc') { initUgcModal(); }
             }
         }
 
@@ -9028,6 +9410,418 @@
                 // VISUAL FRAME RENDERER ACTIONS (WITH DIRECT TELEGRAM PHOTO DELIVERY)
         // =====================================================================
         let lastRenderedImageData = null;
+        /* ===================================================================== */
+        /* UGC CONTENT (VIRAL VIDEO AD STUDIO) JAVASCRIPT HANDLERS               */
+        /* ===================================================================== */
+        const ugcState = {
+            mode: 'standard', // 'standard' | 'product_marketing'
+            step: 1,
+            gender: 'female',
+            skin: 'black',
+            vibe: 'energetic_playful',
+            look: 'natural',
+            wardrobe: 'yes',
+            language: 'nigerian_english',
+            narration: 'yes',
+            outfitMode: 'none',
+            promoterImage: null,
+            productImages: [],
+            pmCreatorImage: null,
+            pmProductImages: [],
+            currentData: null
+        };
+
+        function setUgcMode(mode) {
+            ugcState.mode = mode;
+            const btnStd = document.getElementById('ugc-tab-standard');
+            const btnPm = document.getElementById('ugc-tab-pm');
+            const panelStd = document.getElementById('ugc-standard-panel');
+            const panelPm = document.getElementById('ugc-pm-panel');
+
+            if (btnStd) btnStd.classList.toggle('active', mode === 'standard');
+            if (btnPm) btnPm.classList.toggle('active', mode === 'product_marketing');
+            if (panelStd) panelStd.style.display = (mode === 'standard') ? 'block' : 'none';
+            if (panelPm) panelPm.style.display = (mode === 'product_marketing') ? 'block' : 'none';
+            initUgcModal();
+        }
+
+        function goToUgcStep(step) {
+            ugcState.step = step;
+            for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`ugc-step-${i}`);
+                const dot = document.getElementById(`ugc-step-dot-${i}`);
+                if (el) el.style.display = (i === step) ? 'block' : 'none';
+                if (dot) {
+                    dot.classList.toggle('active', i === step);
+                    if (i < step) dot.innerText = `✓ Step ${i}`;
+                    else dot.innerText = `(${i}) Step ${i}`;
+                }
+            }
+        }
+
+        function initUgcModal() {
+            const isVip = isExtractDressVip();
+            const rawCredits = getExtractDressCredits();
+
+            const stdCrElem = document.getElementById('ugc-user-credits');
+            if (stdCrElem) {
+                stdCrElem.innerText = isVip ? 'Unlimited (VIP Access)' : `${rawCredits.toLocaleString()} credits`;
+            }
+            const pmCrElem = document.getElementById('ugc-pm-user-credits');
+            if (pmCrElem) {
+                pmCrElem.innerText = isVip ? 'Unlimited (VIP Access)' : `${rawCredits.toLocaleString()} credits`;
+            }
+
+            const btnStd = document.getElementById('btn-submit-ugc-standard');
+            if (btnStd) {
+                btnStd.innerHTML = isVip ? 'Generate UGC Package &mdash; VIP Access' : 'Generate UGC Package &mdash; 30 Credits';
+            }
+            const btnPm = document.getElementById('btn-submit-ugc-pm');
+            if (btnPm) {
+                btnPm.innerHTML = isVip ? 'Generate Product Ad &mdash; VIP Access' : 'Generate Product Ad &mdash; 70 Credits';
+            }
+        }
+
+        function setUgcGender(val, el) {
+            ugcState.gender = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-gender]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcSkin(val, el) {
+            ugcState.skin = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-skin]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcVibe(val, el) {
+            ugcState.vibe = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-vibe]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcLook(val, el) {
+            ugcState.look = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-look]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcWardrobe(val, el) {
+            ugcState.wardrobe = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-wardrobe]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcLang(val, el) {
+            ugcState.language = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-lang]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcNarration(val, el) {
+            ugcState.narration = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-narration]').forEach(b => b.classList.toggle('active', b === el));
+        }
+
+        function setUgcOutfitMode(val, el) {
+            ugcState.outfitMode = val;
+            document.querySelectorAll('#ugc-standard-panel [data-ugc-outfit-mode]').forEach(b => b.classList.toggle('active', b === el));
+            const box = document.getElementById('ugc-custom-outfit-box');
+            if (box) box.style.display = (val === 'none') ? 'none' : 'block';
+        }
+
+        function handleUgcPromoterUpload(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                ugcState.promoterImage = ev.target.result;
+                const drop = document.getElementById('ugc-promoter-dropzone');
+                const prev = document.getElementById('ugc-promoter-preview-wrap');
+                const img = document.getElementById('ugc-promoter-preview-img');
+                const fn = document.getElementById('ugc-promoter-filename');
+                if (img) img.src = ev.target.result;
+                if (fn) fn.innerText = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                if (drop) drop.style.display = 'none';
+                if (prev) prev.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeUgcPromoter() {
+            ugcState.promoterImage = null;
+            const drop = document.getElementById('ugc-promoter-dropzone');
+            const prev = document.getElementById('ugc-promoter-preview-wrap');
+            const fileInput = document.getElementById('ugc-promoter-file');
+            if (fileInput) fileInput.value = '';
+            if (prev) prev.style.display = 'none';
+            if (drop) drop.style.display = 'block';
+        }
+
+        function handleUgcProductPhotos(e) {
+            const files = e.target.files || [];
+            ugcState.productImages = [];
+            const lbl = document.getElementById('ugc-prod-photos-label');
+            if (files.length === 0) {
+                if (lbl) lbl.innerText = 'No photos selected yet';
+                return;
+            }
+            if (lbl) lbl.innerText = `${files.length} photo(s) selected`;
+            Array.from(files).slice(0, 3).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    ugcState.productImages.push(ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleUgcPmProductFiles(e) {
+            const files = e.target.files || [];
+            ugcState.pmProductImages = [];
+            const meta = document.getElementById('ugc-pm-prod-meta');
+            if (files.length === 0) {
+                if (meta) meta.innerText = 'No photos yet';
+                return;
+            }
+            if (meta) meta.innerText = `${files.length} product photo(s) loaded`;
+            Array.from(files).slice(0, 3).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => ugcState.pmProductImages.push(ev.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleUgcPmCreatorFile(e) {
+            const file = e.target.files && e.target.files[0];
+            const meta = document.getElementById('ugc-pm-creator-meta');
+            if (!file) {
+                if (meta) meta.innerText = 'No photo yet';
+                return;
+            }
+            if (meta) meta.innerText = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            const reader = new FileReader();
+            reader.onload = ev => { ugcState.pmCreatorImage = ev.target.result; };
+            reader.readAsDataURL(file);
+        }
+
+        async function submitUgc(mode) {
+            const isVip = isExtractDressVip();
+            const rawCredits = getExtractDressCredits();
+            const cost = (mode === 'product_marketing') ? 70 : 30;
+
+            if (!isVip && rawCredits < cost) {
+                showToast(`Insufficient credits! UGC ${mode === 'product_marketing' ? 'Product Marketing' : 'Standard'} requires ${cost} credits.`, false);
+                return;
+            }
+
+            let payload = { mode: mode };
+            if (mode === 'standard') {
+                const bizName = (document.getElementById('ugc-biz-name')?.value || '').trim();
+                const bizDesc = (document.getElementById('ugc-biz-desc')?.value || '').trim();
+                if (!bizName || !bizDesc) {
+                    showToast('Please enter business name and description.', false);
+                    goToUgcStep(1);
+                    return;
+                }
+                payload.business_name = bizName;
+                payload.business_niche = document.getElementById('ugc-biz-niche')?.value || '';
+                payload.product_description = bizDesc;
+                payload.character_count = parseInt(document.getElementById('ugc-promoter-count')?.value || '1');
+                payload.location = document.getElementById('ugc-biz-location')?.value || '';
+                payload.phone_number = document.getElementById('ugc-phone')?.value || '';
+                payload.price = document.getElementById('ugc-price')?.value || '';
+                payload.website = document.getElementById('ugc-website')?.value || '';
+                payload.promoter_gender = ugcState.gender;
+                payload.skin_tone = ugcState.skin;
+                payload.promoter_vibe = ugcState.vibe;
+                payload.look_preset = ugcState.look;
+                payload.branded_wardrobe = ugcState.wardrobe;
+                payload.language_style = ugcState.language;
+                payload.narration = ugcState.narration;
+                payload.custom_outfits = document.getElementById('ugc-custom-outfit-text')?.value || '';
+                payload.additional_notes = document.getElementById('ugc-notes')?.value || '';
+                payload.creator_image = ugcState.promoterImage;
+                payload.product_images = ugcState.productImages;
+            } else {
+                const prodName = (document.getElementById('ugc-pm-name')?.value || '').trim();
+                const prodDesc = (document.getElementById('ugc-pm-desc')?.value || '').trim();
+                if (!prodName || !prodDesc) {
+                    showToast('Please enter product name and description.', false);
+                    return;
+                }
+                payload.product_name = prodName;
+                payload.product_description = prodDesc;
+                payload.price = document.getElementById('ugc-pm-price')?.value || '';
+                payload.language_style = document.getElementById('ugc-pm-lang')?.value || 'american_english';
+                payload.call_to_action = document.getElementById('ugc-pm-cta')?.value || 'link_in_bio';
+                payload.shoot_location = document.getElementById('ugc-pm-location')?.value || '';
+                payload.creator_image = ugcState.pmCreatorImage;
+                payload.product_images = ugcState.pmProductImages;
+            }
+
+            const btn = document.getElementById(mode === 'standard' ? 'btn-submit-ugc-standard' : 'btn-submit-ugc-pm');
+            if (btn) btn.disabled = true;
+
+            AIProgressTracker.start(
+                "Forging 6-Clip UGC Video Ad Package",
+                16,
+                [
+                    { at: 5, text: "Analyzing brand messaging & target audience..." },
+                    { at: 25, text: "Architecting 3-second viral hooks..." },
+                    { at: 55, text: "Generating 6-clip vertical commercial sequence..." },
+                    { at: 85, text: "Synthesizing AI video & image production prompts..." }
+                ],
+                "UGC STUDIO"
+            );
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+            try {
+                const res = await fetch('/api/ugc/generate', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    signal: controller.signal,
+                    body: JSON.stringify(payload)
+                });
+                clearTimeout(timeoutId);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    AIProgressTracker.fail(data.error || 'Failed to generate UGC package.');
+                    if (btn) btn.disabled = false;
+                    return;
+                }
+
+                if (data.credits_remaining !== undefined) {
+                    if (typeof currentUser !== 'undefined' && currentUser) currentUser.credits = data.credits_remaining;
+                    if (window.currentUser) window.currentUser.credits = data.credits_remaining;
+                    if (typeof updateHeaderUserInfo === 'function') updateHeaderUserInfo();
+                    initUgcModal();
+                }
+
+                AIProgressTracker.complete("6-Clip UGC ad campaign forged successfully!");
+                renderUgcResults(data.result);
+            } catch (err) {
+                clearTimeout(timeoutId);
+                console.error('[UGC GENERATE ERROR]', err);
+                AIProgressTracker.fail(err.name === 'AbortError' ? 'Request timed out. Please try again.' : (err.message || 'Network error occurred.'));
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function renderUgcResults(result) {
+            if (!result) return;
+            ugcState.currentData = result;
+
+            const inputWrap = document.getElementById('ugc-input-wrapper');
+            const resWrap = document.getElementById('ugc-results-section');
+            if (inputWrap) inputWrap.style.display = 'none';
+            if (resWrap) resWrap.style.display = 'block';
+
+            const titleEl = document.getElementById('ugc-res-campaign-title');
+            if (titleEl) titleEl.innerText = result.campaign_title || 'UGC Commercial';
+
+            // Render Hooks
+            const hooksList = document.getElementById('ugc-res-hooks-list');
+            if (hooksList && result.hook_variations) {
+                hooksList.innerHTML = result.hook_variations.map((h, i) => `
+                    <div style="margin-bottom:6px;">
+                        <strong style="color:#e5a93c;">Hook ${i+1}:</strong> "${escapeHtml(h)}"
+                    </div>
+                `).join('');
+            }
+
+            // Render 6 Clips
+            const container = document.getElementById('ugc-res-clips-container');
+            if (container && result.clips) {
+                container.innerHTML = result.clips.map(c => `
+                    <div class="form-card" style="font-size:12px; line-height:1.5;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span class="chip active" style="font-size:10px;">CLIP ${c.clip_number}: ${escapeHtml(c.title || '')}</span>
+                            <span style="font-size:11px; color:#e5a93c;">${escapeHtml(c.duration || '')}</span>
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            <strong style="color:var(--text-main);">Spoken Script:</strong>
+                            <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; margin-top:2px; font-style:italic; color:#f3f4f6;">"${escapeHtml(c.spoken_script || '')}"</div>
+                        </div>
+                        <div style="margin-bottom:4px;"><strong style="color:#e5a93c;">On-Screen Text:</strong> [ ${escapeHtml(c.on_screen_text || '')} ]</div>
+                        <div style="margin-bottom:4px;"><strong style="color:#cbd5e1;">Visual Action:</strong> ${escapeHtml(c.creator_action || '')}</div>
+                        <div style="margin-bottom:8px;"><strong style="color:#94a3b8;">Audio / Foley:</strong> ${escapeHtml(c.audio_foley || '')}</div>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn-cancel" onclick="copyDirectText('${escapeHtml(c.image_prompt || '').replace(/'/g, "\\'")}', this)" style="flex:1; padding:4px 8px; font-size:10.5px;">Copy Image Prompt</button>
+                            <button type="button" class="btn-cancel" onclick="copyDirectText('${escapeHtml(c.video_motion_prompt || '').replace(/'/g, "\\'")}', this)" style="flex:1; padding:4px 8px; font-size:10.5px; border-color:rgba(56,189,248,0.4); color:#38bdf8;">Copy Video Prompt</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const scriptEl = document.getElementById('ugc-res-full-script');
+            if (scriptEl) scriptEl.innerText = result.full_voiceover_script || '';
+        }
+
+        function copyDirectText(text, btn) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                if (btn) {
+                    const prev = btn.innerHTML;
+                    btn.innerHTML = 'Copied!';
+                    setTimeout(() => { btn.innerHTML = prev; }, 1800);
+                }
+                showToast('Prompt copied to clipboard!', true);
+            });
+        }
+
+        function copyUgcMasterScript(btn) {
+            if (!ugcState.currentData) return;
+            const text = ugcState.currentData.full_voiceover_script || '';
+            copyDirectText(text, btn);
+        }
+
+        function copyAllUgcPrompts(btn) {
+            if (!ugcState.currentData || !ugcState.currentData.clips) return;
+            let fullText = `=== UGC COMMERCIAL PROMPT BIBLE: ${ugcState.currentData.campaign_title || ''} ===\n\n`;
+            ugcState.currentData.clips.forEach(c => {
+                fullText += `--- CLIP ${c.clip_number}: ${c.title} (${c.duration}) ---\n`;
+                fullText += `[SPOKEN SCRIPT]: "${c.spoken_script}"\n`;
+                fullText += `[ON-SCREEN TEXT]: ${c.on_screen_text}\n`;
+                fullText += `[MIDJOURNEY / FLUX IMAGE PROMPT]:\n${c.image_prompt}\n\n`;
+                fullText += `[KLING / RUNWAY VIDEO PROMPT]:\n${c.video_motion_prompt}\n\n`;
+            });
+            copyDirectText(fullText, btn);
+        }
+
+        async function sendUgcPdfsToTelegram(btn) {
+            if (!ugcState.currentData) {
+                showToast('No active UGC campaign data to send.', false);
+                return;
+            }
+            if (btn) btn.disabled = true;
+            showToast('Dispatching 2 UGC PDFs to Telegram...', true);
+            try {
+                const res = await fetch('/api/ugc/send_to_telegram', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ ugc_data: ugcState.currentData })
+                });
+                const d = await res.json();
+                if (res.ok && d.success) {
+                    showToast('UGC PDFs sent to Telegram successfully!', true);
+                } else {
+                    showToast(d.error || 'Failed to dispatch PDFs to Telegram.', false);
+                }
+            } catch (e) {
+                showToast('Network error dispatching PDFs.', false);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function resetUgcStudio() {
+            ugcState.currentData = null;
+            const inputWrap = document.getElementById('ugc-input-wrapper');
+            const resWrap = document.getElementById('ugc-results-section');
+            if (inputWrap) inputWrap.style.display = 'block';
+            if (resWrap) resWrap.style.display = 'none';
+            goToUgcStep(1);
+        }
+
         /* ===================================================================== */
         /* EXTRACT DRESS (WARDROBE LOCK) JAVASCRIPT HANDLERS                     */
         /* ===================================================================== */
